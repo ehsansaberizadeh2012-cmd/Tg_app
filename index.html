@@ -2,8 +2,8 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>داشبورد مالی تلگرام</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
+    <title>Shelby Financial Dashboard</title>
     <!-- Telegram Web App script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Tailwind CSS -->
@@ -12,59 +12,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS variables for Telegram theme integration */
+        /* CSS variables for smooth Telegram theme integration */
         :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #000000;
-            --tg-theme-hint-color: #999999;
-            --tg-theme-link-color: #2481cc;
-            --tg-theme-button-color: #2481cc;
-            --tg-theme-button-text-color: #ffffff;
-            --tg-theme-secondary-bg-color: #f4f3f8;
-            --tg-header-color: #efeff3; /* A slightly different shade for header/footer */
-            --tg-accent-color: #2481cc;
+            --tg-bg: #ffffff;
+            --tg-text: #000000;
+            --tg-hint: #999999;
+            --tg-button: #2481cc;
+            --tg-button-text: #ffffff;
+            --tg-secondary-bg: #f4f3f8;
+            --tg-header-border: #e8e8e8;
+            --tg-accent: #2481cc;
         }
 
         body {
             font-family: 'Vazirmatn', sans-serif;
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            transition: background-color 0.2s, color 0.2s;
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            transition: background-color 0.3s, color 0.3s;
             margin: 0;
             padding: 1rem;
             box-sizing: border-box;
             width: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Helper classes for dynamic content */
         .card {
-            background-color: var(--tg-theme-secondary-bg-color);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            background-color: var(--tg-secondary-bg);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        .positive-change { color: #10B981; /* green-500 */ }
-        .negative-change { color: #EF4444; /* red-500 */ }
-        .neutral-change { color: var(--tg-theme-hint-color); }
+        .positive-change { color: #10B981; }
+        .negative-change { color: #EF4444; }
+        .neutral-change { color: var(--tg-hint); }
         
         .card-header {
-            border-bottom: 1px solid var(--tg-header-color);
+            border-bottom: 1px solid var(--tg-header-border);
             padding-bottom: 0.75rem;
             margin-bottom: 1rem;
             font-weight: 700;
-            font-size: 1.25rem;
-            color: var(--tg-accent-color);
+            font-size: 1.1rem;
+            color: var(--tg-accent);
         }
         
-        /* Loading Spinner */
+        /* Loader Animation */
         #loader {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 5px solid var(--tg-theme-secondary-bg-color);
-            border-top: 5px solid var(--tg-theme-button-color);
+            border: 5px solid var(--tg-secondary-bg);
+            border-top: 5px solid var(--tg-button);
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -82,216 +82,211 @@
 
     <div id="loader"></div>
 
-    <div id="app-container" class="container mx-auto max-w-4xl opacity-0 transition-opacity duration-300">
+    <div id="app-container" class="container mx-auto max-w-4xl opacity-0 transition-opacity duration-500">
         <header class="text-center mb-6">
-            <h1 class="text-3xl font-bold" id="user-greeting">داشبورد مالی</h1>
-            <p id="last-updated" class="mt-2" style="color: var(--tg-theme-hint-color);"></p>
+            <h1 class="text-2xl font-bold">Shelby Developer</h1>
+            <p id="last-updated" class="text-sm mt-1" style="color: var(--tg-hint);"></p>
         </header>
 
         <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- Dynamic content will be injected here -->
-            <div id="cryptocurrency" class="card"></div>
-            <div id="ounce" class="card"></div>
-            <div id="silver" class="card"></div>
-            <div id="freeCurrency" class="card md:col-span-2 lg:col-span-3"></div>
-            <div id="gold" class="card md:col-span-2 lg:col-span-3"></div>
-            <div id="coin" class="card md:col-span-2 lg:col-span-3"></div>
-            <div id="fundGold" class="card md:col-span-2 lg:col-span-3"></div>
+            <div id="crypto-container" class="card md:col-span-2 lg:col-span-3"></div>
+            <div id="free-currency-container" class="card"></div>
+            <div id="tether-container" class="card"></div>
+            <div id="ounce-container" class="card"></div>
+            <div id="gold-container" class="card md:col-span-2 lg:col-span-3"></div>
+            <div id="coin-container" class="card md:col-span-2 lg:col-span-3"></div>
         </main>
 
-        <footer class="text-center mt-8 text-sm" style="color: var(--tg-theme-hint-color);">
-            <p>اطلاعات توسط Haji-API</p>
+        <footer class="text-center mt-8 text-xs" style="color: var(--tg-hint);">
+            <p>قدرت گرفته از API های عمومی</p>
         </footer>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
 
+        // --- API Endpoints (FIX: Added CORS Proxy) ---
+        const PROXY_URL = "https://corsproxy.io/?";
+        const HAJI_API_URL = PROXY_URL + "https://haji-api.ir/arz/?license=X6AeD481PYBXAVd613617197375739822qgek";
+        const CRYPTO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tron,the-open-network,dogecoin&vs_currencies=usd&include_24hr_change=true";
+
         // --- DOM Elements ---
         const loader = document.getElementById('loader');
         const appContainer = document.getElementById('app-container');
         const lastUpdatedEl = document.getElementById('last-updated');
-        const userGreetingEl = document.getElementById('user-greeting');
-
-        // --- API URL ---
-        const API_URL = "https://haji-api.ir/arz/?license=X6AeD481PYBXAVd613617197375739822qgek";
 
         // --- Helper Functions ---
-        const formatNumber = (num) => new Intl.NumberFormat('fa-IR').format(num);
-        const getChangeClass = (percent) => {
-            if (percent > 0) return 'positive-change';
-            if (percent < 0) return 'negative-change';
-            return 'neutral-change';
-        };
-        const formatPercent = (percent) => `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`;
-        const toToman = (rial) => formatNumber(Math.round(rial / 10));
+        const formatNum = (num, decimals = 0) => new Intl.NumberFormat('fa-IR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(num);
+        const getChangeClass = (percent) => (percent > 0 ? 'positive-change' : (percent < 0 ? 'negative-change' : 'neutral-change'));
+        const formatPercent = (percent) => `${percent > 0 ? '+' : ''}${parseFloat(percent).toFixed(2)}%`;
+        const toToman = (rial) => formatNum(Math.round(rial / 10));
 
         // --- Theme Integration ---
-        function applyTheme(themeParams) {
-            const root = document.documentElement;
-            root.style.setProperty('--tg-theme-bg-color', themeParams.bg_color || '#ffffff');
-            root.style.setProperty('--tg-theme-text-color', themeParams.text_color || '#000000');
-            root.style.setProperty('--tg-theme-hint-color', themeParams.hint_color || '#999999');
-            root.style.setProperty('--tg-theme-link-color', themeParams.link_color || '#2481cc');
-            root.style.setProperty('--tg-theme-button-color', themeParams.button_color || '#2481cc');
-            root.style.setProperty('--tg-theme-button-text-color', themeParams.button_text_color || '#ffffff');
-            root.style.setProperty('--tg-theme-secondary-bg-color', themeParams.secondary_bg_color || '#f4f3f8');
-            root.style.setProperty('--tg-header-color', themeParams.secondary_bg_color ? themeParams.bg_color : '#efeff3');
-            root.style.setProperty('--tg-accent-color', themeParams.button_color || '#2481cc');
-            tg.setHeaderColor(themeParams.secondary_bg_color || '#f4f3f8');
+        function applyTheme(params) {
+            const root = document.documentElement.style;
+            root.setProperty('--tg-bg', params.bg_color || '#ffffff');
+            root.setProperty('--tg-text', params.text_color || '#000000');
+            root.setProperty('--tg-hint', params.hint_color || '#999999');
+            root.setProperty('--tg-button', params.button_color || '#2481cc');
+            root.setProperty('--tg-button-text', params.button_text_color || '#ffffff');
+            root.setProperty('--tg-secondary-bg', params.secondary_bg_color || '#f4f3f8');
+            root.setProperty('--tg-header-border', params.secondary_bg_color ? 'rgba(0,0,0,0.05)' : '#e8e8e8');
+            root.setProperty('--tg-accent', params.button_color || '#2481cc');
         }
 
-        // --- Data Rendering Functions ---
+        // --- Render Functions ---
         function renderCrypto(data) {
-            const item = data.data[0];
-            return `
-                <h2 class="card-header">رمزارز</h2>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <img src="${item.iconUrl}" alt="${item.persianName}" class="w-10 h-10 rounded-full">
-                        <span class="font-medium">${item.persianName}</span>
-                    </div>
-                    <div class="text-left">
-                        <p class="font-bold text-lg">${toToman(item.toomanPrice)} تومان</p>
-                        <p class="text-sm font-semibold ${getChangeClass(item.percentChgTooman)}">${formatPercent(item.percentChgTooman)}</p>
-                    </div>
-                </div>
-            `;
-        }
+            const cryptoMap = {
+                'bitcoin': { name: 'بیت‌کوین', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
+                'ethereum': { name: 'اتریوم', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
+                'tron': { name: 'ترون', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png' },
+                'the-open-network': { name: 'تون‌کوین', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/11419.png' },
+                'dogecoin': { name: 'دوج‌کوین', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png' }
+            };
 
-        function renderSimpleMetric(data, title, icon = true) {
-            const item = data.data[0];
-            const price = item.unit === 'دلار' ? `$${formatNumber(item.close)}` : `${toToman(item.close)} تومان`;
-            return `
-                <h2 class="card-header">${title}</h2>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        ${icon ? `<img src="${item.iconUrl}" alt="${item.persianName}" class="w-10 h-10 rounded-full">` : ''}
-                        <span class="font-medium">${item.persianName}</span>
-                    </div>
-                    <div class="text-left">
-                        <p class="font-bold text-lg">${price}</p>
-                        <p class="text-sm font-semibold ${getChangeClass(item.percentChange)}">${formatPercent(item.percentChange)}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderTable(data, title, columns) {
-            let tableHTML = `<h2 class="card-header">${title}</h2><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-right" style="color:var(--tg-theme-hint-color);">${columns.map(c => `<th class="px-2 py-2 font-normal">${c}</th>`).join('')}</tr></thead><tbody>`;
-            
-            data.data.slice(0, 5).forEach(item => { // Limit to top 5 for brevity
-                const price = item.close ? toToman(item.close) : toToman(item.lastTrade);
-                const percent = item.percentChange != null ? item.percentChange : item.lastTradePercent;
-                const name = item.persianName || item.symbolFullName || item.symbol;
-                
-                tableHTML += `
-                    <tr class="border-t" style="border-color: var(--tg-header-color);">
-                        <td class="px-2 py-3 font-medium">${name}</td>
-                        <td class="px-2 py-3 text-left font-mono">${price}</td>
-                        <td class="px-2 py-3 text-left font-mono ${getChangeClass(percent)}">${formatPercent(parseFloat(percent))}</td>
-                    </tr>
-                `;
-            });
-            tableHTML += '</tbody></table></div>';
-            return tableHTML;
-        }
-
-        function renderCoinTable(coinData, bubbleData) {
-            const bubbleMap = new Map(bubbleData.data.map(b => [b.persianName.replace('حباب ', ''), b]));
-            let tableHTML = `<h2 class="card-header">سکه و حباب</h2><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-right" style="color:var(--tg-theme-hint-color);"><th class="px-2 py-2 font-normal">نوع سکه</th><th class="px-2 py-2 font-normal text-left">قیمت (تومان)</th><th class="px-2 py-2 font-normal text-left">تغییر</th><th class="px-2 py-2 font-normal text-left">حباب (تومان)</th></tr></thead><tbody>`;
-
-            coinData.data.forEach(item => {
-                const bubble = bubbleMap.get(item.persianName);
-                tableHTML += `
-                     <tr class="border-t" style="border-color: var(--tg-header-color);">
-                        <td class="px-2 py-3 font-medium">${item.persianName}</td>
-                        <td class="px-2 py-3 text-left font-mono">${toToman(item.close)}</td>
-                        <td class="px-2 py-3 text-left font-mono ${getChangeClass(item.percentChange)}">${formatPercent(item.percentChange)}</td>
-                        <td class="px-2 py-3 text-left font-mono">${bubble ? toToman(bubble.close) : '-'}</td>
-                    </tr>
-                `;
-            });
-            tableHTML += '</tbody></table></div>';
-            return tableHTML;
+            let html = `<h2 class="card-header">ارزهای دیجیتال (دلاری)</h2><div class="space-y-3">`;
+            for (const id in data) {
+                const info = cryptoMap[id];
+                html += `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <img src="${info.icon}" alt="${info.name}" class="w-8 h-8 rounded-full">
+                            <span class="font-medium">${info.name}</span>
+                        </div>
+                        <div class="text-left font-mono">
+                            <div class="font-bold text-sm">$${formatNum(data[id].usd, 2)}</div>
+                            <div class="text-xs ${getChangeClass(data[id].usd_24h_change)}">${formatPercent(data[id].usd_24h_change)}</div>
+                        </div>
+                    </div>`;
+            }
+            html += `</div>`;
+            document.getElementById('crypto-container').innerHTML = html;
         }
         
-         function renderGoldFunds(data) {
-            let contentHTML = `<h2 class="card-header">صندوق‌های طلا</h2><div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">`;
-            data.data.slice(0, 8).forEach(item => { // Show top 8 funds
-                contentHTML += `
-                    <div class="text-center p-3 rounded-lg" style="background-color: var(--tg-header-color);">
-                        <p class="font-bold">${item.symbol}</p>
-                        <p class="text-xs font-mono">${formatNumber(item.lastTrade)}</p>
-                        <p class="text-xs font-semibold ${getChangeClass(item.lastTradePercent)}">${formatPercent(parseFloat(item.lastTradePercent))}</p>
+        function renderSingleMetric(containerId, title, name, price, percent) {
+             let html = `<h2 class="card-header">${title}</h2>`;
+             html += `
+                <div class="flex items-center justify-between mt-2">
+                    <span class="font-semibold">${name}</span>
+                    <div class="text-left font-mono">
+                        <div class="font-bold text-sm">${price}</div>
+                        <div class="text-xs ${getChangeClass(percent)}">${formatPercent(percent)}</div>
                     </div>
-                `;
+                </div>`;
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function renderGold(data) {
+            let html = `<h2 class="card-header">طلا</h2><div class="overflow-x-auto"><table class="w-full text-sm">`;
+            data.forEach(item => {
+                html += `
+                    <tr class="border-b" style="border-color: var(--tg-header-border);">
+                        <td class="py-2 pr-2 font-medium">${item.persianName}</td>
+                        <td class="py-2 pl-2 text-left font-mono">
+                            <div>${toToman(item.close)} <span class="text-xs" style="color:var(--tg-hint);">تومان</span></div>
+                            <div class="text-xs ${getChangeClass(item.percentChange)}">${formatPercent(item.percentChange)}</div>
+                        </td>
+                    </tr>`;
             });
-            contentHTML += '</div>';
-            return contentHTML;
+            html += '</table></div>';
+            document.getElementById('gold-container').innerHTML = html;
+        }
+        
+        function renderCoins(coinData, bubbleData) {
+            const bubbleMap = new Map(bubbleData.map(b => [b.persianName.replace('حباب ', ''), b]));
+            let html = `<h2 class="card-header">سکه و حباب</h2><div class="overflow-x-auto"><table class="w-full text-sm">
+                        <thead><tr class="text-left" style="color:var(--tg-hint);"><th class="pr-2 py-1 font-normal">نوع سکه</th><th class="px-2 py-1 font-normal">قیمت (تومان)</th><th class="pl-2 py-1 font-normal">حباب (تومان)</th></tr></thead><tbody>`;
+            coinData.forEach(item => {
+                const bubble = bubbleMap.get(item.persianName);
+                html += `
+                    <tr class="border-b" style="border-color: var(--tg-header-border);">
+                        <td class="py-2 pr-2 font-medium">${item.persianName}</td>
+                        <td class="py-2 px-2 text-left font-mono">
+                            <div>${toToman(item.close)}</div>
+                            <div class="text-xs ${getChangeClass(item.percentChange)}">${formatPercent(item.percentChange)}</div>
+                        </td>
+                        <td class="py-2 pl-2 text-left font-mono">
+                            <div>${bubble ? toToman(bubble.close) : '-'}</div>
+                            <div class="text-xs ${getChangeClass(bubble?.percentChange || 0)}">${bubble ? formatPercent(bubble.percentChange) : ''}</div>
+                        </td>
+                    </tr>`;
+            });
+            html += '</tbody></table></div>';
+            document.getElementById('coin-container').innerHTML = html;
         }
 
 
-        // --- Main Fetch and Render Logic ---
+        // --- Main Fetch & Render Logic ---
         async function fetchDataAndRender() {
             loader.style.display = 'block';
+            appContainer.classList.add('opacity-0');
             tg.MainButton.showProgress();
 
             try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
+                const [hajiResponse, cryptoResponse] = await Promise.all([
+                    fetch(HAJI_API_URL).then(res => {
+                        if (!res.ok) throw new Error(`Haji API failed: ${res.statusText}`);
+                        return res.json();
+                    }),
+                    fetch(CRYPTO_API_URL).then(res => {
+                        if (!res.ok) throw new Error(`Crypto API failed: ${res.statusText}`);
+                        return res.json();
+                    })
+                ]);
+
+                // Render Crypto
+                renderCrypto(cryptoResponse);
+
+                // Render Currencies
+                const dollar = hajiResponse.data.freeCurrency.data.find(c => c.id === 200000);
+                renderSingleMetric('free-currency-container', 'دلار بازار آزاد', dollar.persianName, `${toToman(dollar.close)} تومان`, dollar.percentChange);
                 
-                document.getElementById('cryptocurrency').innerHTML = renderCrypto(result.data.cryptocurrency);
-                document.getElementById('ounce').innerHTML = renderSimpleMetric(result.data.ounce, 'انس جهانی', false);
-                document.getElementById('silver').innerHTML = renderSimpleMetric(result.data.silver, 'نقره');
-                document.getElementById('freeCurrency').innerHTML = renderTable(result.data.freeCurrency, 'ارز بازار آزاد', ['نام ارز', 'قیمت (تومان)', 'تغییر']);
-                document.getElementById('gold').innerHTML = renderTable(result.data.gold, 'طلا', ['نوع', 'قیمت (تومان)', 'تغییر']);
-                document.getElementById('coin').innerHTML = renderCoinTable(result.data.coin, result.data.blubber);
-                document.getElementById('fundGold').innerHTML = renderGoldFunds(result.data.fundGold);
+                const tether = hajiResponse.data.cryptocurrency.data.find(c => c.id === 300003);
+                renderSingleMetric('tether-container', 'تتر', tether.persianName, `${toToman(tether.toomanPrice)} تومان`, tether.percentChgTooman);
+
+                // Render Ounce
+                const ounce = hajiResponse.data.ounce.data[0];
+                renderSingleMetric('ounce-container', 'انس جهانی', ounce.persianName, `$${formatNum(ounce.close, 2)}`, ounce.percentChange);
+                
+                // Render Gold
+                renderGold(hajiResponse.data.gold.data);
+
+                // Render Coins
+                renderCoins(hajiResponse.data.coin.data, hajiResponse.data.blubber.data);
 
                 const now = new Date();
-                lastUpdatedEl.textContent = `بروزرسانی در ${now.toLocaleTimeString('fa-IR')}`;
+                lastUpdatedEl.textContent = `بروزرسانی در ساعت ${now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`;
                 
                 appContainer.classList.remove('opacity-0');
 
             } catch (error) {
                 console.error("Fetch Error:", error);
-                tg.showAlert('خطا در دریافت اطلاعات. لطفا دوباره تلاش کنید.');
+                // FIX: Show a more informative error message
+                tg.showAlert(`خطا در دریافت اطلاعات: ${error.message}. لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.`);
             } finally {
                 loader.style.display = 'none';
                 tg.MainButton.hideProgress();
+                tg.HapticFeedback.notificationOccurred('success');
             }
         }
 
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             tg.ready();
-            applyTheme(tg.themeParams);
+            tg.expand();
             
-            // Welcome user
-            const user = tg.initDataUnsafe?.user;
-            if (user?.first_name) {
-                userGreetingEl.textContent = `سلام، ${user.first_name}!`;
-            }
-
-            // Configure Main Button
-            tg.MainButton.setText('بروزرسانی قیمت‌ها');
-            tg.MainButton.onClick(() => {
+            applyTheme(tg.themeParams);
+            tg.onEvent('themeChanged', () => applyTheme(tg.themeParams));
+            
+            tg.MainButton.setText('بروزرسانی').onClick(() => {
                 tg.HapticFeedback.impactOccurred('light');
                 fetchDataAndRender();
-            });
-            tg.MainButton.show();
+            }).show();
             
-            // Initial data load
             fetchDataAndRender();
         });
-
-        // Listen for theme changes
-        tg.onEvent('themeChanged', () => applyTheme(tg.themeParams));
     </script>
-
 </body>
 </html>
 
-	
