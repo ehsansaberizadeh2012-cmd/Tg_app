@@ -3,73 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
-    <title>Shelby Financial Dashboard</title>
-    <!-- Telegram Web App script -->
+    <title>Shelby Crypto Tracker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vazirmatn Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --tg-bg: #ffffff;
-            --tg-text: #000000;
-            --tg-hint: #999999;
+            --tg-bg: #181A20; /* Dark BG */
+            --tg-text: #EAECEF; /* Light Text */
+            --tg-hint: #707A8A;
             --tg-button: #2481cc;
             --tg-button-text: #ffffff;
-            --tg-secondary-bg: #f4f3f8;
-            --tg-header-border: #e8e8e8;
-            --tg-accent: #2481cc;
+            --tg-secondary-bg: #1E2026;
+            --tg-header-border: #2B3139;
+            --positive: #10B981;
+            --negative: #EF4444;
         }
-
         body {
             font-family: 'Vazirmatn', sans-serif;
             background-color: var(--tg-bg);
             color: var(--tg-text);
             transition: background-color 0.3s, color 0.3s;
             margin: 0;
-            padding: 1rem;
-            box-sizing: border-box;
-            width: 100%;
+            padding: 0;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-
-        .card {
-            background-color: var(--tg-secondary-bg);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .positive-change { color: #10B981; }
-        .negative-change { color: #EF4444; }
-        .neutral-change { color: var(--tg-hint); }
-        
-        .card-header {
+        .header {
+            background-color: var(--tg-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 1rem;
             border-bottom: 1px solid var(--tg-header-border);
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--tg-accent);
         }
-        
-        #loader {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        #search-input {
+            background-color: var(--tg-secondary-bg);
+            border: 1px solid var(--tg-header-border);
+            color: var(--tg-text);
+        }
+        #search-input::placeholder {
+            color: var(--tg-hint);
+        }
+        .coin-row {
+            border-bottom: 1px solid var(--tg-header-border);
+            transition: background-color 0.2s;
+        }
+        .coin-row:last-child {
+            border-bottom: none;
+        }
+        .price-up { animation: price-up-flash 0.7s ease-out; }
+        .price-down { animation: price-down-flash 0.7s ease-out; }
+        @keyframes price-up-flash {
+            0% { background-color: rgba(16, 185, 129, 0.2); }
+            100% { background-color: transparent; }
+        }
+        @keyframes price-down-flash {
+            0% { background-color: rgba(239, 68, 68, 0.2); }
+            100% { background-color: transparent; }
+        }
+        #loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 70vh;
+        }
+        .loader {
             border: 5px solid var(--tg-secondary-bg);
             border-top: 5px solid var(--tg-button);
             border-radius: 50%;
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
-            z-index: 1000;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -77,204 +83,152 @@
     </style>
 </head>
 <body class="antialiased">
+    <div class="header">
+        <h1 class="text-xl font-bold text-center mb-4">Shelby Developer Tracker</h1>
+        <input type="text" id="search-input" placeholder="جستجوی نام ارز..." class="w-full p-2 rounded-lg text-sm">
+    </div>
 
-    <div id="loader"></div>
+    <div id="loader-container">
+        <div class="loader"></div>
+    </div>
 
-    <div id="app-container" class="container mx-auto max-w-md opacity-0 transition-opacity duration-500">
-        <header class="text-center mb-6">
-            <h1 class="text-2xl font-bold">Shelby Developer</h1>
-            <p id="last-updated" class="text-sm mt-1" style="color: var(--tg-hint);"></p>
-        </header>
-
-        <main class="grid grid-cols-1 gap-4">
-            <!-- Dynamic content will be injected here -->
-            <div id="crypto-container" class="card"></div>
-            <div id="free-currency-container" class="card"></div>
-            <div id="coin-container" class="card"></div>
-            <div id="gold-container" class="card"></div>
-        </main>
-
-        <footer class="text-center mt-8 text-xs" style="color: var(--tg-hint);">
-            <p>Crypto prices by Nobitex | Other data from public APIs</p>
-        </footer>
+    <div id="coin-list" class="px-4">
+        <!-- Coin rows will be injected here -->
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
 
-        // --- API Endpoints ---
-        const NOBITEX_API_URL = "https://api.nobitex.ir/v2/stats";
-        const PROXY_URL = "https://corsproxy.io/?";
-        const HAJI_API_URL = PROXY_URL + "https://haji-api.ir/arz/?license=X6AeD481PYBXAVd613617197375739822qgek";
+        const API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false";
+        
+        const loaderContainer = document.getElementById('loader-container');
+        const coinListContainer = document.getElementById('coin-list');
+        const searchInput = document.getElementById('search-input');
+        
+        let coinData = [];
+        let updateInterval;
 
-        // --- DOM Elements & Config ---
-        const loader = document.getElementById('loader');
-        const appContainer = document.getElementById('app-container');
-        const lastUpdatedEl = document.getElementById('last-updated');
-        const cryptoToShow = {
-            'BTC': { name: 'بیت‌کوین', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
-            'ETH': { name: 'اتریوم', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
-            'TRX': { name: 'ترون', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png' },
-            'TON': { name: 'تون‌کوین', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/11419.png' },
-            'DOGE': { name: 'دوج‌کوین', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png' }
+        const formatNum = (num, decimals = 2) => {
+             if (num === null || num === undefined) return 'N/A';
+             const options = {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+             };
+             if (num > 1000) options.notation = 'compact';
+             return new Intl.NumberFormat('en-US', options).format(num);
         };
+        const formatPercent = (percent) => `${percent > 0 ? '+' : ''}${percent.toFixed(2)}%`;
+        
+        function renderCoinRow(coin) {
+            const priceChangeClass = coin.price_change_percentage_24h >= 0 ? 'bg-green-600/90' : 'bg-red-600/90';
+            const priceChange = coin.price_change_percentage_24h;
 
-        // --- Helper Functions ---
-        const formatNum = (num, decimals = 0) => new Intl.NumberFormat('fa-IR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(num);
-        const getChangeClass = (percent) => (percent > 0 ? 'positive-change' : (percent < 0 ? 'negative-change' : 'neutral-change'));
-        const formatPercent = (percent) => `${percent > 0 ? '+' : ''}${parseFloat(percent).toFixed(2)}%`;
-        const toToman = (rial) => formatNum(Math.round(rial / 10));
-
-        // --- Theme Integration ---
-        function applyTheme(params) {
-            const root = document.documentElement.style;
-            root.setProperty('--tg-bg', params.bg_color || '#ffffff');
-            root.setProperty('--tg-text', params.text_color || '#000000');
-            root.setProperty('--tg-hint', params.hint_color || '#999999');
-            root.setProperty('--tg-button', params.button_color || '#2481cc');
-            root.setProperty('--tg-button-text', params.button_text_color || '#ffffff');
-            root.setProperty('--tg-secondary-bg', params.secondary_bg_color || '#f4f3f8');
-            root.setProperty('--tg-header-border', params.secondary_bg_color ? 'rgba(0,0,0,0.05)' : '#e8e8e8');
-            root.setProperty('--tg-accent', params.button_color || '#2481cc');
+            return `
+                <div class="coin-row flex items-center justify-between p-3" data-coin-id="${coin.id}">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <img src="${coin.image}" alt="${coin.name}" class="w-8 h-8 rounded-full">
+                        <div>
+                            <div class="font-bold text-sm">${coin.symbol.toUpperCase()}</div>
+                            <div class="text-xs" style="color: var(--tg-hint);">${coin.name}</div>
+                        </div>
+                    </div>
+                    <div class="text-left font-mono text-sm">
+                        <div class="font-medium" data-price>$${formatNum(coin.current_price, coin.current_price < 0.01 ? 6 : 2)}</div>
+                    </div>
+                    <div class="w-20 text-center text-sm font-bold text-white py-1 rounded-md ${priceChangeClass}" data-change>
+                        ${formatPercent(priceChange)}
+                    </div>
+                </div>
+            `;
         }
+        
+        function updateCoinRow(element, newCoinData) {
+            const oldPrice = parseFloat(element.querySelector('[data-price]').textContent.replace(/[^0-9.-]+/g,""));
+            const newPrice = newCoinData.current_price;
 
-        // --- Render Functions ---
-        function renderCrypto(stats) {
-            let html = `<h2 class="card-header">قیمت ارز دیجیتال (نوبیتکس)</h2><div class="space-y-4">`;
-            for (const symbol in cryptoToShow) {
-                const usdtMarket = stats.markets[`${symbol}-USDT`];
-                const irtMarket = stats.markets[`${symbol}-IRT`];
-                const info = cryptoToShow[symbol];
-
-                if (!usdtMarket || !irtMarket) continue;
-
-                const priceUsdt = parseFloat(usdtMarket.latest);
-                const priceIrt = parseFloat(irtMarket.latest);
-                const change = parseFloat(usdtMarket.change24h);
-
-                html += `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-3 space-x-reverse">
-                            <img src="${info.icon}" alt="${info.name}" class="w-8 h-8 rounded-full">
-                            <span class="font-medium">${info.name}</span>
-                        </div>
-                        <div class="text-left font-mono">
-                            <div class="font-bold text-sm">$${formatNum(priceUsdt, priceUsdt < 1 ? 4 : 2)}</div>
-                            <div class="font-semibold text-xs" style="color:var(--tg-hint);">${formatNum(priceIrt)} <span class="text-xs">تومان</span></div>
-                        </div>
-                         <div class="text-left font-mono text-sm w-16 ${getChangeClass(change)}">${formatPercent(change)}</div>
-                    </div>`;
+            if (oldPrice !== newPrice) {
+                 element.querySelector('[data-price]').textContent = `$${formatNum(newPrice, newPrice < 0.01 ? 6 : 2)}`;
+                 element.classList.remove('price-up', 'price-down');
+                 void element.offsetWidth; // Trigger reflow
+                 element.classList.add(newPrice > oldPrice ? 'price-up' : 'price-down');
             }
-            html += `</div>`;
-            document.getElementById('crypto-container').innerHTML = html;
+
+            const changeEl = element.querySelector('[data-change]');
+            const newChange = newCoinData.price_change_percentage_24h;
+            changeEl.textContent = formatPercent(newChange);
+            changeEl.className = `w-20 text-center text-sm font-bold text-white py-1 rounded-md ${newChange >= 0 ? 'bg-green-600/90' : 'bg-red-600/90'}`;
         }
 
-        function renderHajiData(data) {
+        async function fetchData() {
             try {
-                // Render Dollar
-                const dollar = data.freeCurrency.data.find(c => c.id === 200000);
-                let dollarHtml = `<h2 class="card-header">دلار بازار آزاد</h2>
-                    <div class="flex items-center justify-between mt-2">
-                        <span class="font-semibold">${dollar.persianName}</span>
-                        <div class="text-left font-mono">
-                            <div class="font-bold text-sm">${toToman(dollar.close)} تومان</div>
-                            <div class="text-xs ${getChangeClass(dollar.percentChange)}">${formatPercent(dollar.percentChange)}</div>
-                        </div>
-                    </div>`;
-                document.getElementById('free-currency-container').innerHTML = dollarHtml;
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                tg.showAlert('خطا در دریافت اطلاعات از سرور. لطفاً اتصال اینترنت خود را بررسی کنید.');
+                return null;
+            }
+        }
+
+        async function initialLoad() {
+            const data = await fetchData();
+            if (data) {
+                coinData = data;
+                loaderContainer.style.display = 'none';
+                coinListContainer.innerHTML = coinData.map(renderCoinRow).join('');
                 
-                // Render Coins
-                let coinHtml = `<h2 class="card-header">سکه</h2><div class="space-y-3">`;
-                data.coin.data.forEach(item => {
-                    coinHtml += `
-                     <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium">${item.persianName}</span>
-                        <div class="text-left font-mono">
-                            <div>${toToman(item.close)} <span class="text-xs" style="color:var(--tg-hint);">تومان</span></div>
-                            <div class="text-xs ${getChangeClass(item.percentChange)}">${formatPercent(item.percentChange)}</div>
-                        </div>
-                    </div>`;
-                });
-                document.getElementById('coin-container').innerHTML = coinHtml + `</div>`;
-
-                // Render Gold
-                let goldHtml = `<h2 class="card-header">طلا</h2><div class="space-y-3">`;
-                data.gold.data.forEach(item => {
-                    goldHtml += `
-                     <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium">${item.persianName}</span>
-                        <div class="text-left font-mono">
-                            <div>${toToman(item.close)} <span class="text-xs" style="color:var(--tg-hint);">تومان</span></div>
-                            <div class="text-xs ${getChangeClass(item.percentChange)}">${formatPercent(item.percentChange)}</div>
-                        </div>
-                    </div>`;
-                });
-                document.getElementById('gold-container').innerHTML = goldHtml + `</div>`;
-
-            } catch(e) {
-                 console.error("Haji API data structure error", e);
-                 document.getElementById('free-currency-container').innerHTML = `<p class="text-sm text-center" style="color:var(--tg-hint);">خطا در نمایش قیمت سکه و طلا</p>`;
+                // Start live updates after initial load
+                if (updateInterval) clearInterval(updateInterval);
+                updateInterval = setInterval(liveUpdate, 10000); // Update every 10 seconds
             }
         }
-
-        // --- Main Fetch & Render Logic ---
-        async function fetchDataAndRender() {
-            loader.style.display = 'block';
-            appContainer.classList.add('opacity-0');
-            tg.MainButton.showProgress();
-
-            const nobitexPromise = fetch(NOBITEX_API_URL).then(res => res.json());
-            const hajiPromise = fetch(HAJI_API_URL).then(res => res.json());
-
-            const results = await Promise.allSettled([nobitexPromise, hajiPromise]);
-            
-            let allOk = true;
-            let errors = [];
-
-            // Nobitex result
-            if (results[0].status === 'fulfilled') {
-                renderCrypto(results[0].value);
-            } else {
-                allOk = false;
-                errors.push("ارز دیجیتال");
-                console.error("Nobitex API Error:", results[0].reason);
-            }
-
-            // Haji API result
-            if (results[1].status === 'fulfilled') {
-                renderHajiData(results[1].value.data);
-            } else {
-                allOk = false;
-                errors.push("سکه و طلا");
-                console.error("Haji API Error:", results[1].reason);
-            }
-            
-            if (!allOk) {
-                tg.showAlert(`خطا در دریافت اطلاعات: ${errors.join(' و ')}. لطفا دوباره تلاش کنید.`);
-            }
-
-            const now = new Date();
-            lastUpdatedEl.textContent = `بروزرسانی در ${now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`;
-            appContainer.classList.remove('opacity-0');
-            loader.style.display = 'none';
-            tg.MainButton.hideProgress();
-            if (allOk) tg.HapticFeedback.notificationOccurred('success'); else tg.HapticFeedback.notificationOccurred('error');
+        
+        async function liveUpdate() {
+             const newData = await fetchData();
+             if(newData) {
+                 newData.forEach(newCoin => {
+                     const rowElement = document.querySelector(`.coin-row[data-coin-id="${newCoin.id}"]`);
+                     if(rowElement) {
+                         updateCoinRow(rowElement, newCoin);
+                         // Update local data store
+                         const coinIndex = coinData.findIndex(c => c.id === newCoin.id);
+                         if (coinIndex !== -1) coinData[coinIndex] = newCoin;
+                     }
+                 });
+             }
         }
+        
+        function filterCoins() {
+            const query = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('.coin-row');
+            rows.forEach(row => {
+                const coinId = row.dataset.coinId;
+                const coin = coinData.find(c => c.id === coinId);
+                const name = coin.name.toLowerCase();
+                const symbol = coin.symbol.toLowerCase();
 
-        // --- App Initialization ---
+                if (name.includes(query) || symbol.includes(query)) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
             tg.ready();
             tg.expand();
             
-            applyTheme(tg.themeParams);
-            tg.onEvent('themeChanged', () => applyTheme(tg.themeParams));
-            
-            tg.MainButton.setText('بروزرسانی قیمت‌ها').onClick(() => {
-                tg.HapticFeedback.impactOccurred('light');
-                fetchDataAndRender();
-            }).show();
-            
-            fetchDataAndRender();
+            // Override theme for a consistent dark mode look
+            document.documentElement.style.setProperty('--tg-bg', '#181A20');
+            document.documentElement.style.setProperty('--tg-text', '#EAECEF');
+            document.documentElement.style.setProperty('--tg-secondary-bg', '#1E2026');
+            tg.setHeaderColor('#181A20');
+            tg.setBackgroundColor('#181A20');
+
+            initialLoad();
+            searchInput.addEventListener('input', filterCoins);
         });
     </script>
 </body>
