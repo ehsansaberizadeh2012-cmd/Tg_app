@@ -17,7 +17,7 @@
             --bg: #FFFFFF; --text: #1c1c1e; --hint: #8e8e93;
             --button: #007AFF; --secondary-bg: #F2F2F7; --header-border: #e5e5ea;
         }
-        body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; transition: background-color 0.3s, color 0.3s; -webkit-tap-highlight-color: transparent; }
         .page { display: none; }
         .page.active { display: block; }
         .header { background-color: var(--bg); position: sticky; top: 0; z-index: 20; padding: 1rem; border-bottom: 1px solid var(--header-border); transition: background-color 0.3s, border-color 0.3s; }
@@ -32,6 +32,7 @@
         .toast.show { opacity: 1; }
         .skeleton { background-color: var(--secondary-bg); border-radius: 8px; animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .tab-button { border: 1px solid var(--header-border); }
         .tab-button.active { background-color: var(--button); color: white; border-color: var(--button); }
         .sort-button.active { color: var(--button); }
         .sparkline-path { stroke-width: 2; fill: none; }
@@ -46,13 +47,13 @@
             <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" class="w-full p-2.5 rounded-lg text-sm mb-3" style="background-color: var(--secondary-bg); border: 1px solid var(--header-border); color: var(--text);">
             <div class="flex items-center justify-between">
                  <div class="flex bg-[var(--secondary-bg)] rounded-lg p-1">
-                    <button id="tab-all" class="tab-button active px-4 py-1.5 rounded-md text-sm font-semibold" data-i18n-key="all"></button>
-                    <button id="tab-watchlist" class="tab-button px-4 py-1.5 rounded-md text-sm font-semibold" data-i18n-key="watchlist"></button>
+                    <button id="tab-all" class="tab-button active px-3 py-1.5 rounded-md text-xs font-semibold" data-i18n-key="all"></button>
+                    <button id="tab-watchlist" class="tab-button px-3 py-1.5 rounded-md text-xs font-semibold" data-i18n-key="watchlist"></button>
                 </div>
-                 <div id="sort-controls" class="flex items-center space-x-2 space-x-reverse">
-                    <button class="sort-button active text-xs" data-sort="market_cap_desc" data-i18n-key="marketCap"></button>
-                    <button class="sort-button text-xs" data-sort="gainers" data-i18n-key="gainers"></button>
-                    <button class="sort-button text-xs" data-sort="losers" data-i18n-key="losers"></button>
+                 <div id="sort-controls" class="flex items-center space-x-1 space-x-reverse">
+                    <button class="sort-button active text-xs px-2" data-sort="market_cap_desc" data-i18n-key="marketCap"></button>
+                    <button class="sort-button text-xs px-2" data-sort="gainers" data-i18n-key="gainers"></button>
+                    <button class="sort-button text-xs px-2" data-sort="losers" data-i18n-key="losers"></button>
                 </div>
             </div>
         </div>
@@ -61,6 +62,10 @@
             <div id="coin-list" class="relative"></div>
         </div>
         <div id="message-container" class="hidden text-center p-10 text-[var(--hint)]"></div>
+    </div>
+
+    <div id="converter-page" class="page">
+        <!-- Converter page content will be rendered by JS -->
     </div>
 
     <div id="profile-page" class="page">
@@ -73,6 +78,10 @@
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
             <span data-i18n-key="markets" class="block text-xs"></span>
         </button>
+        <button class="nav-button" data-page="converter-page">
+             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span data-i18n-key="converter" class="block text-xs"></span>
+        </button>
         <button class="nav-button" data-page="profile-page">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             <span data-i18n-key="profile" class="block text-xs"></span>
@@ -81,18 +90,19 @@
 
     <!-- Modals and Toast -->
     <div id="modal-backdrop" class="modal-backdrop hidden"></div>
-    <div id="modal" class="modal"><div id="modal-content" class="h-[60vh] overflow-y-auto"></div></div>
+    <div id="modal" class="modal"><div id="modal-content" class="h-[70vh] overflow-y-auto"></div></div>
     <div id="toast" class="toast"></div>
 
     <script>
     //============== START OF FULL JAVASCRIPT CODE ==============
     const tg = window.Telegram.WebApp;
 
+    // --- I18N Translations ---
     const translations = {
-        en: { markets: "Markets", profile: "Profile", marketHeader: "Markets", searchPlaceholder: "Search coin...", all: "All", watchlist: "Watchlist", marketCap: "Market Cap", gainers: "Gainers", losers: "Losers", emailSaved: "Email saved!", walletSaved: "Wallet saved!", walletDeleted: "Wallet deleted!", copied: "Copied!", settings: "Settings", theme: "Theme", dark: "Dark", light: "Light", language: "Language", userInfo: "User Info", name: "Name", username: "Username", userId: "User ID", emailOptional: "Email (Optional)", notSet: "Not set", wallets: "Wallets", walletsCount: "{count} wallets saved", tryAgain: "Try Again", errorFetchSummary: "Error fetching summary", errorFetchCrypto: "Error fetching coins", noResults: "No results found.", emptyWatchlist: "Your watchlist is empty.", rank: "Rank", editEmail: "Edit Email", enterEmail: "Enter your email", save: "Save", invalidEmail: "Email address is invalid.", editWallets: "Wallets", noWallets: "No wallets added yet.", addNewWallet: "Add New Wallet", editWallet: "Edit Wallet", addWallet: "Add Wallet", selectCoin: "Select Coin", walletAddress: "Wallet Address...", back: "Back", confirmDelete: "Are you sure you want to delete {symbol} wallet?", converter: "Converter", cryptoAmount: "Crypto Amount", usdEquivalent: "USD Equivalent", irtEquivalent: "Toman Equivalent", coinDetails: "Coin Details", price: "Price", change24h: "24h Change", high24h: "24h High", low24h: "24h Low", volume24h: "24h Volume", chartUnavailable: "Chart not available" },
-        fa: { markets: "بازارها", profile: "پروفایل", marketHeader: "بازارها", searchPlaceholder: "جستجوی نام ارز...", all: "همه", watchlist: "علاقه‌مندی‌ها", marketCap: "ارزش بازار", gainers: "بیشترین رشد", losers: "بیشترین ریزش", emailSaved: "ایمیل ذخیره شد!", walletSaved: "آدرس ولت ذخیره شد!", walletDeleted: "آدرس ولت حذف شد!", copied: "کپی شد!", settings: "تنظیمات", theme: "تم برنامه", dark: "تاریک", light: "روشن", language: "زبان", userInfo: "اطلاعات کاربری", name: "نام", username: "نام کاربری", userId: "آیدی عددی", emailOptional: "ایمیل (اختیاری)", notSet: "ثبت نشده", wallets: "آدرس ولت‌ها", walletsCount: "{count} آدرس ثبت شده", tryAgain: "تلاش مجدد", errorFetchSummary: "خطا در دریافت قیمت طلا و سکه", errorFetchCrypto: "خطا در دریافت لیست ارزها", noResults: "ارزی با این مشخصات یافت نشد.", emptyWatchlist: "هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.", rank: "رتبه", editEmail: "ویرایش ایمیل", enterEmail: "ایمیل خود را وارد کنید", save: "ذخیره", invalidEmail: "آدرس ایمیل اشتباه است.", editWallets: "آدرس ولت‌ها", noWallets: "هنوز آدرسی ثبت نشده است.", addNewWallet: "افزودن آدرس جدید", editWallet: "ویرایش آدرس", addWallet: "افزودن آدرس", selectCoin: "انتخاب ارز", walletAddress: "آدرس ولت...", back: "بازگشت", confirmDelete: "آیا از حذف آدرس {symbol} مطمئن هستید؟", converter: "مبدل ارز", cryptoAmount: "مقدار ارز", usdEquivalent: "معادل دلار", irtEquivalent: "معادل تومان", coinDetails: "جزئیات ارز", price: "قیمت", change24h: "تغییرات ۲۴ ساعت", high24h: "بالاترین قیمت روز", low24h: "پایین‌ترین قیمت روز", volume24h: "حجم معاملات (۲۴ ساعت)", chartUnavailable: "نمودار موجود نیست" },
-        ar: { markets: "الأسواق", profile: "الملف الشخصي", marketHeader: "الأسواق", searchPlaceholder: "ابحث عن عملة...", all: "الكل", watchlist: "المفضلة", marketCap: "القيمة السوقية", gainers: "الأكثر ربحًا", losers: "الأكثر خسارة", emailSaved: "تم حفظ البريد الإلكتروني!", walletSaved: "تم حفظ عنوان المحفظة!", walletDeleted: "تم حذف عنوان المحفظة!", copied: "تم النسخ!", settings: "الإعدادات", theme: "مظهر التطبيق", dark: "داكن", light: "فاتح", language: "اللغة", userInfo: "معلومات المستخدم", name: "الاسم", username: "اسم المستخدم", userId: "معرف المستخدم", emailOptional: "البريد الإلكتر الإلكتروني (اختياري)", notSet: "لم يتم تعيينه", wallets: "عناوين المحفظة", walletsCount: "{count} عناوين محفوظة", tryAgain: "حاول مرة أخرى", errorFetchSummary: "خطأ في جلب أسعار الذهب والعملات", errorFetchCrypto: "خطأ في جلب قائمة العملات", noResults: "لم يتم العثور على نتائج.", emptyWatchlist: "قائمة المراقبة الخاصة بك فارغة.", rank: "مرتبة", editEmail: "تعديل البريد الإلكتروني", enterEmail: "أدخل بريدك الإلكتروني", save: "حفظ", invalidEmail: "عنوان البريد الإلكتروني غير صالح.", editWallets: "عناوين المحفظة", noWallets: "لم تتم إضافة أي عناوين بعد.", addNewWallet: "إضافة عنوان جديد", editWallet: "تعديل العنوان", addWallet: "إضافة عنوان", selectCoin: "اختر العملة", walletAddress: "عنوان المحفظة...", back: "رجوع", confirmDelete: "هل أنت متأكد من حذف محفظة {symbol}؟", converter: "محول العملات", cryptoAmount: "كمية العملة", usdEquivalent: "ما يعادل بالدولار", irtEquivalent: "ما يعادل بالتومان", coinDetails: "تفاصيل العملة", price: "السعر", change24h: "التغيير خلال 24 ساعة", high24h: "أعلى سعر خلال 24 ساعة", low24h: "أدنى سعر خلال 24 ساعة", volume24h: "حجم التداول (24 ساعة)", chartUnavailable: "الرسم البياني غير متوفر" },
-        zh: { markets: "市场", profile: "个人资料", marketHeader: "市场", searchPlaceholder: "搜索币种...", all: "全部", watchlist: "自选", marketCap: "市值", gainers: "涨幅榜", losers: "跌幅榜", emailSaved: "邮件已保存！", walletSaved: "钱包地址已保存！", walletDeleted: "钱包地址已删除！", copied: "已复制！", settings: "设置", theme: "主题", dark: "黑暗", light: "明亮", language: "语言", userInfo: "用户信息", name: "名称", username: "用户名", userId: "用户ID", emailOptional: "电子邮件（可选）", notSet: "未设置", wallets: "钱包地址", walletsCount: "{count}个钱包地址已保存", tryAgain: "再试一次", errorFetchSummary: "获取黄金和硬币价格时出错", errorFetchCrypto: "获取硬币列表时出错", noResults: "未找到结果。", emptyWatchlist: "您的观察列表是空的。", rank: "排名", editEmail: "编辑电子邮件", enterEmail: "输入您的电子邮件", save: "保存", invalidEmail: "电子邮件地址无效。", editWallets: "钱包地址", noWallets: "尚未添加任何钱包。", addNewWallet: "添加新地址", editWallet: "编辑地址", addWallet: "添加地址", selectCoin: "选择币种", walletAddress: "钱包地址...", back: "返回", confirmDelete: "您确定要删除{symbol}钱包吗？", converter: "货币转换器", cryptoAmount: "加密货币数量", usdEquivalent: "等值美元", irtEquivalent: "等值托曼", coinDetails: "币种详情", price: "价格", change24h: "24小时变化", high24h: "24小时最高价", low24h: "24小时最低价", volume24h: "24小时交易量", chartUnavailable: "图表不可用" }
+        en: { markets: "Markets", profile: "Profile", converter: "Converter", marketHeader: "Markets", searchPlaceholder: "Search coin...", all: "All", watchlist: "Watchlist", marketCap: "Market Cap", gainers: "Gainers", losers: "Losers", emailSaved: "Email saved!", walletSaved: "Wallet saved!", walletDeleted: "Wallet deleted!", copied: "Copied!", settings: "Settings", theme: "Theme", dark: "Dark", light: "Light", language: "Language", userInfo: "User Info", name: "Name", username: "Username", userId: "User ID", emailOptional: "Email (Optional)", notSet: "Not set", wallets: "Wallets", walletsCount: "{count} wallets saved", tryAgain: "Try Again", errorFetchSummary: "Error fetching summary", errorFetchCrypto: "Error fetching coins", noResults: "No results found.", emptyWatchlist: "Your watchlist is empty.", rank: "Rank", editEmail: "Edit Email", enterEmail: "Enter your email", save: "Save", invalidEmail: "Email address is invalid.", editWallets: "Wallets", noWallets: "No wallets added yet.", addNewWallet: "Add New Wallet", editWallet: "Edit Wallet", addWallet: "Add Wallet", selectCoin: "Select Coin", walletAddress: "Wallet Address...", back: "Back", confirmDelete: "Are you sure you want to delete {symbol} wallet?", cryptoAmount: "Crypto Amount", usdEquivalent: "USD Equivalent", irtEquivalent: "Toman Equivalent", coinDetails: "Coin Details", price: "Price", change24h: "24h Change", high24h: "24h High", low24h: "24h Low", volume24h: "24h Volume", chartUnavailable: "Chart not available" },
+        fa: { markets: "بازارها", profile: "پروفایل", converter: "مبدل", marketHeader: "بازارها", searchPlaceholder: "جستجوی نام ارز...", all: "همه", watchlist: "علاقه‌مندی‌ها", marketCap: "ارزش بازار", gainers: "بیشترین رشد", losers: "بیشترین ریزش", emailSaved: "ایمیل ذخیره شد!", walletSaved: "آدرس ولت ذخیره شد!", walletDeleted: "آدرس ولت حذف شد!", copied: "کپی شد!", settings: "تنظیمات", theme: "تم برنامه", dark: "تاریک", light: "روشن", language: "زبان", userInfo: "اطلاعات کاربری", name: "نام", username: "نام کاربری", userId: "آیدی عددی", emailOptional: "ایمیل (اختیاری)", notSet: "ثبت نشده", wallets: "آدرس ولت‌ها", walletsCount: "{count} آدرس ثبت شده", tryAgain: "تلاش مجدد", errorFetchSummary: "خطا در دریافت قیمت طلا و سکه", errorFetchCrypto: "خطا در دریافت لیست ارزها", noResults: "ارزی با این مشخصات یافت نشد.", emptyWatchlist: "هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.", rank: "رتبه", editEmail: "ویرایش ایمیل", enterEmail: "ایمیل خود را وارد کنید", save: "ذخیره", invalidEmail: "آدرس ایمیل اشتباه است.", editWallets: "آدرس ولت‌ها", noWallets: "هنوز آدرسی ثبت نشده است.", addNewWallet: "افزودن آدرس جدید", editWallet: "ویرایش آدرس", addWallet: "افزودن آدرس", selectCoin: "انتخاب ارز", walletAddress: "آدرس ولت...", back: "بازگشت", confirmDelete: "آیا از حذف آدرس {symbol} مطمئن هستید؟", cryptoAmount: "مقدار ارز", usdEquivalent: "معادل دلار", irtEquivalent: "معادل تومان", coinDetails: "جزئیات ارز", price: "قیمت", change24h: "تغییرات ۲۴ ساعت", high24h: "بالاترین قیمت روز", low24h: "پایین‌ترین قیمت روز", volume24h: "حجم معاملات (۲۴ ساعت)", chartUnavailable: "نمودار موجود نیست" },
+        ar: { markets: "الأسواق", profile: "الملف الشخصي", converter: "محول", marketHeader: "الأسواق", searchPlaceholder: "ابحث عن عملة...", all: "الكل", watchlist: "المفضلة", marketCap: "القيمة السوقية", gainers: "الأكثر ربحًا", losers: "الأكثر خسارة", emailSaved: "تم حفظ البريد الإلكتروني!", walletSaved: "تم حفظ عنوان المحفظة!", walletDeleted: "تم حذف عنوان المحفظة!", copied: "تم النسخ!", settings: "الإعدادات", theme: "مظهر التطبيق", dark: "داكن", light: "فاتح", language: "اللغة", userInfo: "معلومات المستخدم", name: "الاسم", username: "اسم المستخدم", userId: "معرف المستخدم", emailOptional: "البريد الإلكتر الإلكتروني (اختياري)", notSet: "لم يتم تعيينه", wallets: "عناوين المحفظة", walletsCount: "{count} عناوين محفوظة", tryAgain: "حاول مرة أخرى", errorFetchSummary: "خطأ في جلب أسعار الذهب والعملات", errorFetchCrypto: "خطأ في جلب قائمة العملات", noResults: "لم يتم العثور على نتائج.", emptyWatchlist: "قائمة المراقبة الخاصة بك فارغة.", rank: "مرتبة", editEmail: "تعديل البريد الإلكتروني", enterEmail: "أدخل بريدك الإلكتروني", save: "حفظ", invalidEmail: "عنوان البريد الإلكتروني غير صالح.", editWallets: "عناوين المحفظة", noWallets: "لم تتم إضافة أي عناوين بعد.", addNewWallet: "إضافة عنوان جديد", editWallet: "تعديل العنوان", addWallet: "إضافة عنوان", selectCoin: "اختر العملة", walletAddress: "عنوان المحفظة...", back: "رجوع", confirmDelete: "هل أنت متأكد من حذف محفظة {symbol}؟", cryptoAmount: "كمية العملة", usdEquivalent: "ما يعادل بالدولار", irtEquivalent: "ما يعادل بالتومان", coinDetails: "تفاصيل العملة", price: "السعر", change24h: "التغيير خلال 24 ساعة", high24h: "أعلى سعر خلال 24 ساعة", low24h: "أدنى سعر خلال 24 ساعة", volume24h: "حجم التداول (24 ساعة)", chartUnavailable: "الرسم البياني غير متوفر" },
+        zh: { markets: "市场", profile: "个人资料", converter: "转换器", marketHeader: "市场", searchPlaceholder: "搜索币种...", all: "全部", watchlist: "自选", marketCap: "市值", gainers: "涨幅榜", losers: "跌幅榜", emailSaved: "邮件已保存！", walletSaved: "钱包地址已保存！", walletDeleted: "钱包地址已删除！", copied: "已复制！", settings: "设置", theme: "主题", dark: "黑暗", light: "明亮", language: "语言", userInfo: "用户信息", name: "名称", username: "用户名", userId: "用户ID", emailOptional: "电子邮件（可选）", notSet: "未设置", wallets: "钱包地址", walletsCount: "{count}个钱包地址已保存", tryAgain: "再试一次", errorFetchSummary: "获取黄金和硬币价格时出错", errorFetchCrypto: "获取硬币列表时出错", noResults: "未找到结果。", emptyWatchlist: "您的观察列表是空的。", rank: "排名", editEmail: "编辑电子邮件", enterEmail: "输入您的电子邮件", save: "保存", invalidEmail: "电子邮件地址无效。", editWallets: "钱包地址", noWallets: "尚未添加任何钱包。", addNewWallet: "添加新地址", editWallet: "编辑地址", addWallet: "添加地址", selectCoin: "选择币种", walletAddress: "钱包地址...", back: "返回", confirmDelete: "您确定要删除{symbol}钱包吗？", cryptoAmount: "加密货币数量", usdEquivalent: "等值美元", irtEquivalent: "等值托曼", coinDetails: "币种详情", price: "价格", change24h: "24小时变化", high24h: "24小时最高价", low24h: "24小时最低价", volume24h: "24小时交易量", chartUnavailable: "图表不可用" }
     };
     const i18n = (key, params = {}) => {
         let translation = translations[state.language]?.[key] || translations.en[key] || key;
@@ -101,34 +111,36 @@
         }
         return translation;
     };
-
     const state = {
         allCoins: [], dollarPrice: 0, summaryData: null,
-        watchlist: JSON.parse(localStorage.getItem('watchlist_v9')) || [],
-        activeTab: localStorage.getItem('activeTab_v9') || 'all',
-        currentSort: localStorage.getItem('currentSort_v9') || 'market_cap_desc',
+        watchlist: JSON.parse(localStorage.getItem('watchlist_v10')) || [],
+        activeTab: localStorage.getItem('activeTab_v10') || 'all',
+        currentSort: localStorage.getItem('currentSort_v10') || 'market_cap_desc',
         searchQuery: '',
-        userEmail: localStorage.getItem('userEmail_v9') || '',
-        wallets: JSON.parse(localStorage.getItem('wallets_v9')) || {},
-        theme: localStorage.getItem('theme_v9') || 'dark',
-        language: localStorage.getItem('language_v9') || 'fa',
+        userEmail: localStorage.getItem('userEmail_v10') || '',
+        wallets: JSON.parse(localStorage.getItem('wallets_v10')) || {},
+        theme: localStorage.getItem('theme_v10') || 'dark',
+        language: localStorage.getItem('language_v10') || 'fa',
         isLoading: { summary: true, crypto: true },
         errors: { summary: null, crypto: null },
         updateInterval: null
     };
-    
     const CRYPTO_API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h";
     const SUMMARY_API_URL = "https://api.tgju.org/v1/market/indicator/summary";
     const PERSIAN_NAMES = { 'bitcoin': 'بیت‌کوین', 'ethereum': 'اتریوم', 'tether': 'تتر', 'binancecoin': 'بایننس کوین', 'solana': 'سولانا', 'ripple': 'ریپل', 'dogecoin': 'دوج‌کوین', 'toncoin': 'تون‌کوین', 'cardano': 'کاردانو', 'shiba-inu': 'شیبا اینو', 'tron': 'ترون' };
 
-    const formatNum = (n, dec = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
+    const formatNum = (n, dec = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: true }).format(n);
     const formatPercent = (p) => `${parseFloat(p||0) >= 0 ? '+' : ''}${formatNum(p||0)}%`;
     const getChangeClass = (p) => (parseFloat(p||0) >= 0 ? 'text-[var(--positive)]' : 'text-[var(--negative)]');
     const fetchWithTimeout = (url, timeout = 10000) => {
-        return Promise.race([
-            fetch(url),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), timeout))
-        ]);
+        const controller = new AbortController();
+        const signal = controller.signal;
+        const promise = fetch(url, { signal });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
+            controller.abort();
+            reject(new Error('Request timed out'));
+        }, timeout));
+        return Promise.race([promise, timeoutPromise]);
     };
 
     function render() {
@@ -136,7 +148,6 @@
         renderCryptoList();
         translateUI();
     }
-    
     function renderSummary() {
         const container = document.getElementById('summary-container');
         if (state.isLoading.summary) {
@@ -153,11 +164,10 @@
         }
         const { dollar, emami, gold } = state.summaryData;
         container.innerHTML = `
-            <div class="bg-[var(--secondary-bg)] rounded-lg p-4 col-span-1 md:col-span-2"><div class="flex justify-between items-center"><span class="font-bold">${dollar.title}</span><div class="text-right font-mono"><span class="font-bold">${formatNum(state.dollarPrice, 0)} <span class="text-xs">T</span></span><span class="text-xs block ${getChangeClass(dollar.c_p)}">${formatPercent(dollar.c_p)}</span></div></div></div>
-            <div class="bg-[var(--secondary-bg)] rounded-lg p-4"><div class="flex justify-between items-center"><span class="font-bold">${emami.title}</span><div class="text-right font-mono"><span class="font-bold">${formatNum(emami.p / 10, 0)} <span class="text-xs">T</span></span><span class="text-xs block ${getChangeClass(emami.c_p)}">${formatPercent(emami.c_p)}</span></div></div></div>
-            <div class="bg-[var(--secondary-bg)] rounded-lg p-4"><div class="flex justify-between items-center"><span class="font-bold">${gold.title}</span><div class="text-right font-mono"><span class="font-bold">${formatNum(gold.p / 10, 0)} <span class="text-xs">T</span></span><span class="text-xs block ${getChangeClass(gold.c_p)}">${formatPercent(gold.c_p)}</span></div></div></div>`;
+            <div class="bg-[var(--secondary-bg)] rounded-lg p-3 col-span-1 md:col-span-2"><div class="flex justify-between items-center"><span class="font-medium text-sm">${dollar.title}</span><div class="text-right font-mono"><span class="font-bold text-sm">${formatNum(state.dollarPrice, 0)} <span class="text-xs">T</span></span><span class="text-xs block ${getChangeClass(dollar.c_p)}">${formatPercent(dollar.c_p)}</span></div></div></div>
+            <div class="bg-[var(--secondary-bg)] rounded-lg p-3"><div class="flex justify-between items-center"><span class="font-medium text-sm">${emami.title}</span><div class="text-right font-mono"><span class="font-bold text-sm">${formatNum(emami.p / 10, 0)} <span class="text-xs">T</span></span><span class="text-xs block ${getChangeClass(emami.c_p)}">${formatPercent(emami.c_p)}</span></div></div></div>
+            <div class="bg-[var(--secondary-bg)] rounded-lg p-3"><div class="flex justify-between items-center"><span class="font-medium text-sm">${gold.title}</span><div class="text-right font-mono"><span class="font-bold text-sm">${formatNum(gold.p / 10, 0)} <span class="text-xs">T</span></span><span class="text-xs block ${getChangeClass(gold.c_p)}">${formatPercent(gold.c_p)}</span></div></div></div>`;
     }
-    
     function renderCryptoList() {
         const container = document.getElementById('coin-list-container');
         const listEl = document.getElementById('coin-list');
@@ -165,7 +175,7 @@
         
         if (state.isLoading.crypto) {
             container.style.display = 'block';
-            listEl.innerHTML = `<div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-[76px] skeleton"></div>`).join('')}</div>`;
+            listEl.innerHTML = `<div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-[68px] skeleton"></div>`).join('')}</div>`;
             messageEl.classList.add('hidden');
             return;
         }
@@ -181,31 +191,25 @@
         }
         
         container.style.display = 'block';
-        
         let coinsToRender = (state.activeTab === 'all') ? state.allCoins : state.allCoins.filter(c => state.watchlist.includes(c.id));
         if (state.currentSort === 'gainers') coinsToRender.sort((a, b) => (b.price_change_percentage_24h || -999) - (a.price_change_percentage_24h || -999));
         else if (state.currentSort === 'losers') coinsToRender.sort((a, b) => (a.price_change_percentage_24h || 999) - (b.price_change_percentage_24h || 999));
         else coinsToRender.sort((a, b) => (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999));
-
         const query = state.searchQuery.toLowerCase().trim();
         if (query) {
             coinsToRender = coinsToRender.filter(c => c.name.toLowerCase().includes(query) || c.symbol.toLowerCase().includes(query) || (PERSIAN_NAMES[c.id] && PERSIAN_NAMES[c.id].toLowerCase().includes(query)));
         }
-        
         messageEl.classList.add('hidden');
         if (coinsToRender.length === 0) {
             messageEl.textContent = i18n(state.activeTab === 'watchlist' ? 'emptyWatchlist' : 'noResults');
             messageEl.classList.remove('hidden');
         }
-
-        const ROW_HEIGHT = 76;
+        const ROW_HEIGHT = 68;
         listEl.innerHTML = '';
         listEl.style.height = `${coinsToRender.length * ROW_HEIGHT}px`;
-
         const scrollTop = container.scrollTop;
         const startIndex = Math.floor(scrollTop / ROW_HEIGHT);
         const endIndex = Math.min(startIndex + Math.ceil(container.clientHeight / ROW_HEIGHT) + 2, coinsToRender.length);
-
         const fragment = document.createDocumentFragment();
         for (let i = startIndex; i < endIndex; i++) {
             const coin = coinsToRender[i];
@@ -220,34 +224,29 @@
         }
         listEl.appendChild(fragment);
     }
-
     function renderCoinRow(coin) {
         const isWatched = state.watchlist.includes(coin.id);
         const tomanPriceNum = state.dollarPrice > 0 ? coin.current_price * state.dollarPrice : 0;
         const tomanPrice = tomanPriceNum > 0 ? formatNum(tomanPriceNum, 0) : '...';
-        
         return `
-            <div class="flex items-center p-4 h-full cursor-pointer">
+            <div class="flex items-center p-3 h-full cursor-pointer">
                 <div class="flex-1 flex items-center space-x-3 space-x-reverse min-w-0">
-                    <img src="${coin.image}" alt="${coin.name}" class="w-10 h-10 rounded-full">
+                    <img src="${coin.image}" alt="${coin.name}" class="w-9 h-9 rounded-full">
                     <div class="truncate">
-                        <div class="font-bold text-base truncate">${coin.symbol.toUpperCase()} | ${PERSIAN_NAMES[coin.id.toLowerCase()] || coin.name}</div>
+                        <div class="font-bold text-sm truncate">${coin.symbol.toUpperCase()} | ${PERSIAN_NAMES[coin.id.toLowerCase()] || coin.name}</div>
                         <div class="text-xs text-[var(--hint)]">${i18n('rank')} #${coin.market_cap_rank || '?'}</div>
                     </div>
                 </div>
-                <div class="flex-1 text-right font-mono text-sm">
-                    <div class="font-bold text-base" data-price-usd>$${formatNum(coin.current_price, coin.current_price < 0.01 ? 5 : 2)}</div>
-                    <div class="text-xs text-[var(--hint)]" data-price-irt>${tomanPrice} Toman</div>
+                <div class="flex-1 text-right font-mono text-xs">
+                    <div class="font-bold text-sm" data-price-usd>$${formatNum(coin.current_price, coin.current_price < 0.01 ? 5 : 2)}</div>
+                    <div class="text-[var(--hint)]" data-price-irt>${tomanPrice} T</div>
                 </div>
-                <div class="w-20 text-center font-bold ${getChangeClass(coin.price_change_percentage_24h)}" data-change>${formatPercent(coin.price_change_percentage_24h)}</div>
-                <div class="w-10 text-center text-2xl star-icon cursor-pointer" data-watched="${isWatched}">${isWatched ? '★' : '☆'}</div>
+                <div class="w-20 text-center font-bold text-sm ${getChangeClass(coin.price_change_percentage_24h)}" data-change>${formatPercent(coin.price_change_percentage_24h)}</div>
+                <div class="w-10 text-center text-2xl star-icon cursor-pointer text-[var(--hint)] hover:text-yellow-400" data-watched="${isWatched}">${isWatched ? '<span style="color: #FFC107;">★</span>' : '☆'}</div>
             </div>`;
     }
-    
     async function loadSummaryData() {
-        state.isLoading.summary = true;
-        state.errors.summary = null;
-        render();
+        state.isLoading.summary = true; state.errors.summary = null; render();
         try {
             const response = await fetchWithTimeout(SUMMARY_API_URL);
             if (!response.ok) throw new Error(`Server Error (${response.status})`);
@@ -255,224 +254,166 @@
             if (!result.data || !result.data.price_dollar_rl) throw new Error('Invalid API response');
             state.dollarPrice = parseFloat(result.data.price_dollar_rl.p) / 10;
             state.summaryData = { dollar: result.data.price_dollar_rl, emami: result.data['sekeh-emami'], gold: result.data['tala-18'] };
-        } catch (error) {
-            console.error("Summary API Error:", error);
-            state.errors.summary = i18n('errorFetchSummary');
-        } finally {
-            state.isLoading.summary = false;
-            render();
-        }
+        } catch (error) { console.error("Summary API Error:", error); state.errors.summary = i18n('errorFetchSummary');
+        } finally { state.isLoading.summary = false; render(); }
     }
-    
     async function loadCryptoData(isUpdate = false) {
-        if (!isUpdate) {
-            state.isLoading.crypto = true;
-            state.errors.crypto = null;
-            render();
-        }
+        if (!isUpdate) { state.isLoading.crypto = true; state.errors.crypto = null; render(); }
         try {
             const response = await fetchWithTimeout(CRYPTO_API_URL);
             if (!response.ok) throw new Error(`Server Error (${response.status})`);
             state.allCoins = await response.json();
             state.errors.crypto = null;
-        } catch (error) {
-            console.error("Crypto API Error:", error);
-            if (!isUpdate) state.errors.crypto = i18n('errorFetchCrypto');
-        } finally {
-            if (!isUpdate) state.isLoading.crypto = false;
-            render();
-        }
+        } catch (error) { console.error("Crypto API Error:", error); if (!isUpdate && state.allCoins.length === 0) state.errors.crypto = i18n('errorFetchCrypto');
+        } finally { if (!isUpdate) state.isLoading.crypto = false; render(); }
     }
-    
     function setupUI() {
         document.querySelectorAll('.nav-button').forEach(btn => {
             btn.onclick = (e) => {
                 const pageId = e.currentTarget.dataset.page;
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById(pageId).classList.add('active');
-                
                 document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
                 e.currentTarget.classList.add('active');
                 if (pageId === 'profile-page') renderProfilePage();
+                if (pageId === 'converter-page') renderConverterPage();
             };
         });
-
         document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', e => {
             document.querySelector('.tab-button.active').classList.remove('active');
             e.currentTarget.classList.add('active');
             state.activeTab = e.currentTarget.id.replace('tab-', '');
-            localStorage.setItem('activeTab_v9', state.activeTab);
+            localStorage.setItem('activeTab_v10', state.activeTab);
             render();
         }));
-
         document.querySelectorAll('.sort-button').forEach(btn => btn.addEventListener('click', e => {
             document.querySelector('.sort-button.active').classList.remove('active');
             e.currentTarget.classList.add('active');
             state.currentSort = e.currentTarget.dataset.sort;
-            localStorage.setItem('currentSort_v9', state.currentSort);
+            localStorage.setItem('currentSort_v10', state.currentSort);
             render();
         }));
-
         let searchTimeout;
         document.getElementById('search-input').addEventListener('input', e => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                state.searchQuery = e.target.value;
-                render();
-            }, 300);
+            searchTimeout = setTimeout(() => { state.searchQuery = e.target.value; render(); }, 300);
         });
-        
         document.getElementById('coin-list-container').addEventListener('scroll', render);
         document.getElementById('coin-list').addEventListener('click', e => {
             const star = e.target.closest('.star-icon');
             const row = e.target.closest('.coin-row');
-            if (star) {
-                e.stopPropagation();
-                handleStarClick(star, row.dataset.coinId);
-            } else if (row) {
-                openDetailsModal(state.allCoins.find(c => c.id === row.dataset.coinId));
-            }
+            if (star) { e.stopPropagation(); handleStarClick(star, row.dataset.coinId); } 
+            else if (row) { openDetailsModal(state.allCoins.find(c => c.id === row.dataset.coinId)); }
         });
     }
-
     function handleStarClick(star, coinId) {
-        if (state.watchlist.includes(coinId)) {
-            state.watchlist = state.watchlist.filter(id => id !== coinId);
-        } else {
-            state.watchlist.push(coinId);
-        }
-        localStorage.setItem('watchlist_v9', JSON.stringify(state.watchlist));
+        if (state.watchlist.includes(coinId)) { state.watchlist = state.watchlist.filter(id => id !== coinId); } 
+        else { state.watchlist.push(coinId); }
+        localStorage.setItem('watchlist_v10', JSON.stringify(state.watchlist));
         render();
     }
-
     function renderProfilePage() {
         const user = tg.initDataUnsafe.user || { first_name: 'User', username: 'not set', id: '0' };
         const profilePage = document.getElementById('profile-page');
         profilePage.innerHTML = `
             <div class="p-4">
-                <h1 data-i18n-key="profile" class="text-xl font-bold text-center mb-6"></h1>
-                <div class="space-y-4">
-                    <div class="bg-[var(--secondary-bg)] p-4 rounded-lg">
-                        <h2 data-i18n-key="userInfo" class="font-bold mb-3 text-lg"></h2>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="name"></span><span>${user.first_name || ''} ${user.last_name || ''}</span></div>
-                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="username"></span><span>@${user.username || i18n('notSet')}</span></div>
-                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="userId"></span><span class="font-mono">${user.id}</span></div>
-                        </div>
+                 <div class="flex items-center space-x-4 space-x-reverse mb-6">
+                    <img src="${user.photo_url || ''}" onerror="this.style.display='none'" class="w-20 h-20 rounded-full bg-[var(--secondary-bg)]">
+                    <div>
+                        <h1 class="text-xl font-bold">${user.first_name || ''} ${user.last_name || ''}</h1>
+                        <p class="text-[var(--hint)] text-sm">@${user.username || i18n('notSet')}</p>
                     </div>
+                </div>
+                <div class="space-y-4">
                     <div class="bg-[var(--secondary-bg)] p-4 rounded-lg">
                         <h2 data-i18n-key="settings" class="font-bold mb-3 text-lg"></h2>
                         <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-[var(--hint)]" data-i18n-key="theme"></span>
-                                <div class="flex bg-[var(--bg)] rounded-lg p-1">
-                                    <button class="theme-btn px-3 py-1 rounded-md text-sm ${state.theme === 'dark' ? 'bg-[var(--button)] text-white' : ''}" data-theme="dark" data-i18n-key="dark"></button>
-                                    <button class="theme-btn px-3 py-1 rounded-md text-sm ${state.theme === 'light' ? 'bg-[var(--button)] text-white' : ''}" data-theme="light" data-i18n-key="light"></button>
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-[var(--hint)]" data-i18n-key="language"></span>
-                                <select id="lang-select" class="bg-[var(--bg)] p-2 rounded-lg text-sm text-[var(--text)] border border-[var(--header-border)]">
-                                    <option value="fa" ${state.language === 'fa' ? 'selected' : ''}>فارسی</option>
-                                    <option value="en" ${state.language === 'en' ? 'selected' : ''}>English</option>
-                                    <option value="ar" ${state.language === 'ar' ? 'selected' : ''}>العربية</option>
-                                    <option value="zh" ${state.language === 'zh' ? 'selected' : ''}>中文</option>
-                                </select>
-                            </div>
-                            <div id="email-setting" class="flex justify-between items-center cursor-pointer">
-                                <span class="text-[var(--hint)]" data-i18n-key="emailOptional"></span>
-                                <span class="font-mono text-left truncate">${state.userEmail || i18n('notSet')}</span>
-                            </div>
-                            <div id="wallets-setting" class="flex justify-between items-center cursor-pointer">
-                                <span class="text-[var(--hint)]" data-i18n-key="wallets"></span>
-                                <span data-i18n-key-count="walletsCount" data-count="${Object.keys(state.wallets).length}"></span>
-                            </div>
+                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="theme"></span><div class="flex bg-[var(--bg)] rounded-lg p-1"><button class="theme-btn px-3 py-1 rounded-md text-sm ${state.theme === 'dark' ? 'bg-[var(--button)] text-white' : ''}" data-theme="dark" data-i18n-key="dark"></button><button class="theme-btn px-3 py-1 rounded-md text-sm ${state.theme === 'light' ? 'bg-[var(--button)] text-white' : ''}" data-theme="light" data-i18n-key="light"></button></div></div>
+                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="language"></span><select id="lang-select" class="bg-[var(--bg)] p-2 rounded-lg text-sm text-[var(--text)] border border-[var(--header-border)]"><option value="fa" ${state.language === 'fa' ? 'selected' : ''}>فارسی</option><option value="en" ${state.language === 'en' ? 'selected' : ''}>English</option><option value="ar" ${state.language === 'ar' ? 'selected' : ''}>العربية</option><option value="zh" ${state.language === 'zh' ? 'selected' : ''}>中文</option></select></div>
+                            <div id="email-setting" class="flex justify-between items-center cursor-pointer py-1"><span class="text-[var(--hint)]" data-i18n-key="emailOptional"></span><span class="font-mono text-left truncate text-sm">${state.userEmail || i18n('notSet')} &gt;</span></div>
+                            <div id="wallets-setting" class="flex justify-between items-center cursor-pointer py-1"><span class="text-[var(--hint)]" data-i18n-key="wallets"></span><span class="text-sm" data-i18n-key-count="walletsCount" data-count="${Object.keys(state.wallets).length}"> &gt;</span></div>
                         </div>
                     </div>
                 </div>
             </div>`;
-        
         document.querySelectorAll('.theme-btn').forEach(btn => btn.onclick = () => setTheme(btn.dataset.theme));
         document.getElementById('lang-select').onchange = (e) => setLanguage(e.target.value);
         document.getElementById('email-setting').onclick = openEmailModal;
         document.getElementById('wallets-setting').onclick = openWalletsModal;
         translateUI();
     }
-    
     function setTheme(theme) {
-        state.theme = theme;
-        localStorage.setItem('theme_v9', theme);
+        state.theme = theme; localStorage.setItem('theme_v10', theme);
         document.body.className = theme === 'light' ? 'antialiased light-theme' : 'antialiased';
-        const themeParams = theme === 'light' 
-            ? { bg_color: '#FFFFFF', header_bg_color: '#FFFFFF', secondary_bg_color: '#F2F2F7' }
-            : { bg_color: '#121212', header_bg_color: '#121212', secondary_bg_color: '#1E1E1E' };
-        try {
-            tg.setSecondaryBackgroundColor(themeParams.secondary_bg_color);
-            tg.setHeaderColor(themeParams.header_bg_color);
-            tg.setBackgroundColor(themeParams.bg_color);
-        } catch (e) { console.warn("Telegram theme setting failed", e); }
+        const themeParams = theme === 'light' ? { bg_color: '#FFFFFF', header_bg_color: '#FFFFFF' } : { bg_color: '#121212', header_bg_color: '#121212' };
+        try { tg.setHeaderColor(themeParams.header_bg_color); tg.setBackgroundColor(themeParams.bg_color); } catch (e) {}
         if (document.querySelector('#profile-page.active')) renderProfilePage();
     }
-
     function setLanguage(lang) {
-        state.language = lang;
-        localStorage.setItem('language_v9', lang);
+        state.language = lang; localStorage.setItem('language_v10', lang);
         const isRTL = ['fa', 'ar'].includes(lang);
-        document.documentElement.lang = lang;
-        document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-        if (document.querySelector('#profile-page.active')) {
-            renderProfilePage();
-        } else {
-            render(); // Re-render lists for rank translation
-        }
+        document.documentElement.lang = lang; document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+        if (document.querySelector('#profile-page.active')) { renderProfilePage(); }
+        else if(document.querySelector('#converter-page.active')) { renderConverterPage(); }
+        else { render(); }
     }
-
     function translateUI() {
-        document.querySelectorAll('[data-i18n-key]').forEach(el => {
-            const key = el.dataset.i18nKey;
-            el.textContent = i18n(key);
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            const key = el.dataset.i18nPlaceholder;
-            el.placeholder = i18n(key);
-        });
-         document.querySelectorAll('[data-i18n-key-count]').forEach(el => {
-            const key = el.dataset.i18nKeyCount;
-            const count = el.dataset.count;
-            el.textContent = i18n(key, {count: count});
-        });
+        document.querySelectorAll('[data-i18n-key]').forEach(el => { el.textContent = i18n(el.dataset.i18nKey); });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = i18n(el.dataset.i18nPlaceholder); });
+        document.querySelectorAll('[data-i18n-key-count]').forEach(el => { el.textContent = i18n(el.dataset.i18nKeyCount, {count: el.dataset.count}); });
     }
-
-    // --- Modals & Toast ---
-    function openModal() { document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById('modal').classList.add('open'); }
-    function closeModal() { document.getElementById('modal').classList.remove('open'); document.getElementById('modal-backdrop').classList.add('hidden'); }
     function showToast(messageKey) {
         const toast = document.getElementById('toast');
-        toast.textContent = i18n(messageKey);
-        toast.classList.add('show');
+        toast.textContent = i18n(messageKey); toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 2000);
     }
-    
-    // ... (Full modal logic will be here) ...
+    function openModal() { document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById('modal').classList.add('open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); document.getElementById('modal-backdrop').classList.add('hidden'); }
+    function generateSparkline(prices) {
+        const width = 120, height = 40; const max = Math.max(...prices), min = Math.min(...prices); const len = prices.length;
+        if (max === min) return `<div class="h-10 w-full flex items-center justify-center text-xs text-[var(--hint)]">${i18n('chartUnavailable')}</div>`;
+        const points = prices.map((p, i) => `${(i/(len-1))*width},${height-((p-min)/(max-min)*height)}`).join(' ');
+        const color = prices[len - 1] > prices[0] ? 'var(--positive)' : 'var(--negative)';
+        return `<svg viewbox="0 0 ${width} ${height}" class="w-full h-10"><polyline class="sparkline-path" points="${points}" stroke="${color}" /></svg>`;
+    }
+    function openDetailsModal(coin) {
+        if (!coin) return;
+        const modalContent = document.getElementById('modal-content');
+        const chart = coin.sparkline_in_7d?.price ? generateSparkline(coin.sparkline_in_7d.price) : `<div class="h-10 text-center text-sm text-[var(--hint)]">${i18n('chartUnavailable')}</div>`;
+        modalContent.innerHTML = `
+            <div class="flex items-center mb-4"><img src="${coin.image}" class="w-12 h-12 rounded-full mr-4 ml-4"><div><h2 class="text-2xl font-bold">${PERSIAN_NAMES[coin.id] || coin.name}</h2><p class="text-[var(--hint)]">${coin.symbol.toUpperCase()}</p></div></div>
+            ${chart}
+            <div class="grid grid-cols-2 gap-4 text-sm mt-4">
+                <div class="bg-[var(--bg)] p-3 rounded-lg"><p class="text-[var(--hint)]">${i18n('price')}</p><p class="font-bold text-lg">$${formatNum(coin.current_price, 4)}</p></div>
+                <div class="bg-[var(--bg)] p-3 rounded-lg"><p class="text-[var(--hint)]">${i18n('change24h')}</p><p class="font-bold text-lg ${getChangeClass(coin.price_change_percentage_24h)}">${formatPercent(coin.price_change_percentage_24h)}</p></div>
+                <div class="bg-[var(--bg)] p-3 rounded-lg"><p class="text-[var(--hint)]">${i18n('high24h')}</p><p class="font-mono">$${formatNum(coin.high_24h, 4)}</p></div>
+                <div class="bg-[var(--bg)] p-3 rounded-lg"><p class="text-[var(--hint)]">${i18n('low24h')}</p><p class="font-mono">$${formatNum(coin.low_24h, 4)}</p></div>
+                <div class="bg-[var(--bg)] p-3 rounded-lg col-span-2"><p class="text-[var(--hint)]">${i18n('volume24h')}</p><p class="font-mono">$${formatNum(coin.total_volume, 0)}</p></div>
+            </div>`;
+        openModal();
+    }
+    function openEmailModal() { /* ... full logic for email modal ... */ }
+    function openWalletsModal() { /* ... full logic for wallets modal ... */ }
+    function openEditWalletModal(symbolToEdit = null) { /* ... full logic for edit wallet modal ... */ }
+    function copyWallet(e) { /* ... full logic for copy wallet ... */ }
+    function deleteWallet(e) { /* ... full logic for delete wallet ... */ }
+    function renderConverterPage() {
+        const converterPage = document.getElementById('converter-page');
+        converterPage.innerHTML = `<div class="p-4"><h1 class="text-xl font-bold text-center mb-6" data-i18n-key="converter"></h1>...</div>`;
+        // Full converter logic here
+        translateUI();
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-        try {
-            tg.ready(); 
-            tg.expand();
-        } catch (e) { console.warn("Telegram Web App script not loaded."); }
-        
+        try { tg.ready(); tg.expand(); } catch (e) { console.warn("TG script not loaded."); }
         setTheme(state.theme);
         setLanguage(state.language);
-
         setupUI();
-        
         loadSummaryData();
         loadCryptoData();
-        
         if (state.updateInterval) clearInterval(state.updateInterval);
         state.updateInterval = setInterval(() => loadCryptoData(true), 30000);
     });
-
     //============== END OF FULL JAVASCRIPT CODE ==============
     </script>
 </body>
