@@ -24,9 +24,6 @@
         @keyframes price-down-flash { 0% { background-color: rgba(255, 59, 48, 0.2); } 100% { background-color: transparent; } }
         .loader { border: 4px solid var(--tg-secondary-bg); border-top: 4px solid var(--tg-button); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #modal-backdrop { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); z-index: 40; backdrop-filter: blur(5px); }
-        #modal { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--tg-secondary-bg); z-index: 50; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 1.5rem; transform: translateY(100%); transition: transform 0.3s ease-out; }
-        #modal.open { transform: translateY(0); }
         .skeleton { background-color: var(--tg-secondary-bg); border-radius: 8px; animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
@@ -52,19 +49,16 @@
     <div id="coin-list-container" class="h-[calc(100vh-150px)] overflow-y-auto">
         <div id="coin-list" class="relative"></div>
     </div>
-     <div id="message-container" class="hidden text-center p-10 text-[var(--tg-hint)]"></div>
-
-    <!-- Modal -->
-    <div id="modal-backdrop" class="hidden"></div>
-    <div id="modal"><div id="modal-content"></div></div>
+    <div id="message-container" class="hidden text-center p-10 text-[var(--tg-hint)]"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
 
         // --- APIs & Config ---
         const CRYPTO_API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h";
-        const DOLLAR_API_URL = "https://p.parsijoo.ir/api/currency/";
-        const PERSIAN_NAMES = { 'bitcoin': 'بیت‌کوین', 'ethereum': 'اتریوم', 'tether': 'تتر', 'bnb': 'بایننس کوین', 'solana': 'سولانا', 'xrp': 'ریپل', 'dogecoin': 'دوج‌کوین', 'toncoin': 'تون‌کوین', 'cardano': 'کاردانو', 'shiba-inu': 'شیبا اینو', 'tron': 'ترون' };
+        // FIX: Using a new reliable proxy and API for Gold/Dollar
+        const SUMMARY_API_URL = "https://api.allorigins.win/raw?url=https://haji-api.ir/arz/";
+        const PERSIAN_NAMES = { 'bitcoin': 'بیت‌کوین', 'ethereum': 'اتریوم', 'tether': 'تتر', 'binancecoin': 'بایننس کوین', 'solana': 'سولانا', 'ripple': 'ریپل', 'dogecoin': 'دوج‌کوین', 'toncoin': 'تون‌کوین', 'cardano': 'کاردانو', 'shiba-inu': 'شیبا اینو', 'tron': 'ترون' };
 
         // --- DOM Elements ---
         const summaryContainer = document.getElementById('summary-container');
@@ -76,28 +70,24 @@
         let state = {
             allCoins: [],
             dollarPrice: 0,
-            watchlist: JSON.parse(localStorage.getItem('watchlist_v2')) || [],
-            activeTab: localStorage.getItem('activeTab_v2') || 'all',
-            currentSort: localStorage.getItem('currentSort_v2') || 'market_cap_desc',
+            watchlist: JSON.parse(localStorage.getItem('watchlist_v3')) || [],
+            activeTab: localStorage.getItem('activeTab_v3') || 'all',
+            currentSort: localStorage.getItem('currentSort_v3') || 'market_cap_desc',
             searchQuery: '',
             updateInterval: null
         };
         
-        // --- Formatters ---
         const formatNum = (n, dec = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
         const formatPercent = (p) => `${parseFloat(p||0) >= 0 ? '+' : ''}${formatNum(p||0)}%`;
         const getChangeClass = (p) => (parseFloat(p||0) >= 0 ? 'text-[var(--positive)]' : 'text-[var(--negative)]');
 
-        // --- Main Render Logic ---
         function render() {
             let coinsToRender = (state.activeTab === 'all') ? state.allCoins : state.allCoins.filter(c => state.watchlist.includes(c.id));
             
-            // Sort
             if (state.currentSort === 'gainers') coinsToRender.sort((a, b) => (b.price_change_percentage_24h || -999) - (a.price_change_percentage_24h || -999));
             else if (state.currentSort === 'losers') coinsToRender.sort((a, b) => (a.price_change_percentage_24h || 999) - (b.price_change_percentage_24h || 999));
             else coinsToRender.sort((a, b) => (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999));
 
-            // Filter
             const query = state.searchQuery.toLowerCase().trim();
             if (query) {
                 coinsToRender = coinsToRender.filter(c => 
@@ -105,19 +95,13 @@
                 );
             }
             
-            // Handle Empty States
             messageContainer.classList.add('hidden');
-            if (coinsToRender.length === 0) {
-                let msg = 'در حال بارگذاری...';
-                if (state.allCoins.length > 0) {
-                    msg = state.activeTab === 'watchlist' ? 'هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.' : 'ارزی با این مشخصات یافت نشد.';
-                }
-                messageContainer.textContent = msg;
+            if (coinsToRender.length === 0 && state.allCoins.length > 0) {
+                messageContainer.textContent = state.activeTab === 'watchlist' ? 'هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.' : 'ارزی با این مشخصات یافت نشد.';
                 messageContainer.classList.remove('hidden');
             }
 
-            // Virtual Scrolling Render
-            const ROW_HEIGHT = 76; // Height of each row in px
+            const ROW_HEIGHT = 76;
             coinList.innerHTML = '';
             coinList.style.height = `${coinsToRender.length * ROW_HEIGHT}px`;
 
@@ -141,17 +125,20 @@
 
         function renderCoinRow(coin) {
             const isWatched = state.watchlist.includes(coin.id);
-            const tomanPrice = state.dollarPrice > 0 ? formatNum(coin.current_price * state.dollarPrice, 0) : '...';
+            // FIX: Correctly parse Toman price from string
+            const tomanPriceNum = state.dollarPrice > 0 ? coin.current_price * state.dollarPrice : 0;
+            const tomanPrice = tomanPriceNum > 0 ? formatNum(tomanPriceNum, 0) : '...';
+            
             return `
                 <div class="flex items-center p-4 h-full">
-                    <div class="flex-1 flex items-center space-x-3 space-x-reverse">
+                    <div class="flex-1 flex items-center space-x-3 space-x-reverse min-w-0">
                         <img src="${coin.image}" alt="${coin.name}" class="w-10 h-10 rounded-full">
-                        <div>
-                            <div class="font-bold text-base">${coin.symbol.toUpperCase()} | ${PERSIAN_NAMES[coin.id] || coin.name}</div>
+                        <div class="truncate">
+                            <div class="font-bold text-base truncate">${coin.symbol.toUpperCase()} | ${PERSIAN_NAMES[coin.id.toLowerCase()] || coin.name}</div>
                             <div class="text-xs text-[var(--tg-hint)]">رتبه #${coin.market_cap_rank}</div>
                         </div>
                     </div>
-                    <div class="flex-1 text-left font-mono text-sm">
+                    <div class="flex-1 text-right font-mono text-sm">
                         <div class="font-bold text-base" data-price-usd>$${formatNum(coin.current_price, coin.current_price < 0.01 ? 5 : 2)}</div>
                         <div class="text-xs text-[var(--tg-hint)]" data-price-irt>${tomanPrice} تومان</div>
                     </div>
@@ -160,20 +147,23 @@
                 </div>`;
         }
         
-        // --- API Calls ---
         async function initialLoad() {
             renderSkeleton();
-            const [cryptoRes, dollarRes] = await Promise.allSettled([ fetch(CRYPTO_API_URL), fetch(DOLLAR_API_URL) ]);
+            const [cryptoRes, summaryRes] = await Promise.allSettled([ fetch(CRYPTO_API_URL), fetch(SUMMARY_API_URL) ]);
 
-            if (dollarRes.status === 'fulfilled') {
-                const data = await dollarRes.value.json();
-                state.dollarPrice = parseFloat(data.result.dollar.price);
-                renderSummary(data.result);
+            if (summaryRes.status === 'fulfilled') {
+                const data = await summaryRes.value.json();
+                // FIX: Correctly parse string price from Haji API
+                const dollarStr = data.data.freeCurrency.data.find(c => c.id === 200000).close.replace(/,/g, '');
+                state.dollarPrice = parseFloat(dollarStr) / 10; // Convert Rial to Toman
+                renderSummary(data.data);
             } else { summaryContainer.innerHTML = `<div class="bg-[var(--tg-secondary-bg)] rounded-lg p-4 text-center text-[var(--negative)]">خطا در دریافت قیمت طلا و سکه</div>`; }
             
             if (cryptoRes.status === 'fulfilled') {
                 state.allCoins = await cryptoRes.value.json();
-            } else { messageContainer.textContent = 'خطا در دریافت لیست ارزها.'; messageContainer.classList.remove('hidden'); }
+            } else { 
+                document.getElementById('coin-list-container').innerHTML = `<div class="text-center p-10 text-[var(--negative)]">خطا در دریافت لیست ارزها</div>`;
+            }
             
             render();
             if (state.updateInterval) clearInterval(state.updateInterval);
@@ -184,36 +174,31 @@
             try {
                 const res = await fetch(CRYPTO_API_URL);
                 state.allCoins = await res.json();
-                render(); // Efficiently re-renders only visible rows
+                render();
             } catch (e) { console.error("Live update failed", e); }
         }
 
-        // --- Event Handlers & UI ---
         function setupUI() {
-            // Restore state from localStorage
             document.querySelector(`#tab-${state.activeTab}`).classList.add('active');
+            document.querySelectorAll('.tab-button:not(.active)').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.sort-button').forEach(b => b.classList.remove('active'));
             document.querySelector(`.sort-button[data-sort="${state.currentSort}"]`).classList.add('active');
-
-            // Tabs
+            
             document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', e => {
                 document.querySelector('.tab-button.active').classList.remove('active');
                 e.currentTarget.classList.add('active');
                 state.activeTab = e.currentTarget.id.replace('tab-', '');
-                localStorage.setItem('activeTab_v2', state.activeTab);
+                localStorage.setItem('activeTab_v3', state.activeTab);
                 render();
             }));
-
-            // Sort
             document.querySelectorAll('.sort-button').forEach(btn => btn.addEventListener('click', e => {
                 document.querySelector('.sort-button.active').classList.remove('active');
                 e.currentTarget.classList.add('active');
                 state.currentSort = e.currentTarget.dataset.sort;
-                localStorage.setItem('currentSort_v2', state.currentSort);
+                localStorage.setItem('currentSort_v3', state.currentSort);
                 render();
             }));
 
-            // Search (Debounced)
             let searchTimeout;
             document.getElementById('search-input').addEventListener('input', e => {
                 clearTimeout(searchTimeout);
@@ -223,51 +208,48 @@
                 }, 300);
             });
             
-            // List interaction
             coinListContainer.addEventListener('scroll', render);
             coinList.addEventListener('click', e => {
                 const star = e.target.closest('.star-icon');
-                const row = e.target.closest('.coin-row');
-                if (star) handleStarClick(star, row.dataset.coinId);
-                else if (row) openModal(state.allCoins.find(c => c.id === row.dataset.coinId));
-            });
-
-            // Modal
-            const modalBackdrop = document.getElementById('modal-backdrop');
-            modalBackdrop.addEventListener('click', () => {
-                document.getElementById('modal').classList.remove('open');
-                modalBackdrop.classList.add('hidden');
+                if (star) {
+                    e.stopPropagation();
+                    const row = e.target.closest('.coin-row');
+                    handleStarClick(star, row.dataset.coinId);
+                }
             });
         }
         
         function handleStarClick(star, coinId) {
             if (state.watchlist.includes(coinId)) state.watchlist = state.watchlist.filter(id => id !== coinId);
             else state.watchlist.push(coinId);
-            localStorage.setItem('watchlist_v2', JSON.stringify(state.watchlist));
+            localStorage.setItem('watchlist_v3', JSON.stringify(state.watchlist));
             render();
         }
 
-        function openModal(coin) {
-            // Omitted for brevity, logic remains the same as previous versions
-            document.getElementById('modal-content').innerHTML = `...`; // Placeholder for modal content
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal').classList.add('open');
+        function renderSummary(data) {
+             summaryContainer.innerHTML = `
+                <div class="bg-[var(--tg-secondary-bg)] rounded-lg p-4">
+                    <h2 class="font-bold mb-2">دلار آزاد</h2>
+                    <div class="flex justify-between items-center">
+                        <span>${data.freeCurrency.data.find(c => c.id === 200000).persianName}</span>
+                        <span class="font-mono font-bold">${formatNum(state.dollarPrice, 0)} <span class="text-xs">T</span></span>
+                    </div>
+                </div>
+                <div class="bg-[var(--tg-secondary-bg)] rounded-lg p-4">
+                     <h2 class="font-bold mb-2">سکه امامی</h2>
+                    <div class="flex justify-between items-center">
+                        <span>${data.coin.data.find(c => c.id === 100001).persianName}</span>
+                        <span class="font-mono font-bold">${formatNum(data.coin.data.find(c => c.id === 100001).close / 10, 0)} <span class="text-xs">T</span></span>
+                    </div>
+                </div>
+             `;
         }
         
         function renderSkeleton() {
-             summaryContainer.innerHTML = Array(3).fill('').map(() => `
-                <div class="bg-[var(--tg-secondary-bg)] rounded-lg p-4 space-y-3">
-                    <div class="skeleton h-5 w-1/3"></div>
-                    <div class="flex justify-between items-center">
-                        <div class="skeleton h-4 w-1/4"></div>
-                        <div class="skeleton h-8 w-1/2"></div>
-                    </div>
-                </div>`).join('');
-            messageContainer.classList.remove('hidden');
-            messageContainer.innerHTML = `<div class="loader"></div>`;
+            summaryContainer.innerHTML = Array(2).fill('').map(() => `<div class="h-24 skeleton"></div>`).join('');
+            coinListContainer.innerHTML = `<div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-16 skeleton"></div>`).join('')}</div>`;
         }
 
-        // --- App Init ---
         document.addEventListener('DOMContentLoaded', () => {
             tg.ready(); tg.expand();
             tg.setHeaderColor('#121212'); tg.setBackgroundColor('#121212');
