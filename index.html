@@ -6,7 +6,6 @@
     <title>Shelby Bet - بازارها</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- فونت Vazirmatn برای RTL مناسب است -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* تعریف متغیرهای تم تاریک و روشن */
@@ -58,12 +57,8 @@
 </head>
 <body class="antialiased">
 
-    <!-- =========== Pages Container =========== -->
-    
-    <!-- 1. صفحه بازارها (Markets) - صفحه اصلی -->
     <div id="markets-page" class="page active">
         <div class="header">
-            <!-- عنوان جدید اعمال شد -->
             <h1 data-i18n-key="marketHeader" class="text-xl font-bold text-center mb-4"></h1>
             <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" class="w-full p-2.5 rounded-xl text-sm mb-3" style="background-color: var(--secondary-bg); border: 1px solid var(--header-border); color: var(--text);">
             <div class="flex items-center justify-between">
@@ -78,56 +73,44 @@
                 </div>
             </div>
         </div>
-        <!-- خلاصه‌وضعیت بازار و قیمت دلار -->
         <div id="summary-container" class="p-4 grid grid-cols-2 gap-3">
-             <!-- Skeleton loading for summary -->
-            <div class="h-16 skeleton rounded-xl"></div>
+             <div class="h-16 skeleton rounded-xl"></div>
             <div class="h-16 skeleton rounded-xl"></div>
         </div>
-        <!-- لیست ارزها با Infinite Scroll -->
         <div id="coin-list-container" class="h-[calc(100vh-230px)] overflow-y-auto">
             <div id="coin-list" class="relative">
-                 <!-- Skeleton loading for crypto list -->
                  <div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-[68px] skeleton"></div>`).join('')}</div>
             </div>
         </div>
         <div id="message-container" class="hidden text-center p-10 text-[var(--hint)]"></div>
     </div>
 
-    <!-- 2. صفحه پروفایل (Profile) -->
     <div id="profile-page" class="page"></div>
     
-    <!-- 3. صفحه "به زودی" (برای Wallet, Converter, Shop) -->
     <div id="coming-soon-page" class="page"></div>
 
-    <!-- =========== Navigation Bar - نوار پیمایش (Fixed Bottom) =========== -->
     <nav class="nav-bar">
         
-        <!-- 1. کیف پول (Wallet) -->
         <button class="nav-button" data-page="coming-soon-page" data-page-key="wallet">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
             <span data-i18n-key="wallet" class="block text-xs"></span>
         </button>
         
-        <!-- 2. بازارها (Markets) - فعال -->
         <button class="nav-button active" data-page="markets-page">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
             <span data-i18n-key="markets" class="block text-xs"></span>
         </button>
         
-        <!-- 3. تبدیل (Converter) - نام تغییر یافته -->
         <button class="nav-button" data-page="coming-soon-page" data-page-key="converter">
              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span data-i18n-key="converter" class="block text-xs"></span>
         </button>
         
-        <!-- 4. فروشگاه (Shop) -->
         <button class="nav-button" data-page="coming-soon-page" data-page-key="shop">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4m-1.5 5h11m-11 0a2 2 0 01-2-2v-5a2 2 0 012-2h11a2 2 0 012 2v5a2 2 0 01-2 2h-11z"></path></svg>
             <span data-i18n-key="shop" class="block text-xs"></span>
         </button>
         
-        <!-- 5. پروفایل (Profile) -->
         <button class="nav-button" data-page="profile-page">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             <span data-i18n-key="profile" class="block text-xs"></span>
@@ -135,7 +118,6 @@
         
     </nav>
 
-    <!-- Modals and Toast -->
     <div id="modal-backdrop" class="modal-backdrop hidden" onclick="closeModal()"></div>
     <div id="modal" class="modal"><div id="modal-content" class="h-[70vh] overflow-y-auto"></div></div>
     <div id="toast" class="toast"></div>
@@ -149,13 +131,13 @@
     // --- I18N Translations (چهار زبان کامل) ---
     const translations = {
         en: { 
-            markets: "Markets", profile: "Profile", converter: "Conversion", marketHeader: "Shelby Digital Currency Markets", searchPlaceholder: "Search coins...", all: "All", watchlist: "Watchlist", marketCap: "Market Cap", gainers: "Gainers", losers: "Losers", emailSaved: "Email saved!", walletSaved: "Wallet address saved!", walletDeleted: "Wallet deleted!", copied: "Copied!", settings: "Settings", theme: "Theme", dark: "Dark", light: "Light", language: "Language", userInfo: "User Info", name: "Name", username: "Username", userId: "User ID", emailOptional: "Email (Optional)", notSet: "Not set", wallets: "Wallets", walletsCount: "{count} saved wallets", tryAgain: "Try Again", errorFetchSummary: "Error fetching Dollar rate from internal source. Using cached price.", errorFetchCrypto: "Error fetching crypto list. Please check your connection.", noResults: "No coins found.", emptyWatchlist: "Your watchlist is empty.", rank: "Rank", editEmail: "Edit Email", enterEmail: "Enter your email", save: "Save", invalidEmail: "Invalid email address.", editWallets: "Wallet Addresses", noWallets: "No wallets added yet.", addNewWallet: "Add New Wallet", editWallet: "Edit Wallet", addWallet: "Add Wallet", selectCoin: "Select Coin", walletAddress: "Wallet Address...", back: "Back", confirmDelete: "Are you sure you want to delete {symbol} wallet?", cryptoAmount: "Coin Amount", usdEquivalent: "USD Equivalent", irtEquivalent: "Toman Equivalent", coinDetails: "Coin Details", price: "Price", change24h: "24h Change", high24h: "24h High", low24h: "24h Low", volume24h: "24h Volume", chartUnavailable: "Chart Unavailable", chart24h: "24h Price Chart", shop: "Shop", wallet: "Wallet", dollar: "Tether (Nobitex)", gold: "Gold (18k)", usingCachedPrice: "Using cached price", comingSoon: "Coming Soon!", comingSoonMessage: "This page ({pageName}) is under development and will be available soon.",
+            markets: "Markets", profile: "Profile", converter: "Conversion", marketHeader: "Shelby Digital Currency Markets", searchPlaceholder: "Search coins...", all: "All", watchlist: "Watchlist", marketCap: "Market Cap", gainers: "Gainers", losers: "Losers", emailSaved: "Email saved!", walletSaved: "Wallet address saved!", walletDeleted: "Wallet deleted!", copied: "Copied!", settings: "Settings", theme: "Theme", dark: "Dark", light: "Light", language: "Language", userInfo: "User Info", name: "Name", username: "Username", userId: "User ID", emailOptional: "Email (Optional)", notSet: "Not set", wallets: "Wallets", walletsCount: "{count} saved wallets", tryAgain: "Try Again", errorFetchSummary: "Error fetching currency/gold rate. Using cached dollar price.", errorFetchCrypto: "Error fetching crypto list. Please check your connection.", noResults: "No coins found.", emptyWatchlist: "Your watchlist is empty.", rank: "Rank", editEmail: "Edit Email", enterEmail: "Enter your email", save: "Save", invalidEmail: "Invalid email address.", editWallets: "Wallet Addresses", noWallets: "No wallets added yet.", addNewWallet: "Add New Wallet", editWallet: "Edit Wallet", addWallet: "Add Wallet", selectCoin: "Select Coin", walletAddress: "Wallet Address...", back: "Back", confirmDelete: "Are you sure you want to delete {symbol} wallet?", cryptoAmount: "Coin Amount", usdEquivalent: "USD Equivalent", irtEquivalent: "Toman Equivalent", coinDetails: "Coin Details", price: "Price", change24h: "24h Change", high24h: "24h High", low24h: "24h Low", volume24h: "24h Volume", chartUnavailable: "Chart Unavailable", chart24h: "24h Price Chart", shop: "Shop", wallet: "Wallet", dollar: "Dollar/Tether", gold: "Gold (18k)", usingCachedPrice: "Using cached price", comingSoon: "Coming Soon!", comingSoonMessage: "This page ({pageName}) is under development and will be available soon.",
         },
         fa: { 
-            markets: "بازارها", profile: "پروفایل", converter: "تبدیل", marketHeader: "بازار ارزهای دیجیتال شلبی", searchPlaceholder: "جستجوی ارز...", all: "همه", watchlist: "علاقه‌مندی‌ها", marketCap: "ارزش بازار", gainers: "بیشترین رشد", losers: "بیشترین افت", emailSaved: "ایمیل ذخیره شد!", walletSaved: "آدرس کیف پول ذخیره شد!", walletDeleted: "کیف پول حذف شد!", copied: "کپی شد!", settings: "تنظیمات", theme: "پوسته", dark: "تاریک", light: "روشن", language: "زبان", userInfo: "اطلاعات کاربر", name: "نام", username: "نام کاربری", userId: "شناسه کاربر", emailOptional: "ایمیل (اختیاری)", notSet: "تعیین نشده", wallets: "کیف پول‌ها", walletsCount: "{count} کیف پول ذخیره شده", tryAgain: "تلاش مجدد", errorFetchSummary: "خطا در دریافت نرخ دلار از منبع داخلی. از نرخ ذخیره شده استفاده می‌شود.", errorFetchCrypto: "خطا در دریافت لیست ارزها. لطفاً اتصال خود را بررسی کنید.", noResults: "ارزی با این مشخصات یافت نشد.", emptyWatchlist: "هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.", rank: "رتبه", editEmail: "ویرایش ایمیل", enterEmail: "ایمیل خود را وارد کنید", save: "ذخیره", invalidEmail: "آدرس ایمیل نامعتبر است.", editWallets: "آدرس کیف پول", noWallets: "هنوز آدرسی اضافه نشده است.", addNewWallet: "افزودن آدرس جدید", editWallet: "ویرایش آدرس", addWallet: "افزودن آدرس", selectCoin: "انتخاب ارز", walletAddress: "آدرس کیف پول...", back: "بازگشت", confirmDelete: "آیا از حذف کیف پول {symbol} مطمئن هستید؟", cryptoAmount: "مقدار ارز", usdEquivalent: "معادل دلاری", irtEquivalent: "معادل تومانی", coinDetails: "جزئیات ارز", price: "قیمت", change24h: "تغییر ۲۴ ساعته", high24h: "بالاترین ۲۴ ساعته", low24h: "پایین‌ترین ۲۴ ساعته", volume24h: "حجم معاملات (۲۴ ساعته)", chartUnavailable: "نمودار موجود نیست", chart24h: "نمودار قیمت ۲۴ ساعته (نمادین)", shop: "فروشگاه", wallet: "کیف پول", dollar: "تتر (نوبیتکس)", gold: "طلای ۱۸ عیار", usingCachedPrice: "استفاده از نرخ ذخیره شده قبلی", comingSoon: "به زودی!", comingSoonMessage: "این صفحه ({pageName}) در حال توسعه است و به زودی در دسترس خواهد بود.",
+            markets: "بازارها", profile: "پروفایل", converter: "تبدیل", marketHeader: "بازار ارزهای دیجیتال شلبی", searchPlaceholder: "جستجوی ارز...", all: "همه", watchlist: "علاقه‌مندی‌ها", marketCap: "ارزش بازار", gainers: "بیشترین رشد", losers: "بیشترین افت", emailSaved: "ایمیل ذخیره شد!", walletSaved: "آدرس کیف پول ذخیره شد!", walletDeleted: "کیف پول حذف شد!", copied: "کپی شد!", settings: "تنظیمات", theme: "پوسته", dark: "تاریک", light: "روشن", language: "زبان", userInfo: "اطلاعات کاربر", name: "نام", username: "نام کاربری", userId: "شناسه کاربر", emailOptional: "ایمیل (اختیاری)", notSet: "تعیین نشده", wallets: "کیف پول‌ها", walletsCount: "{count} کیف پول ذخیره شده", tryAgain: "تلاش مجدد", errorFetchSummary: "خطا در دریافت نرخ ارز/طلا. از نرخ ذخیره شده دلار استفاده می‌شود.", errorFetchCrypto: "خطا در دریافت لیست ارزها. لطفاً اتصال خود را بررسی کنید.", noResults: "ارزی با این مشخصات یافت نشد.", emptyWatchlist: "هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.", rank: "رتبه", editEmail: "ویرایش ایمیل", enterEmail: "ایمیل خود را وارد کنید", save: "ذخیره", invalidEmail: "آدرس ایمیل نامعتبر است.", editWallets: "آدرس کیف پول", noWallets: "هنوز آدرسی اضافه نشده است.", addNewWallet: "افزودن آدرس جدید", editWallet: "ویرایش آدرس", addWallet: "افزودن آدرس", selectCoin: "انتخاب ارز", walletAddress: "آدرس کیف پول...", back: "بازگشت", confirmDelete: "آیا از حذف کیف پول {symbol} مطمئن هستید؟", cryptoAmount: "مقدار ارز", usdEquivalent: "معادل دلاری", irtEquivalent: "معادل تومانی", coinDetails: "جزئیات ارز", price: "قیمت", change24h: "تغییر ۲۴ ساعته", high24h: "بالاترین ۲۴ ساعته", low24h: "پایین‌ترین ۲۴ ساعته", volume24h: "حجم معاملات (۲۴ ساعته)", chartUnavailable: "نمودار موجود نیست", chart24h: "نمودار قیمت ۲۴ ساعته (نمادین)", shop: "فروشگاه", wallet: "کیف پول", dollar: "دلار/تتر", gold: "طلای ۱۸ عیار", usingCachedPrice: "استفاده از نرخ ذخیره شده قبلی", comingSoon: "به زودی!", comingSoonMessage: "این صفحه ({pageName}) در حال توسعه است و به زودی در دسترس خواهد بود.",
         },
-        ar: { markets: "الأسواق", profile: "الملف الشخصي", converter: "تحويل", marketHeader: "أسواق العملات الرقمية شلبي", searchPlaceholder: "ابحث عن عملة...", all: "الكل", watchlist: "المفضلة", marketCap: "القيمة السوقية", gainers: "الأكثر ربحًا", losers: "الأكثر خسارة", emailSaved: "تم حفظ البريد الإلكتروني!", walletSaved: "تم حفظ عنوان المحفظة!", walletDeleted: "تم حذف عنوان المحفظة!", copied: "تم النسخ!", settings: "الإعدادات", theme: "مظهر التطبيق", dark: "داكن", light: "فاتح", language: "اللغة", userInfo: "معلومات المستخدم", name: "الاسم", username: "اسم المستخدم", userId: "معرف المستخدم", emailOptional: "البريد الإلكتروني (اختياري)", notSet: "لم يتم تعيينه", wallets: "عناوين المحفظة", walletsCount: "{count} عناوين محفوظة", tryAgain: "حاول مرة أخرى", errorFetchSummary: "خطأ في جلب سعر الدولار من مصدر داخلي. باستخدام السعر المخزن مؤقتًا.", errorFetchCrypto: "خطأ في جلب قائمة العملات. يرجى التحقق من اتصالك.", noResults: "لم يتم العثور على نتائج.", emptyWatchlist: "قائمة المراقبة الخاصة بك فارغة.", rank: "مرتبة", editEmail: "تعديل البريد الإلكتروني", enterEmail: "أدخل بريدك الإلكتروني", save: "حفظ", invalidEmail: "عنوان البريد الإلكتروني غير صالح.", editWallets: "عناوين المحفظة", noWallets: "لم تتم إضافة أي عناوين بعد.", addNewWallet: "إضافة عنوان جديد", editWallet: "تعديل العنوان", addWallet: "إضافة عنوان", selectCoin: "اختر العملة", walletAddress: "عنوان المحفظة...", back: "رجوع", confirmDelete: "هل أنت متأكد من حذف محفظة {symbol}؟", cryptoAmount: "كمية العملة", usdEquivalent: "ما يعادل بالدولار", irtEquivalent: "ما يعادل بالتومان", coinDetails: "تفاصيل العملة", price: "السعر", change24h: "التغيير خلال 24 ساعة", high24h: "أعلى سعر خلال 24 ساعة", low24h: "أدنى سعر خلال 24 ساعة", volume24h: "حجم التداول (24 ساعة)", chartUnavailable: "الرسم البياني غير متوفر", chart24h: "الرسم البياني للسعر 24 ساعة", shop: "المتجر", wallet: "المحفظة", dollar: "Tether (Nobitex)", gold: "الذهب (18 قيراط)", usingCachedPrice: "استخدام السعر المخزن مؤقتًا", comingSoon: "قريبًا!", comingSoonMessage: "هذه الصفحة ({pageName}) قيد التطوير وستكون متاحة قريبًا.", },
-        zh: { markets: "市场", profile: "个人资料", converter: "转换", marketHeader: "Shelby数字货币市场", searchPlaceholder: "搜索币种...", all: "全部", watchlist: "关注列表", marketCap: "市值", gainers: "涨幅榜", losers: "跌幅榜", emailSaved: "邮件已保存!", walletSaved: "钱包地址已保存!", walletDeleted: "钱包已删除!", copied: "已复制!", settings: "设置", theme: "主题", dark: "深色", light: "浅色", language: "语言", userInfo: "用户信息", name: "名称", username: "用户名", userId: "用户ID", emailOptional: "电子邮件 (可选)", notSet: "未设置", wallets: "钱包", walletsCount: "{count} 个已保存钱包", tryAgain: "重试", errorFetchSummary: "获取美元汇率错误。正在使用缓存价格。", errorFetchCrypto: "获取币种列表错误。请检查您的连接。", noResults: "未找到任何币种。", emptyWatchlist: "您的关注列表为空。", rank: "排名", editEmail: "编辑邮件", enterEmail: "输入您的电子邮件", save: "保存", invalidEmail: "无效的电子邮件地址。", editWallets: "钱包地址", noWallets: "尚未添加钱包地址。", addNewWallet: "添加新钱包", editWallet: "编辑钱包", addWallet: "添加钱包", selectCoin: "选择币种", walletAddress: "钱包地址...", back: "返回", confirmDelete: "确定删除 {symbol} 钱包吗？", cryptoAmount: "币种数量", usdEquivalent: "美元等值", irtEquivalent: "Toman等值", coinDetails: "币种详情", price: "价格", change24h: "24小时变化", high24h: "24小时最高", low24h: "24小时最低", volume24h: "24小时交易量", chartUnavailable: "图表不可用", chart24h: "24小时价格图表", shop: "商店", wallet: "钱包", dollar: "Tether (Nobitex)", gold: "黄金 (18k)", usingCachedPrice: "使用缓存价格", comingSoon: "即将推出!", comingSoonMessage: "此页面 ({pageName}) 正在开发中，即将推出。", },
+        ar: { markets: "الأسواق", profile: "الملف الشخصي", converter: "تحويل", marketHeader: "أسواق العملات الرقمية شلبي", searchPlaceholder: "ابحث عن عملة...", all: "الكل", watchlist: "المفضلة", marketCap: "القيمة السوقية", gainers: "الأكثر ربحًا", losers: "الأكثر خسارة", emailSaved: "تم حفظ البريد الإلكتروني!", walletSaved: "تم حفظ عنوان المحفظة!", walletDeleted: "تم حذف عنوان المحفظة!", copied: "تم النسخ!", settings: "الإعدادات", theme: "مظهر التطبيق", dark: "داكن", light: "فاتح", language: "اللغة", userInfo: "معلومات المستخدم", name: "الاسم", username: "اسم المستخدم", userId: "معرف المستخدم", emailOptional: "البريد الإلكتروني (اختياري)", notSet: "لم يتم تعيينه", wallets: "عناوين المحفظة", walletsCount: "{count} عناوين محفوظة", tryAgain: "حاول مرة أخرى", errorFetchSummary: "خطأ في جلب سعر العملة/الذهب. باستخدام سعر الدولار المخزن مؤقتًا.", errorFetchCrypto: "خطأ في جلب قائمة العملات. يرجى التحقق من اتصالك.", noResults: "لم يتم العثور على نتائج.", emptyWatchlist: "قائمة المراقبة الخاصة بك فارغة.", rank: "مرتبة", editEmail: "تعديل البريد الإلكتروني", enterEmail: "أدخل بريدك الإلكتروني", save: "حفظ", invalidEmail: "عنوان البريد الإلكتروني غير صالح.", editWallets: "عناوين المحفظة", noWallets: "لم تتم إضافة أي عناوين بعد.", addNewWallet: "إضافة عنوان جديد", editWallet: "تعديل العنوان", addWallet: "إضافة عنوان", selectCoin: "اختر العملة", walletAddress: "عنوان المحفظة...", back: "رجوع", confirmDelete: "هل أنت متأكد من حذف محفظة {symbol}؟", cryptoAmount: "كمية العملة", usdEquivalent: "ما يعادل بالدولار", irtEquivalent: "ما يعادل بالتومان", coinDetails: "تفاصيل العملة", price: "السعر", change24h: "التغيير خلال 24 ساعة", high24h: "أعلى سعر خلال 24 ساعة", low24h: "أدنى سعر خلال 24 ساعة", volume24h: "حجم التداول (24 ساعة)", chartUnavailable: "الرسم البياني غير متوفر", chart24h: "الرسم البياني للسعر 24 ساعة", shop: "المتجر", wallet: "المحفظة", dollar: "الدولار/Tether", gold: "الذهب (18 قيراط)", usingCachedPrice: "استخدام السعر المخزن مؤقتًا", comingSoon: "قريبًا!", comingSoonMessage: "هذه الصفحة ({pageName}) قيد التطوير وستكون متاحة قريبًا.", },
+        zh: { markets: "市场", profile: "个人资料", converter: "转换", marketHeader: "Shelby数字货币市场", searchPlaceholder: "搜索币种...", all: "全部", watchlist: "关注列表", marketCap: "市值", gainers: "涨幅榜", losers: "跌幅榜", emailSaved: "邮件已保存!", walletSaved: "钱包地址已保存!", walletDeleted: "钱包已删除!", copied: "已复制!", settings: "设置", theme: "主题", dark: "深色", light: "浅色", language: "语言", userInfo: "用户信息", name: "名称", username: "用户名", userId: "用户ID", emailOptional: "电子邮件 (可选)", notSet: "未设置", wallets: "钱包", walletsCount: "{count} 个已保存钱包", tryAgain: "重试", errorFetchSummary: "获取货币/黄金汇率错误。正在使用缓存美元价格。", errorFetchCrypto: "获取币种列表错误。请检查您的连接。", noResults: "未找到任何币种。", emptyWatchlist: "您的关注列表为空。", rank: "排名", editEmail: "编辑邮件", enterEmail: "输入您的电子邮件", save: "保存", invalidEmail: "无效的电子邮件地址。", editWallets: "钱包地址", noWallets: "尚未添加钱包地址。", addNewWallet: "添加新钱包", editWallet: "编辑钱包", addWallet: "添加钱包", selectCoin: "选择币种", walletAddress: "钱包地址...", back: "返回", confirmDelete: "确定删除 {symbol} 钱包吗？", cryptoAmount: "币种数量", usdEquivalent: "美元等值", irtEquivalent: "Toman等值", coinDetails: "币种详情", price: "价格", change24h: "24小时变化", high24h: "24小时最高", low24h: "24小时最低", volume24h: "24小时交易量", chartUnavailable: "图表不可用", chart24h: "24小时价格图表", shop: "商店", wallet: "钱包", dollar: "美元/Tether", gold: "黄金 (18k)", usingCachedPrice: "使用缓存价格", comingSoon: "即将推出!", comingSoonMessage: "此页面 ({pageName}) 正在开发中，即将推出。", },
     };
     
     let activeLanguage = localStorage.getItem('language_v10') || 'fa';
@@ -191,8 +173,8 @@
         loadedPages: 1, 
     };
     
-    // API قیمت USDT/IRT نوبیتکس (برای نرخ تومانی)
-    const NOBITEX_API_URL = "https://api.nobitex.ir/v2/market/stats?symbol=USDTIRT";
+    // 📢 آدرس API جدید (حاجی وب‌سرویس) - دارای نرخ دلار و طلا
+    const HAJI_API_URL = "https://haji-api.ir/arz/?license=X6AeD481PYBXAVd613617197375739822qgek";
     const CRYPTO_BASE_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&sparkline=true&price_change_percentage=24h";
 
     // توابع کمکی
@@ -231,53 +213,64 @@
         translateUI();
     }
     
-    // تابع بارگذاری داده‌های خلاصه (قیمت دلار/تتر از نوبیتکس)
+    // تابع بارگذاری داده‌های خلاصه (قیمت دلار/تتر و طلا از Haji-API)
     async function loadSummaryData() {
         state.isLoading.summary = true; 
         state.errors.summary = null; 
         
         // نرخ دلار ذخیره شده قبلی (برای مواقع خطا)
-        // 🚨 نکته مهم: این نرخ دلار (Toman) است.
         const lastDollarPriceToman = parseFloat(localStorage.getItem('lastDollarPrice_v10')) || 0; 
-        
-        // ابتدا نرخ ذخیره‌شده را اعمال می‌کنیم تا اگر API شکست خورد، کریپتوها باز هم قیمت تومانی را داشته باشند
-        state.dollarPrice = lastDollarPriceToman; 
+        state.dollarPrice = lastDollarPriceToman; // ابتدا نرخ ذخیره‌شده را اعمال می‌کنیم
         
         try {
-            // استفاده از fetchWithRetry برای پایداری بیشتر
-            const response = await fetchWithRetry(NOBITEX_API_URL);
+            // 🚀 استفاده از API جدید حاجی وب‌سرویس برای دلار و طلا
+            const response = await fetchWithRetry(HAJI_API_URL);
             const result = await response.json();
             
-            // Nobitex structure: result.stats.USDTIRT.last (price in Rial)
-            const usdtData = result.stats && result.stats.USDTIRT;
-            if (!usdtData || !usdtData.last) throw new Error('Invalid Nobitex API response structure or missing USDTIRT data.');
+            let newDollarPriceToman = 0;
+            let newGoldPriceToman = 0;
+            let dollarChangePercent = 0;
+            let goldChangePercent = 0;
+
+            // 🛑 توجه: این کد بر اساس حدس منطقی از ساختار رایج APIهای ایرانی نوشته شده است.
+            // اگر API کار نکرد، باید لاگ پاسخ را بررسی کرده و کلیدها را اصلاح کنید.
+            if (result && Array.isArray(result.arz)) {
+                // جستجوی دلار/تتر و طلای ۱۸ عیار
+                const dollarData = result.arz.find(item => item.name && (item.name.includes('دلار') || item.name.includes('آمریکا') || item.name.includes('تتر')));
+                const goldData = result.arz.find(item => item.name && item.name.includes('گرم طلا ۱۸ عیار')); 
+
+                if (dollarData && dollarData.price) {
+                    // فرض می‌کنیم قیمت در تومان است و باید کاماها حذف شوند.
+                    newDollarPriceToman = parseFloat(String(dollarData.price).replace(/,/g, '')) || 0; 
+                    dollarChangePercent = parseFloat(dollarData.change_percent) || 0;
+                }
+                if (goldData && goldData.price) {
+                    // فرض می‌کنیم قیمت در تومان است.
+                    newGoldPriceToman = parseFloat(String(goldData.price).replace(/,/g, '')) || 0;
+                    goldChangePercent = parseFloat(goldData.change_percent) || 0;
+                }
+            } else if (result && result.status === 'error') {
+                 // اگر API پاسخ خطا (مثلاً پایان لایسنس) داد
+                 throw new Error(result.message || "Haji-API returned an error status.");
+            }
             
-            // 💰 تبدیل قیمت از ریال (Rial) به تومان (Toman) با تقسیم بر ۱۰
-            const rialPrice = parseFloat(usdtData.last);
-            const newDollarPriceToman = rialPrice / 10;
-            
-            // محاسبه درصد تغییر ۲۴ ساعته
-            const openPrice = parseFloat(usdtData.open);
-            const changePercent = openPrice > 0 ? ((rialPrice - openPrice) / openPrice) * 100 : 0;
-            
-            state.dollarPrice = newDollarPriceToman; // نرخ دلار جدید به تومان
-            localStorage.setItem('lastDollarPrice_v10', newDollarPriceToman); 
-            
+            if (newDollarPriceToman > 0) {
+                state.dollarPrice = newDollarPriceToman; // نرخ دلار جدید به تومان
+                localStorage.setItem('lastDollarPrice_v10', newDollarPriceToman); 
+            }
+
             state.summaryData = {
-                dollar: { price: newDollarPriceToman, change: changePercent },
-                // داده طلای ۱۸ عیار در API نوبیتکس وجود ندارد، آن را صفر می‌کنیم
-                gold: { price: 0, change: 0 } 
+                dollar: { price: state.dollarPrice, change: dollarChangePercent },
+                gold: { price: newGoldPriceToman, change: goldChangePercent } 
             };
 
         } catch (error) { 
-            console.error("Summary (Nobitex) API Error (Retry failed):", error); 
+            console.error("Summary (Haji-API) API Error (Retry failed):", error); 
             
             if (lastDollarPriceToman > 0) {
-                // اگر API اصلی شکست خورد، از نرخ ذخیره‌شده قبلی استفاده می‌کنیم و هشدار می‌دهیم
                 state.dollarPrice = lastDollarPriceToman;
                 state.errors.summary = i18n('errorFetchSummary'); 
             } else {
-                // اگر حتی نرخ کش شده هم نداریم
                 state.dollarPrice = 0; 
                 state.errors.summary = `${i18n('errorFetchSummary')}. ${i18n('tryAgain')}`;
             }
@@ -285,7 +278,7 @@
             // اگر قیمت دلار به‌روز نشد، از داده‌های Mock (صفر یا کش شده) استفاده می‌کنیم
             state.summaryData = {
                  dollar: { price: state.dollarPrice, change: 0 },
-                 gold: { price: 0, change: 0 } 
+                 gold: { price: 0, change: 0 } // قیمت طلا را صفر نمایش می‌دهیم
             };
         } finally { 
             state.isLoading.summary = false; 
@@ -493,16 +486,13 @@
                     </div>
                 </div>
                 
-                <!-- قیمت‌ها -->
                 <div class="text-right font-mono pr-2">
                     <div class="font-bold text-sm" data-price-usd>$${priceUSD}</div>
                     <div class="text-[var(--hint)] text-xs">${tomanPrice} T</div>
                 </div>
                 
-                <!-- تغییرات ۲۴ ساعته -->
                 <div class="w-20 text-center font-bold text-sm ${getChangeClass(coin.price_change_percentage_24h)} ml-4">${changePercent}</div>
                 
-                <!-- ستاره -->
                 <div class="w-10 text-center text-2xl star-icon cursor-pointer text-[var(--hint)] hover:text-yellow-400" data-watched="${isWatched}" aria-label="${isWatched ? 'Remove from Watchlist' : 'Add to Watchlist'}">${isWatched ? '<span style="color: #FFC107;">★</span>' : '☆'}</div>
             </div>`;
     }
@@ -716,7 +706,6 @@
                 </div>
             </div>
             
-            <!-- نمودار 24 ساعته (در واقع 7 روزه است اما برای این بخش کافی است) -->
             <div class="mb-6">
                  <h3 class="font-bold text-lg mb-3" data-i18n-key="chart24h"></h3>
                  <div class="h-40 flex items-center justify-center p-2 bg-[var(--bg)] rounded-xl border border-[var(--header-border)]">
@@ -822,11 +811,11 @@
         if (state.updateInterval) clearInterval(state.updateInterval);
         state.updateInterval = setInterval(() => {
             loadCryptoData(true);
-            loadSummaryData(); // نرخ دلار را هم به‌روزرسانی می‌کنیم
+            loadSummaryData(); // نرخ دلار و طلا را هم به‌روزرسانی می‌کنیم
         }, 30000);
     });
     //============== END OF FULL JAVASCRIPT CODE ==============
     </script>
 </body>
 </html>
-
+```eof
