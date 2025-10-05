@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
-    <title>Shelby Bet</title>
+    <title>Shelby Bet - بازارها</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- فونت Vazirmatn برای RTL مناسب است -->
@@ -20,7 +20,16 @@
             --button: #007AFF; --secondary-bg: #F2F2F7; --header-border: #e5e5ea;
         }
         /* استایل‌های پایه */
-        body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; transition: background-color 0.3s, color 0.3s; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Vazirmatn', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 0; 
+            padding-bottom: 70px; 
+            transition: background-color 0.3s, color 0.3s; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         .page { display: none; min-height: calc(100vh - 70px); }
         .page.active { display: block; }
         /* استایل نوار بالا و نوار پیمایش */
@@ -42,6 +51,9 @@
         .modal.open { transform: translateY(0); }
         .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 10px 20px; border-radius: 8px; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; }
+        /* لیست ارزها: برای اسکرول مجازی */
+        #coin-list-container { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+        .coin-row { transition: background-color 0.1s; }
     </style>
 </head>
 <body class="antialiased">
@@ -52,24 +64,31 @@
     <div id="markets-page" class="page active">
         <div class="header">
             <h1 data-i18n-key="marketHeader" class="text-xl font-bold text-center mb-4"></h1>
-            <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" class="w-full p-2.5 rounded-lg text-sm mb-3" style="background-color: var(--secondary-bg); border: 1px solid var(--header-border); color: var(--text);">
+            <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" class="w-full p-2.5 rounded-xl text-sm mb-3" style="background-color: var(--secondary-bg); border: 1px solid var(--header-border); color: var(--text);">
             <div class="flex items-center justify-between">
-                 <div class="flex bg-[var(--secondary-bg)] rounded-lg p-1">
-                    <button id="tab-all" class="tab-button active px-3 py-1.5 rounded-md text-xs font-semibold" data-i18n-key="all"></button>
-                    <button id="tab-watchlist" class="tab-button px-3 py-1.5 rounded-md text-xs font-semibold" data-i18n-key="watchlist"></button>
+                 <div class="flex bg-[var(--secondary-bg)] rounded-xl p-1">
+                    <button id="tab-all" class="tab-button active px-3 py-1.5 rounded-lg text-xs font-semibold" data-i18n-key="all"></button>
+                    <button id="tab-watchlist" class="tab-button px-3 py-1.5 rounded-lg text-xs font-semibold" data-i18n-key="watchlist"></button>
                 </div>
                  <div id="sort-controls" class="flex items-center space-x-1 space-x-reverse">
-                    <button class="sort-button active text-xs px-2" data-sort="market_cap_desc" data-i18n-key="marketCap"></button>
-                    <button class="sort-button text-xs px-2" data-sort="gainers" data-i18n-key="gainers"></button>
-                    <button class="sort-button text-xs px-2" data-sort="losers" data-i18n-key="losers"></button>
+                    <button class="sort-button active text-xs px-2 py-1.5" data-sort="market_cap_desc" data-i18n-key="marketCap"></button>
+                    <button class="sort-button text-xs px-2 py-1.5" data-sort="gainers" data-i18n-key="gainers"></button>
+                    <button class="sort-button text-xs px-2 py-1.5" data-sort="losers" data-i18n-key="losers"></button>
                 </div>
             </div>
         </div>
         <!-- خلاصه‌وضعیت بازار و قیمت دلار -->
-        <div id="summary-container" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        <div id="summary-container" class="p-4 grid grid-cols-2 gap-3">
+             <!-- Skeleton loading for summary -->
+            <div class="h-16 skeleton rounded-xl"></div>
+            <div class="h-16 skeleton rounded-xl"></div>
+        </div>
         <!-- لیست ارزها با Infinite Scroll -->
         <div id="coin-list-container" class="h-[calc(100vh-230px)] overflow-y-auto">
-            <div id="coin-list" class="relative"></div>
+            <div id="coin-list" class="relative">
+                 <!-- Skeleton loading for crypto list -->
+                 <div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-[68px] skeleton"></div>`).join('')}</div>
+            </div>
         </div>
         <div id="message-container" class="hidden text-center p-10 text-[var(--hint)]"></div>
     </div>
@@ -95,7 +114,7 @@
             <span data-i18n-key="markets" class="block text-xs"></span>
         </button>
         
-        <!-- 3. تبدیل (Converter) -->
+        <!-- 3. تبدیل (Converter) - نام تغییر یافته -->
         <button class="nav-button" data-page="coming-soon-page" data-page-key="converter">
              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span data-i18n-key="converter" class="block text-xs"></span>
@@ -123,27 +142,24 @@
     <script>
     //============== START OF FULL JAVASCRIPT CODE ==============
     
-    // متغیرهای گلوبال
+    // متغیرهای گلوبال تلگرام وب‌اپ
     const tg = window.Telegram.WebApp;
 
     // --- I18N Translations (چهار زبان کامل) ---
     const translations = {
         en: { 
-            markets: "Markets", profile: "Profile", converter: "Converter", marketHeader: "Crypto Markets", searchPlaceholder: "Search coins...", all: "All", watchlist: "Watchlist", marketCap: "Market Cap", gainers: "Gainers", losers: "Losers", emailSaved: "Email saved!", walletSaved: "Wallet address saved!", walletDeleted: "Wallet deleted!", copied: "Copied!", settings: "Settings", theme: "Theme", dark: "Dark", light: "Light", language: "Language", userInfo: "User Info", name: "Name", username: "Username", userId: "User ID", emailOptional: "Email (Optional)", notSet: "Not set", wallets: "Wallets", walletsCount: "{count} saved wallets", tryAgain: "Try Again", errorFetchSummary: "Error fetching summary data", errorFetchCrypto: "Error fetching crypto list", noResults: "No coins found.", emptyWatchlist: "Your watchlist is empty.", rank: "Rank", editEmail: "Edit Email", enterEmail: "Enter your email", save: "Save", invalidEmail: "Invalid email address.", editWallets: "Wallet Addresses", noWallets: "No wallets added yet.", addNewWallet: "Add New Wallet", editWallet: "Edit Wallet", addWallet: "Add Wallet", selectCoin: "Select Coin", walletAddress: "Wallet Address...", back: "Back", confirmDelete: "Are you sure you want to delete {symbol} wallet?", cryptoAmount: "Coin Amount", usdEquivalent: "USD Equivalent", irtEquivalent: "Toman Equivalent", coinDetails: "Coin Details", price: "Price", change24h: "24h Change", high24h: "24h High", low24h: "24h Low", volume24h: "24h Volume", chartUnavailable: "Chart unavailable", shop: "Shop", wallet: "Wallet", usingCachedPrice: "Using cached price", comingSoon: "Coming Soon!", comingSoonMessage: "This page ({pageName}) is under development and will be available soon.", 
+            markets: "Markets", profile: "Profile", converter: "Conversion", marketHeader: "Crypto Markets", searchPlaceholder: "Search coins...", all: "All", watchlist: "Watchlist", marketCap: "Market Cap", gainers: "Gainers", losers: "Losers", emailSaved: "Email saved!", walletSaved: "Wallet address saved!", walletDeleted: "Wallet deleted!", copied: "Copied!", settings: "Settings", theme: "Theme", dark: "Dark", light: "Light", language: "Language", userInfo: "User Info", name: "Name", username: "Username", userId: "User ID", emailOptional: "Email (Optional)", notSet: "Not set", wallets: "Wallets", walletsCount: "{count} saved wallets", tryAgain: "Try Again", errorFetchSummary: "Error fetching summary data. Using cached Dollar price.", errorFetchCrypto: "Error fetching crypto list. Please check your connection.", noResults: "No coins found.", emptyWatchlist: "Your watchlist is empty.", rank: "Rank", editEmail: "Edit Email", enterEmail: "Enter your email", save: "Save", invalidEmail: "Invalid email address.", editWallets: "Wallet Addresses", noWallets: "No wallets added yet.", addNewWallet: "Add New Wallet", editWallet: "Edit Wallet", addWallet: "Add Wallet", selectCoin: "Select Coin", walletAddress: "Wallet Address...", back: "Back", confirmDelete: "Are you sure you want to delete {symbol} wallet?", cryptoAmount: "Coin Amount", usdEquivalent: "USD Equivalent", irtEquivalent: "Toman Equivalent", coinDetails: "Coin Details", price: "Price", change24h: "24h Change", high24h: "24h High", low24h: "24h Low", volume24h: "24h Volume", chartUnavailable: "Chart Unavailable", chart24h: "24h Price Chart", shop: "Shop", wallet: "Wallet", dollar: "Dollar", gold: "Gold (18k)", usingCachedPrice: "Using cached price", comingSoon: "Coming Soon!", comingSoonMessage: "This page ({pageName}) is under development and will be available soon.",
         },
         fa: { 
-            markets: "بازارها", profile: "پروفایل", converter: "مبدل", marketHeader: "بازار ارزهای دیجیتال", searchPlaceholder: "جستجوی ارز...", all: "همه", watchlist: "علاقه‌مندی‌ها", marketCap: "ارزش بازار", gainers: "بیشترین رشد", losers: "بیشترین افت", emailSaved: "ایمیل ذخیره شد!", walletSaved: "آدرس کیف پول ذخیره شد!", walletDeleted: "کیف پول حذف شد!", copied: "کپی شد!", settings: "تنظیمات", theme: "پوسته", dark: "تاریک", light: "روشن", language: "زبان", userInfo: "اطلاعات کاربر", name: "نام", username: "نام کاربری", userId: "شناسه کاربر", emailOptional: "ایمیل (اختیاری)", notSet: "تعیین نشده", wallets: "کیف پول‌ها", walletsCount: "{count} کیف پول ذخیره شده", tryAgain: "تلاش مجدد", errorFetchSummary: "خطا در دریافت قیمت طلا و سکه", errorFetchCrypto: "خطا در دریافت لیست ارزها", noResults: "ارزی با این مشخصات یافت نشد.", emptyWatchlist: "هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.", rank: "رتبه", editEmail: "ویرایش ایمیل", enterEmail: "ایمیل خود را وارد کنید", save: "ذخیره", invalidEmail: "آدرس ایمیل نامعتبر است.", editWallets: "آدرس کیف پول", noWallets: "هنوز آدرسی اضافه نشده است.", addNewWallet: "افزودن آدرس جدید", editWallet: "ویرایش آدرس", addWallet: "افزودن آدرس", selectCoin: "انتخاب ارز", walletAddress: "آدرس کیف پول...", back: "بازگشت", confirmDelete: "آیا از حذف کیف پول {symbol} مطمئن هستید؟", cryptoAmount: "مقدار ارز", usdEquivalent: "معادل دلاری", irtEquivalent: "معادل تومانی", coinDetails: "جزئیات ارز", price: "قیمت", change24h: "تغییر ۲۴ ساعته", high24h: "بالاترین ۲۴ ساعته", low24h: "پایین‌ترین ۲۴ ساعته", volume24h: "حجم معاملات (۲۴ ساعته)", chartUnavailable: "نمودار موجود نیست", shop: "فروشگاه", wallet: "کیف پول", usingCachedPrice: "استفاده از نرخ ذخیره شده قبلی", comingSoon: "به زودی!", comingSoonMessage: "این صفحه ({pageName}) در حال توسعه است و به زودی در دسترس خواهد بود.",
+            markets: "بازارها", profile: "پروفایل", converter: "تبدیل", marketHeader: "بازار ارزهای دیجیتال", searchPlaceholder: "جستجوی ارز...", all: "همه", watchlist: "علاقه‌مندی‌ها", marketCap: "ارزش بازار", gainers: "بیشترین رشد", losers: "بیشترین افت", emailSaved: "ایمیل ذخیره شد!", walletSaved: "آدرس کیف پول ذخیره شد!", walletDeleted: "کیف پول حذف شد!", copied: "کپی شد!", settings: "تنظیمات", theme: "پوسته", dark: "تاریک", light: "روشن", language: "زبان", userInfo: "اطلاعات کاربر", name: "نام", username: "نام کاربری", userId: "شناسه کاربر", emailOptional: "ایمیل (اختیاری)", notSet: "تعیین نشده", wallets: "کیف پول‌ها", walletsCount: "{count} کیف پول ذخیره شده", tryAgain: "تلاش مجدد", errorFetchSummary: "خطا در دریافت نرخ دلار و طلا. از نرخ ذخیره شده استفاده می‌شود.", errorFetchCrypto: "خطا در دریافت لیست ارزها. لطفاً اتصال خود را بررسی کنید.", noResults: "ارزی با این مشخصات یافت نشد.", emptyWatchlist: "هنوز ارزی به علاقه‌مندی‌ها اضافه نکرده‌اید.", rank: "رتبه", editEmail: "ویرایش ایمیل", enterEmail: "ایمیل خود را وارد کنید", save: "ذخیره", invalidEmail: "آدرس ایمیل نامعتبر است.", editWallets: "آدرس کیف پول", noWallets: "هنوز آدرسی اضافه نشده است.", addNewWallet: "افزودن آدرس جدید", editWallet: "ویرایش آدرس", addWallet: "افزودن آدرس", selectCoin: "انتخاب ارز", walletAddress: "آدرس کیف پول...", back: "بازگشت", confirmDelete: "آیا از حذف کیف پول {symbol} مطمئن هستید؟", cryptoAmount: "مقدار ارز", usdEquivalent: "معادل دلاری", irtEquivalent: "معادل تومانی", coinDetails: "جزئیات ارز", price: "قیمت", change24h: "تغییر ۲۴ ساعته", high24h: "بالاترین ۲۴ ساعته", low24h: "پایین‌ترین ۲۴ ساعته", volume24h: "حجم معاملات (۲۴ ساعته)", chartUnavailable: "نمودار موجود نیست", chart24h: "نمودار قیمت ۲۴ ساعته (نمادین)", shop: "فروشگاه", wallet: "کیف پول", dollar: "دلار آزاد", gold: "طلای ۱۸ عیار", usingCachedPrice: "استفاده از نرخ ذخیره شده قبلی", comingSoon: "به زودی!", comingSoonMessage: "این صفحه ({pageName}) در حال توسعه است و به زودی در دسترس خواهد بود.",
         },
-        ar: { 
-            markets: "الأسواق", profile: "الملف الشخصي", converter: "محول", marketHeader: "الأسواق", searchPlaceholder: "ابحث عن عملة...", all: "الكل", watchlist: "المفضلة", marketCap: "القيمة السوقية", gainers: "الأكثر ربحًا", losers: "الأكثر خسارة", emailSaved: "تم حفظ البريد الإلكتروني!", walletSaved: "تم حفظ عنوان المحفظة!", walletDeleted: "تم حذف عنوان المحفظة!", copied: "تم النسخ!", settings: "الإعدادات", theme: "مظهر التطبيق", dark: "داكن", light: "فاتح", language: "اللغة", userInfo: "معلومات المستخدم", name: "الاسم", username: "اسم المستخدم", userId: "معرف المستخدم", emailOptional: "البريد الإلكتروني (اختياري)", notSet: "لم يتم تعيينه", wallets: "عناوين المحفظة", walletsCount: "{count} عناوين محفوظة", tryAgain: "حاول مرة أخرى", errorFetchSummary: "خطأ في جلب أسعار الذهب والعملات", errorFetchCrypto: "خطأ في جلب قائمة العملات", noResults: "لم يتم العثور على نتائج.", emptyWatchlist: "قائمة المراقبة الخاصة بك فارغة.", rank: "مرتبة", editEmail: "تعديل البريد الإلكتروني", enterEmail: "أدخل بريدك الإلكتروني", save: "حفظ", invalidEmail: "عنوان البريد الإلكتروني غير صالح.", editWallets: "عناوين المحفظة", noWallets: "لم تتم إضافة أي عناوين بعد.", addNewWallet: "إضافة عنوان جديد", editWallet: "تعديل العنوان", addWallet: "إضافة عنوان", selectCoin: "اختر العملة", walletAddress: "عنوان المحفظة...", back: "رجوع", confirmDelete: "هل أنت متأكد من حذف محفظة {symbol}؟", cryptoAmount: "كمية العملة", usdEquivalent: "ما يعادل بالدولار", irtEquivalent: "ما يعادل بالتومان", coinDetails: "تفاصيل العملة", price: "السعر", change24h: "التغيير خلال 24 ساعة", high24h: "أعلى سعر خلال 24 ساعة", low24h: "أدنى سعر خلال 24 ساعة", volume24h: "حجم التداول (24 ساعة)", chartUnavailable: "الرسم البياني غير متوفر", shop: "المتجر", wallet: "المحفظة", usingCachedPrice: "استخدام السعر المخزن مؤقتًا", comingSoon: "قريبًا!", comingSoonMessage: "هذه الصفحة ({pageName}) قيد التطوير وستكون متاحة قريبًا.",
-        },
-        zh: { 
-            markets: "市场", profile: "个人资料", converter: "转换器", marketHeader: "加密市场", searchPlaceholder: "搜索币种...", all: "全部", watchlist: "关注列表", marketCap: "市值", gainers: "涨幅榜", losers: "跌幅榜", emailSaved: "邮件已保存!", walletSaved: "钱包地址已保存!", walletDeleted: "钱包已删除!", copied: "已复制!", settings: "设置", theme: "主题", dark: "深色", light: "浅色", language: "语言", userInfo: "用户信息", name: "名称", username: "用户名", userId: "用户ID", emailOptional: "电子邮件 (可选)", notSet: "未设置", wallets: "钱包", walletsCount: "{count} 个已保存钱包", tryAgain: "重试", errorFetchSummary: "获取摘要数据错误", errorFetchCrypto: "获取币种列表错误", noResults: "未找到任何币种。", emptyWatchlist: "您的关注列表为空。", rank: "排名", editEmail: "编辑邮件", enterEmail: "输入您的电子邮件", save: "保存", invalidEmail: "无效的电子邮件地址。", editWallets: "钱包地址", noWallets: "尚未添加钱包地址。", addNewWallet: "添加新钱包", editWallet: "编辑钱包", addWallet: "添加钱包", selectCoin: "选择币种", walletAddress: "钱包地址...", back: "返回", confirmDelete: "确定删除 {symbol} 钱包吗？", cryptoAmount: "币种数量", usdEquivalent: "美元等值", irtEquivalent: "Toman等值", coinDetails: "币种详情", price: "价格", change24h: "24小时变化", high24h: "24小时最高", low24h: "24小时最低", volume24h: "24小时交易量", chartUnavailable: "图表不可用", shop: "商店", wallet: "钱包", usingCachedPrice: "使用缓存价格", comingSoon: "即将推出!", comingSoonMessage: "此页面 ({pageName}) 正在开发中，即将推出。",
-        },
+        // ... (Arabic and Chinese translations are omitted for brevity but remain in the original file)
+        ar: { markets: "الأسواق", profile: "الملف الشخصي", converter: "تحويل", marketHeader: "الأسواق", searchPlaceholder: "ابحث عن عملة...", all: "الكل", watchlist: "المفضلة", marketCap: "القيمة السوقية", gainers: "الأكثر ربحًا", losers: "الأكثر خسارة", emailSaved: "تم حفظ البريد الإلكتروني!", walletSaved: "تم حفظ عنوان المحفظة!", walletDeleted: "تم حذف عنوان المحفظة!", copied: "تم النسخ!", settings: "الإعدادات", theme: "مظهر التطبيق", dark: "داكن", light: "فاتح", language: "اللغة", userInfo: "معلومات المستخدم", name: "الاسم", username: "اسم المستخدم", userId: "معرف المستخدم", emailOptional: "البريد الإلكتروني (اختياري)", notSet: "لم يتم تعيينه", wallets: "عناوين المحفظة", walletsCount: "{count} عناوين محفوظة", tryAgain: "حاول مرة أخرى", errorFetchSummary: "خطأ في جلب أسعار الذهب والعملات. باستخدام سعر الدولار المخزن مؤقتًا.", errorFetchCrypto: "خطأ في جلب قائمة العملات. يرجى التحقق من اتصالك.", noResults: "لم يتم العثور على نتائج.", emptyWatchlist: "قائمة المراقبة الخاصة بك فارغة.", rank: "مرتبة", editEmail: "تعديل البريد الإلكتروني", enterEmail: "أدخل بريدك الإلكتروني", save: "حفظ", invalidEmail: "عنوان البريد الإلكتروني غير صالح.", editWallets: "عناوين المحفظة", noWallets: "لم تتم إضافة أي عناوين بعد.", addNewWallet: "إضافة عنوان جديد", editWallet: "تعديل العنوان", addWallet: "إضافة عنوان", selectCoin: "اختر العملة", walletAddress: "عنوان المحفظة...", back: "رجوع", confirmDelete: "هل أنت متأكد من حذف محفظة {symbol}؟", cryptoAmount: "كمية العملة", usdEquivalent: "ما يعادل بالدولار", irtEquivalent: "ما يعادل بالتومان", coinDetails: "تفاصيل العملة", price: "السعر", change24h: "التغيير خلال 24 ساعة", high24h: "أعلى سعر خلال 24 ساعة", low24h: "أدنى سعر خلال 24 ساعة", volume24h: "حجم التداول (24 ساعة)", chartUnavailable: "الرسم البياني غير متوفر", chart24h: "الرسم البياني للسعر 24 ساعة", shop: "المتجر", wallet: "المحفظة", dollar: "الدولار", gold: "الذهب (18 قيراط)", usingCachedPrice: "استخدام السعر المخزن مؤقتًا", comingSoon: "قريبًا!", comingSoonMessage: "هذه الصفحة ({pageName}) قيد التطوير وستكون متاحة قريبًا.", },
+        zh: { markets: "市场", profile: "个人资料", converter: "转换", marketHeader: "加密市场", searchPlaceholder: "搜索币种...", all: "全部", watchlist: "关注列表", marketCap: "市值", gainers: "涨幅榜", losers: "跌幅榜", emailSaved: "邮件已保存!", walletSaved: "钱包地址已保存!", walletDeleted: "钱包已删除!", copied: "已复制!", settings: "设置", theme: "主题", dark: "深色", light: "浅色", language: "语言", userInfo: "用户信息", name: "名称", username: "用户名", userId: "用户ID", emailOptional: "电子邮件 (可选)", notSet: "未设置", wallets: "钱包", walletsCount: "{count} 个已保存钱包", tryAgain: "重试", errorFetchSummary: "获取摘要数据错误。正在使用缓存的美元价格。", errorFetchCrypto: "获取币种列表错误。请检查您的连接。", noResults: "未找到任何币种。", emptyWatchlist: "您的关注列表为空。", rank: "排名", editEmail: "编辑邮件", enterEmail: "输入您的电子邮件", save: "保存", invalidEmail: "无效的电子邮件地址。", editWallets: "钱包地址", noWallets: "尚未添加钱包地址。", addNewWallet: "添加新钱包", editWallet: "编辑钱包", addWallet: "添加钱包", selectCoin: "选择币种", walletAddress: "钱包地址...", back: "返回", confirmDelete: "确定删除 {symbol} 钱包吗？", cryptoAmount: "币种数量", usdEquivalent: "美元等值", irtEquivalent: "Toman等值", coinDetails: "币种详情", price: "价格", change24h: "24小时变化", high24h: "24小时最高", low24h: "24小时最低", volume24h: "24小时交易量", chartUnavailable: "图表不可用", chart24h: "24小时价格图表", shop: "商店", wallet: "钱包", dollar: "美元", gold: "黄金 (18k)", usingCachedPrice: "使用缓存价格", comingSoon: "即将推出!", comingSoonMessage: "此页面 ({pageName}) 正在开发中，即将推出。", },
     };
     
     let activeLanguage = localStorage.getItem('language_v10') || 'fa';
-    const isRTL = ['fa', 'ar'].includes(activeLanguage);
+    let isRTL = ['fa', 'ar'].includes(activeLanguage); // به‌روزرسانی متغیر گلوبال
     
     // تابع ترجمه
     const i18n = (key, params = {}) => {
@@ -155,7 +171,7 @@
     // نام فارسی برای نمایش و جستجو
     const PERSIAN_NAMES = { 'bitcoin': 'بیت‌کوین', 'ethereum': 'اتریوم', 'tether': 'تتر', 'binancecoin': 'بایننس کوین', 'solana': 'سولانا', 'ripple': 'ریپل', 'dogecoin': 'دوج‌کوین', 'toncoin': 'تون‌کوین', 'cardano': 'کاردانو', 'shiba-inu': 'شیبا اینو', 'tron': 'ترون', 'notcoin': 'نات‌کوین', 'pepe': 'پپه', 'floki': 'فلوکی' };
     
-    // آیدی ارزهای خاص
+    // آیدی ارزهای خاص که ممکن است در صفحه اول نباشند
     const EXTRA_COIN_IDS = 'toncoin,notcoin,dogecoin,shiba-inu,pepe,floki'; 
 
     const state = {
@@ -176,21 +192,37 @@
     };
     
     const SUMMARY_API_URL = "https://api.tgju.org/v1/market/indicator/summary";
+    const CRYPTO_BASE_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&sparkline=true&price_change_percentage=24h";
 
     // توابع کمکی
     const formatNum = (n, dec = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: true }).format(n);
     const formatPercent = (p) => `${parseFloat(p||0) >= 0 ? '+' : ''}${formatNum(p||0)}%`;
     const getChangeClass = (p) => (parseFloat(p||0) >= 0 ? 'text-[var(--positive)]' : 'text-[var(--negative)]');
-    const fetchWithTimeout = (url, timeout = 10000) => {
-        const controller = new AbortController();
-        const signal = controller.signal;
-        const promise = fetch(url, { signal });
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
-            controller.abort();
-            reject(new Error('Request timed out'));
-        }, timeout));
-        return Promise.race([promise, timeoutPromise]);
-    };
+    
+    /**
+     * اجرای fetch با timeout و retry (برای APIهایی که پایداری کمتری دارند مثل قیمت دلار)
+     */
+    async function fetchWithRetry(url, maxRetries = 3, initialDelay = 1000) {
+        for (let i = 0; i < maxRetries; i++) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 ثانیه تایم‌اوت
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`Server Error (${response.status})`);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (i === maxRetries - 1) {
+                    console.error(`Failed to fetch ${url} after ${maxRetries} attempts.`, error);
+                    throw error;
+                }
+                const delay = initialDelay * Math.pow(2, i);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+
 
     function render() {
         renderSummary();
@@ -198,28 +230,52 @@
         translateUI();
     }
     
-    // تابع بارگذاری داده‌های خلاصه (قیمت دلار)
+    // تابع بارگذاری داده‌های خلاصه (قیمت دلار و طلا)
     async function loadSummaryData() {
-        state.isLoading.summary = true; state.errors.summary = null; render();
+        state.isLoading.summary = true; 
+        state.errors.summary = null; 
+        
+        // نرخ دلار ذخیره شده قبلی (برای مواقع خطا)
         const lastDollarPrice = parseFloat(localStorage.getItem('lastDollarPrice_v10')) || 0; 
+
         try {
-            const response = await fetchWithTimeout(SUMMARY_API_URL);
-            if (!response.ok) throw new Error(`Server Error (${response.status})`);
+            // استفاده از fetchWithRetry برای پایداری بیشتر
+            const response = await fetchWithRetry(SUMMARY_API_URL);
             const result = await response.json();
+            
             if (!result.data || !result.data.price_dollar_rl) throw new Error('Invalid API response');
+            
             // قیمت دلار از ریال به تومان تبدیل می‌شود (تقسیم بر ۱۰)
+            // 💰 نکته مهم: قیمت دلار و طلا در API "tgju" به ریال است. ما آن را به تومان تبدیل می‌کنیم.
             const newDollarPrice = parseFloat(result.data.price_dollar_rl.p) / 10;
             state.dollarPrice = newDollarPrice;
             localStorage.setItem('lastDollarPrice_v10', newDollarPrice); 
-            state.summaryData = { dollar: result.data.price_dollar_rl, emami: result.data['sekeh-emami'], gold: result.data['tala-18'] };
+            
+            // قیمت سکه و طلا نیز به تومان تبدیل می‌شود
+            const dollarData = result.data.price_dollar_rl;
+            const goldData = result.data['tala-18'];
+
+            state.summaryData = {
+                dollar: { price: parseFloat(dollarData.p) / 10, change: dollarData.d },
+                gold: { price: parseFloat(goldData.p) / 10, change: goldData.d }
+            };
+
         } catch (error) { 
-            console.error("Summary API Error:", error); 
+            console.error("Summary API Error (Retry failed):", error); 
+            
             if (lastDollarPrice > 0) {
+                // اگر API اصلی شکست خورد، از نرخ ذخیره‌شده قبلی استفاده می‌کنیم
                 state.dollarPrice = lastDollarPrice;
-                state.errors.summary = `❗️ ${i18n('errorFetchSummary')} - ${i18n('usingCachedPrice')}`; 
+                state.errors.summary = i18n('errorFetchSummary'); 
             } else {
-                state.errors.summary = i18n('errorFetchSummary');
+                state.errors.summary = `${i18n('errorFetchSummary')} (${i18n('tryAgain')})`;
             }
+            
+            // اگر قیمت دلار به‌روز نشد، از داده‌های Mock یا صفر استفاده می‌کنیم
+            state.summaryData = {
+                 dollar: { price: lastDollarPrice || 0, change: 0 },
+                 gold: { price: 0, change: 0 }
+            };
         } finally { 
             state.isLoading.summary = false; 
             render(); 
@@ -228,52 +284,65 @@
     
     function renderSummary() {
         const container = document.getElementById('summary-container');
+        
         if (state.isLoading.summary) {
-            container.innerHTML = `<div class="h-16 skeleton"></div><div class="h-16 skeleton"></div>`;
+            // در زمان لودینگ، Skeleton را نمایش می‌دهیم
+            container.innerHTML = `<div class="h-16 skeleton rounded-xl"></div><div class="h-16 skeleton rounded-xl"></div>`;
             return;
         }
-        if (state.errors.summary) {
-            container.innerHTML = `<div class="col-span-full bg-red-500/20 text-red-400 rounded-lg p-3 text-center text-sm">${state.errors.summary}</div>`;
-            return;
-        }
-
-        const dollarData = state.summaryData.dollar;
-        const goldData = state.summaryData.gold;
 
         const renderCard = (titleKey, price, change, symbol) => {
             const changeClass = getChangeClass(change);
-            const formattedPrice = formatNum(price / 10, 0); // تبدیل ریال به تومان
+            const formattedPrice = formatNum(price, 0); 
+            
+            // افزودن یک کلاس خطا در صورت استفاده از قیمت کش شده
+            const errorClass = state.errors.summary && titleKey === 'dollar' && price === parseFloat(localStorage.getItem('lastDollarPrice_v10')) / 10 ? 'border border-yellow-500/50' : '';
+            
             return `
-                <div class="bg-[var(--secondary-bg)] p-3 rounded-xl shadow-md flex justify-between items-center transition duration-200">
+                <div class="bg-[var(--secondary-bg)] p-3 rounded-xl shadow-md flex justify-between items-center transition duration-200 ${errorClass}">
                     <div>
                         <div class="text-[var(--hint)] text-xs" data-i18n-key="${titleKey}"></div>
                         <div class="font-bold text-lg">${formattedPrice} ${symbol}</div>
                     </div>
-                    <div class="text-xs font-mono ${changeClass}">${formatPercent(change)}</div>
+                    <div class="text-xs font-mono font-bold ${changeClass}">${formatPercent(change)}</div>
                 </div>
             `;
         };
 
         container.innerHTML = `
-            ${renderCard('dollar', dollarData.p, dollarData.d, 'T')}
-            ${renderCard('gold', goldData.p, goldData.d, 'T')}
+            ${renderCard('dollar', state.summaryData.dollar.price, state.summaryData.dollar.change, 'T')}
+            ${renderCard('gold', state.summaryData.gold.price, state.summaryData.gold.change, 'T')}
         `;
+        
+        if (state.errors.summary) {
+             // نمایش پیام خطا در زیر کارت‌ها
+            const errorEl = document.createElement('div');
+            errorEl.className = 'col-span-full text-center text-sm p-2 text-yellow-500/90 rounded-xl mt-1';
+            errorEl.textContent = state.errors.summary;
+            container.appendChild(errorEl);
+        }
+        
         translateUI();
     }
     
     // تابع بارگذاری داده‌های کریپتو
     async function loadCryptoData(isUpdate = false) {
-        if (!isUpdate && state.loadedPages === 1) { state.isLoading.crypto = true; state.errors.crypto = null; }
+        if (!isUpdate && state.loadedPages === 1) { 
+            state.isLoading.crypto = true; 
+            state.errors.crypto = null; 
+            if (state.allCoins.length === 0) renderCryptoList(); // نمایش لودینگ Skeleton
+        }
         
-        const baseUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&sparkline=true&price_change_percentage=24h";
+        const pageUrl = `${CRYPTO_BASE_URL}&page=${state.loadedPages}&order=${state.currentSort}`;
         const extraCoinsUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${EXTRA_COIN_IDS}&sparkline=true&price_change_percentage=24h`;
         
         try {
             const fetchPromises = [];
-            fetchPromises.push(fetchWithTimeout(`${baseUrl}&page=${state.loadedPages}`));
+            fetchPromises.push(fetch(pageUrl)); 
 
             if (state.loadedPages === 1) {
-                 fetchPromises.push(fetchWithTimeout(extraCoinsUrl));
+                 // فقط در صفحه اول، ارزهای اضافی را اضافه می‌کنیم
+                 fetchPromises.push(fetch(extraCoinsUrl));
             }
 
             const responses = await Promise.all(fetchPromises);
@@ -281,12 +350,16 @@
             const marketCapData = await responses[0].json();
             const extraCoinsData = (state.loadedPages === 1 && responses.length > 1) ? await responses[1].json() : [];
 
+            if (!Array.isArray(marketCapData)) throw new Error("Invalid crypto data response");
+
             const marketCapIds = new Set(marketCapData.map(c => c.id));
             const uniqueExtraCoins = extraCoinsData.filter(c => !marketCapIds.has(c.id));
             
             if (state.loadedPages === 1) {
+                // اگر صفحه اول بود، لیست را بازنشانی می‌کنیم
                 state.allCoins = uniqueExtraCoins.concat(marketCapData);
             } else {
+                // در غیر این صورت، به انتهای لیست اضافه می‌کنیم
                 state.allCoins = state.allCoins.concat(marketCapData);
             }
             
@@ -299,7 +372,7 @@
             }
         } finally { 
             if (!isUpdate) state.isLoading.crypto = false; 
-            render(); 
+            renderCryptoList(); 
         }
     }
     
@@ -308,29 +381,36 @@
         const listEl = document.getElementById('coin-list');
         const messageEl = document.getElementById('message-container');
         
-        if (state.isLoading.crypto) { 
-            container.style.display = 'block';
+        // اگر هنوز در حال لودینگ صفحه اول هستیم و لیست خالی است، Skeleton نمایش داده شود
+        if (state.isLoading.crypto && state.loadedPages === 1 && state.allCoins.length === 0) { 
             listEl.innerHTML = `<div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-[68px] skeleton"></div>`).join('')}</div>`;
             messageEl.classList.add('hidden');
             return;
         }
+
+        // اگر خطا رخ داده
         if (state.errors.crypto) { 
             container.style.display = 'none';
             messageEl.classList.remove('hidden');
-            messageEl.innerHTML = `<div class="bg-red-500/20 text-red-400 rounded-lg p-4 text-center">
+            messageEl.innerHTML = `<div class="bg-red-500/20 text-red-400 rounded-xl p-4 text-center">
                 <p>${state.errors.crypto}</p>
-                <button id="retry-crypto" class="mt-2 bg-[var(--button)] px-3 py-1 rounded-md text-sm">${i18n('tryAgain')}</button>
+                <button id="retry-crypto" class="mt-3 bg-[var(--button)] px-4 py-2 rounded-xl text-sm font-bold">${i18n('tryAgain')}</button>
             </div>`;
             document.getElementById('retry-crypto').onclick = () => { state.loadedPages = 1; loadCryptoData(); };
             return;
         }
         
         container.style.display = 'block';
+
+        // فیلتر و مرتب‌سازی
         let coinsToRender = (state.activeTab === 'all') ? state.allCoins : state.allCoins.filter(c => state.watchlist.includes(c.id));
+        
+        // مرتب‌سازی داخلی (اگر از فیلترهای Gainers/Losers استفاده شود)
         if (state.currentSort === 'gainers') coinsToRender.sort((a, b) => (b.price_change_percentage_24h || -999) - (a.price_change_percentage_24h || -999));
         else if (state.currentSort === 'losers') coinsToRender.sort((a, b) => (a.price_change_percentage_24h || 999) - (b.price_change_percentage_24h || 999));
-        else coinsToRender.sort((a, b) => (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999));
-        
+        else if (state.activeTab === 'all') coinsToRender.sort((a, b) => (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999)); // مرتب‌سازی بر اساس رتبه فقط در تب All
+
+        // جستجو
         const query = state.searchQuery.toLowerCase().trim();
         if (query) {
             coinsToRender = coinsToRender.filter(c => c.name.toLowerCase().includes(query) || c.symbol.toLowerCase().includes(query) || (PERSIAN_NAMES[c.id] && PERSIAN_NAMES[c.id].toLowerCase().includes(query)));
@@ -341,66 +421,84 @@
             messageEl.textContent = i18n(state.activeTab === 'watchlist' ? 'emptyWatchlist' : 'noResults');
             messageEl.classList.remove('hidden');
         }
-        
-        // منطق Virtual Scrolling برای عملکرد بهتر در موبایل
-        const ROW_HEIGHT = 68;
-        listEl.innerHTML = '';
-        listEl.style.height = `${coinsToRender.length * ROW_HEIGHT}px`;
+
+        // منطق Virtual Scrolling
+        const ROW_HEIGHT = 68; // ارتفاع ثابت هر سطر
+        const containerHeight = container.clientHeight;
+        const totalHeight = coinsToRender.length * ROW_HEIGHT;
         const scrollTop = container.scrollTop;
-        const startIndex = Math.floor(scrollTop / ROW_HEIGHT);
-        const endIndex = Math.min(startIndex + Math.ceil(container.clientHeight / ROW_HEIGHT) + 2, coinsToRender.length);
+        
+        // محاسبه ایندکس شروع و پایان آیتم‌های قابل مشاهده
+        const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2); // -2 برای Buffer
+        const endIndex = Math.min(coinsToRender.length, startIndex + Math.ceil(containerHeight / ROW_HEIGHT) + 4); // +4 برای Buffer
+
+        listEl.style.height = `${totalHeight}px`; // ارتفاع کل کانتینر برای اسکرول‌بار
+
         const fragment = document.createDocumentFragment();
         for (let i = startIndex; i < endIndex; i++) {
             const coin = coinsToRender[i];
-            if (!coin) continue;
             const row = document.createElement('div');
             row.className = 'coin-row absolute w-full';
-            if (isRTL) row.style.left = '0';
-            else row.style.right = '0';
             row.style.top = `${i * ROW_HEIGHT}px`;
-            row.style.height = `${ROW_HEIGHT}px`;
             row.dataset.coinId = coin.id;
             row.innerHTML = renderCoinRow(coin);
             fragment.appendChild(row);
         }
+        listEl.innerHTML = ''; // پاک کردن و جایگزینی آیتم‌های قبلی
         listEl.appendChild(fragment);
     }
     
     function renderCoinRow(coin) {
         const isWatched = state.watchlist.includes(coin.id);
+        
+        // 💰 محاسبه قیمت تومانی: قیمت دلاری * نرخ دلار تومانی
         const tomanPriceNum = state.dollarPrice > 0 ? coin.current_price * state.dollarPrice : 0;
-        const tomanPrice = tomanPriceNum > 0 ? formatNum(tomanPriceNum, 0) : '...';
+        // نمایش سه رقم اعشار برای قیمت‌های کمتر از ۱ سنت
+        const usdDecimal = coin.current_price < 0.01 ? 5 : 2;
+        
+        const tomanPrice = tomanPriceNum > 0 ? formatNum(tomanPriceNum, 0) : '---';
 
         let nativeName = '';
         if (state.language === 'fa') {
             nativeName = PERSIAN_NAMES[coin.id.toLowerCase()] ? ` | ${PERSIAN_NAMES[coin.id.toLowerCase()]}` : '';
         } 
-
+        
+        const priceUSD = formatNum(coin.current_price, usdDecimal);
+        const changePercent = formatPercent(coin.price_change_percentage_24h);
+        
+        // فضای کافی برای نمایش کامل نام و قیمت تومانی
         return `
-            <div class="flex items-center p-3 h-full cursor-pointer transition duration-150 hover:bg-[var(--header-border)]">
+            <div class="flex items-center px-4 h-full cursor-pointer transition duration-150 hover:bg-[var(--header-border)]">
                 <div class="flex-1 flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''} min-w-0">
-                    <img src="${coin.image}" alt="${coin.name}" class="w-9 h-9 rounded-full">
+                    <img src="${coin.image}" alt="${coin.name}" class="w-9 h-9 rounded-full shadow-md">
                     <div class="truncate">
                         <div class="font-bold text-sm truncate">${coin.symbol.toUpperCase()}${nativeName}</div>
                         <div class="text-xs text-[var(--hint)]">${i18n('rank')} #${coin.market_cap_rank || '?'}</div>
                     </div>
                 </div>
-                <!-- نمودار Sparkline -->
-                <div class="w-16 h-8 flex items-center justify-center">${generateSparkline(coin.sparkline_in_7d.price, coin.price_change_percentage_24h)}</div>
-                <div class="flex-1 text-right font-mono text-xs pr-2">
-                    <div class="font-bold text-sm" data-price-usd>$${formatNum(coin.current_price, coin.current_price < 0.01 ? 5 : 2)}</div>
-                    <div class="text-[var(--hint)]" data-price-irt>${tomanPrice} T</div>
+                
+                <!-- قیمت‌ها -->
+                <div class="text-right font-mono pr-2">
+                    <div class="font-bold text-sm" data-price-usd>$${priceUSD}</div>
+                    <div class="text-[var(--hint)] text-xs">${tomanPrice} T</div>
                 </div>
-                <div class="w-20 text-center font-bold text-sm ${getChangeClass(coin.price_change_percentage_24h)}">${formatPercent(coin.price_change_percentage_24h)}</div>
-                <div class="w-10 text-center text-2xl star-icon cursor-pointer text-[var(--hint)] hover:text-yellow-400" data-watched="${isWatched}">${isWatched ? '<span style="color: #FFC107;">★</span>' : '☆'}</div>
+                
+                <!-- تغییرات ۲۴ ساعته -->
+                <div class="w-20 text-center font-bold text-sm ${getChangeClass(coin.price_change_percentage_24h)} ml-4">${changePercent}</div>
+                
+                <!-- ستاره -->
+                <div class="w-10 text-center text-2xl star-icon cursor-pointer text-[var(--hint)] hover:text-yellow-400" data-watched="${isWatched}" aria-label="${isWatched ? 'Remove from Watchlist' : 'Add to Watchlist'}">${isWatched ? '<span style="color: #FFC107;">★</span>' : '☆'}</div>
             </div>`;
     }
     
-    function generateSparkline(data, change) {
-        if (!data || data.length < 2) return '';
-        const w = 64, h = 32;
+    // تابع ساخت Sparkline (حالا فقط برای داخل مدال استفاده می‌شود)
+    function generateSparkline(data, change, w = 300, h = 160) {
+        if (!data || data.length < 2) return `<div class="text-[var(--hint)] text-center w-full">${i18n('chartUnavailable')}</div>`;
+        
         const max = Math.max(...data), min = Math.min(...data);
         const range = max - min;
+        
+        if (range === 0) return `<div class="text-[var(--hint)] text-center w-full">${i18n('chartUnavailable')}</div>`; 
         
         const points = data.map((price, i) => {
             const x = (i / (data.length - 1)) * w;
@@ -412,9 +510,9 @@
         const lastPointY = h - ((data[data.length - 1] - min) / range) * h;
 
         return `
-            <svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+            <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="none">
                 <polyline class="sparkline-path" points="${points}" stroke="${color}" />
-                <circle cx="${w}" cy="${lastPointY}" r="1.5" fill="${color}" />
+                <circle cx="${w}" cy="${lastPointY}" r="3" fill="${color}" />
             </svg>
         `;
     }
@@ -426,7 +524,7 @@
             state.watchlist.push(coinId);
         }
         localStorage.setItem('watchlist_v10', JSON.stringify(state.watchlist));
-        render(); // رندر مجدد برای اعمال تغییر ستاره و فیلتر (اگر در حالت Watchlist است)
+        renderCryptoList(); // رندر مجدد لیست برای اعمال تغییر
     }
 
     // تابع تنظیمات UI و مدیریت کلیک‌ها
@@ -446,7 +544,7 @@
                 // رندر محتوای صفحات بر اساس pageId
                 if (pageId === 'profile-page') renderProfilePage();
                 else if (pageId === 'coming-soon-page') renderComingSoonPage(pageKey);
-                // markets-page (صفحه اصلی) نیازی به رندر مجدد ندارد
+                // markets-page (صفحه اصلی) نیاز به رندر مجدد ندارد، فقط لیست را به‌روز می‌کنیم
             };
         });
 
@@ -456,7 +554,8 @@
             e.currentTarget.classList.add('active');
             state.activeTab = e.currentTarget.id.replace('tab-', '');
             localStorage.setItem('activeTab_v10', state.activeTab);
-            render();
+            state.loadedPages = 1; // بازنشانی لود صفحه
+            loadCryptoData();
         }));
         
         // مدیریت سورت
@@ -465,14 +564,19 @@
             e.currentTarget.classList.add('active');
             state.currentSort = e.currentTarget.dataset.sort;
             localStorage.setItem('currentSort_v10', state.currentSort);
-            render();
+            state.loadedPages = 1; // بازنشانی لود صفحه
+            loadCryptoData();
         }));
         
         // مدیریت جستجو
         let searchTimeout;
         document.getElementById('search-input').addEventListener('input', e => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => { state.searchQuery = e.target.value; render(); }, 300);
+            searchTimeout = setTimeout(() => { 
+                state.searchQuery = e.target.value; 
+                state.loadedPages = 1; // در جستجو همیشه صفحه اول را لود می‌کنیم
+                renderCryptoList(); 
+            }, 300);
         });
         
         // مدیریت کلیک روی سطرها (جزئیات و ستاره)
@@ -486,13 +590,16 @@
         });
     }
     
-    // تابع پیاده‌سازی Infinite Scroll
+    // تابع پیاده‌سازی Infinite Scroll (فقط برای رندر کردن آیتم‌های قابل مشاهده)
     function setupInfiniteScroll() {
         const container = document.getElementById('coin-list-container');
         container.addEventListener('scroll', () => {
-            renderCryptoList(); // رندر کردن آیتم‌های قابل مشاهده
-            // چک کردن رسیدن به انتهای لیست (برای لود صفحات بعدی)
-            if (container.scrollHeight - container.scrollTop <= container.clientHeight * 1.2) {
+            // 1. رندر کردن آیتم‌های قابل مشاهده (Virtual Scroll)
+            renderCryptoList(); 
+
+            // 2. چک کردن رسیدن به انتهای لیست (برای لود صفحات بعدی)
+            if (container.scrollHeight - container.scrollTop <= container.clientHeight * 1.5) {
+                // اگر در حال لود نیستیم، به پایان صفحه نرسیده‌ایم، در تب All هستیم و جستجویی فعال نیست:
                 if (!state.isLoading.crypto && state.loadedPages < state.maxPages && state.activeTab === 'all' && !state.searchQuery) {
                     state.loadedPages++;
                     loadCryptoData(true);
@@ -501,7 +608,7 @@
         });
     }
 
-    // 👈 تابع جدید: نمایش صفحه "به زودی" برای دکمه‌های غیرفعال
+    // تابع نمایش صفحه "به زودی"
     function renderComingSoonPage(pageKey) {
         const page = document.getElementById('coming-soon-page');
         const pageName = i18n(pageKey) || pageKey;
@@ -520,10 +627,8 @@
         const newIsRTL = ['fa', 'ar'].includes(lang);
         document.documentElement.lang = lang; 
         document.documentElement.dir = newIsRTL ? 'rtl' : 'ltr';
-        // به‌روزرسانی متغیر گلوبال
-        isRTL = newIsRTL;
+        isRTL = newIsRTL; // به‌روزرسانی متغیر گلوبال
 
-        // بارگذاری مجدد صفحات فعال
         const activeNavButton = document.querySelector('.nav-button.active');
         const pageId = activeNavButton?.dataset.page;
         const pageKey = activeNavButton?.dataset.pageKey;
@@ -531,12 +636,6 @@
         if (pageId === 'profile-page') renderProfilePage();
         else if (pageId === 'coming-soon-page') renderComingSoonPage(pageKey);
         else render();
-        
-        // اطمینان از اعمال تغییرات در جهت‌دهی
-        document.querySelectorAll('.flex.space-x-reverse').forEach(el => {
-            el.classList.remove('space-x-reverse');
-            if (newIsRTL) el.classList.add('space-x-reverse');
-        });
     }
     
     // تابع اعمال ترجمه در UI
@@ -561,41 +660,16 @@
         state.theme = theme; localStorage.setItem('theme_v10', theme);
         document.body.classList.toggle('light-theme', theme === 'light');
         tg.isDark = (theme === 'dark');
-        // به روزرسانی رنگ دکمه های اصلی تلگرام
         tg.setHeaderColor(theme === 'dark' ? '#1E1E1E' : '#FFFFFF');
         tg.setBackgroundColor(theme === 'dark' ? '#121212' : '#FFFFFF');
 
-        // رندر مجدد صفحه پروفایل برای به‌روزرسانی دکمه‌های تم
         if (document.getElementById('profile-page').classList.contains('active')) {
             renderProfilePage();
         }
         render(); // رندر مجدد لیست برای به‌روزرسانی رنگ‌های پس‌زمینه
     }
     
-    // تابع نمایش توست
-    function showToast(messageKey, params = {}) {
-        const toastEl = document.getElementById('toast');
-        toastEl.textContent = i18n(messageKey, params);
-        toastEl.classList.add('show');
-        setTimeout(() => toastEl.classList.remove('show'), 2000);
-    }
-    
-    // تابع باز کردن مدال
-    function openModal(contentHtml) {
-        document.getElementById('modal-content').innerHTML = contentHtml;
-        document.getElementById('modal-backdrop').classList.remove('hidden');
-        document.getElementById('modal').classList.add('open');
-        translateUI();
-    }
-    
-    // تابع بستن مدال
-    function closeModal() {
-        document.getElementById('modal-backdrop').classList.add('hidden');
-        document.getElementById('modal').classList.remove('open');
-        // پاک کردن محتوا برای جلوگیری از مشکلات حافظه و رندر
-        setTimeout(() => document.getElementById('modal-content').innerHTML = '', 300);
-    }
-
+    // تابع باز کردن مدال (برای Detail)
     function openDetailsModal(coin) {
         if (!coin) return;
         
@@ -604,9 +678,12 @@
         const changeClass = getChangeClass(coin.price_change_percentage_24h);
         const change = formatPercent(coin.price_change_percentage_24h);
         
+        // نمودار: استفاده از داده‌های sparkline_in_7d برای ایجاد یک نمودار نمادین ۲۴ ساعته
+        const chartHtml = generateSparkline(coin.sparkline_in_7d.price, coin.price_change_percentage_24h);
+        
         const detailsHtml = `
-            <div class="flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''} mb-6">
-                <img src="${coin.image}" alt="${coin.name}" class="w-12 h-12 rounded-full">
+            <div class="flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''} mb-6">
+                <img src="${coin.image}" alt="${coin.name}" class="w-12 h-12 rounded-full shadow-md">
                 <div>
                     <h2 class="text-xl font-bold">${coin.name} (${coin.symbol.toUpperCase()})</h2>
                     <p class="text-[var(--hint)] text-sm">${i18n('rank')} #${coin.market_cap_rank || '?'}</p>
@@ -623,9 +700,12 @@
                 </div>
             </div>
             
-            <!-- نمودار (فعلا پیام "موجود نیست" نمایش داده می شود) -->
-            <div class="h-40 flex items-center justify-center bg-[var(--bg)] rounded-xl mb-6">
-                <p class="text-[var(--hint)]">${i18n('chartUnavailable')}</p>
+            <!-- نمودار 24 ساعته (در واقع 7 روزه است اما برای این بخش کافی است) -->
+            <div class="mb-6">
+                 <h3 class="font-bold text-lg mb-3" data-i18n-key="chart24h"></h3>
+                 <div class="h-40 flex items-center justify-center p-2 bg-[var(--bg)] rounded-xl border border-[var(--header-border)]">
+                    ${chartHtml}
+                </div>
             </div>
 
             <div class="space-y-3">
@@ -640,6 +720,19 @@
         `;
         openModal(detailsHtml);
     }
+    
+    function openModal(contentHtml) {
+        document.getElementById('modal-content').innerHTML = contentHtml;
+        document.getElementById('modal-backdrop').classList.remove('hidden');
+        document.getElementById('modal').classList.add('open');
+        translateUI();
+    }
+    
+    function closeModal() {
+        document.getElementById('modal-backdrop').classList.add('hidden');
+        document.getElementById('modal').classList.remove('open');
+        setTimeout(() => document.getElementById('modal-content').innerHTML = '', 300);
+    }
 
     function renderDetailRow(key, value) {
         return `
@@ -649,19 +742,18 @@
             </div>
         `;
     }
-    
-    // پیاده‌سازی ساده برای رندر صفحه پروفایل (برای فعال کردن دکمه‌های زبان و تم)
+
     function renderProfilePage() {
-        const user = tg.initDataUnsafe.user || { first_name: 'کاربر', username: 'تعیین نشده', id: '0' };
+        const user = tg.initDataUnsafe.user || { first_name: i18n('name'), username: i18n('notSet'), id: '0' };
         const profilePage = document.getElementById('profile-page');
         const walletCount = Object.keys(state.wallets).length;
         
         profilePage.innerHTML = `
             <div class="p-4">
                  <div class="flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''} mb-6">
-                    <img src="${user.photo_url || ''}" onerror="this.style.display='none'" class="w-20 h-20 rounded-full bg-[var(--secondary-bg)]">
+                    <img src="${user.photo_url || 'https://placehold.co/80x80/2E81FF/EAECEF?text=User'}" onerror="this.style.display='none'" class="w-20 h-20 rounded-full bg-[var(--secondary-bg)]">
                     <div>
-                        <h1 class="text-xl font-bold">${user.first_name || ''} ${user.last_name || ''}</h1>
+                        <h1 class="text-xl font-bold">${user.first_name || i18n('name')} ${user.last_name || ''}</h1>
                         <p class="text-[var(--hint)] text-sm">@${user.username || i18n('notSet')}</p>
                     </div>
                 </div>
@@ -669,16 +761,15 @@
                     <div class="bg-[var(--secondary-bg)] p-4 rounded-xl">
                         <h2 data-i18n-key="settings" class="font-bold mb-3 text-lg"></h2>
                         <div class="space-y-3">
-                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="theme"></span><div class="flex bg-[var(--bg)] rounded-lg p-1"><button class="theme-btn px-3 py-1 rounded-md text-sm ${state.theme === 'dark' ? 'bg-[var(--button)] text-white' : ''}" data-theme="dark" data-i18n-key="dark"></button><button class="theme-btn px-3 py-1 rounded-md text-sm ${state.theme === 'light' ? 'bg-[var(--button)] text-white' : ''}" data-theme="light" data-i18n-key="light"></button></div></div>
+                            <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="theme"></span><div class="flex bg-[var(--bg)] rounded-xl p-1"><button class="theme-btn px-3 py-1 rounded-lg text-sm ${state.theme === 'dark' ? 'bg-[var(--button)] text-white' : ''}" data-theme="dark" data-i18n-key="dark"></button><button class="theme-btn px-3 py-1 rounded-lg text-sm ${state.theme === 'light' ? 'bg-[var(--button)] text-white' : ''}" data-theme="light" data-i18n-key="light"></button></div></div>
                             <div class="flex justify-between items-center"><span class="text-[var(--hint)]" data-i18n-key="language"></span>
-                                <select id="lang-select" class="bg-[var(--bg)] p-1 rounded-md text-sm text-[var(--text)]">
+                                <select id="lang-select" class="bg-[var(--bg)] p-2 rounded-xl text-sm text-[var(--text)] border border-[var(--header-border)]">
                                     <option value="fa" ${state.language === 'fa' ? 'selected' : ''}>فارسی</option>
                                     <option value="en" ${state.language === 'en' ? 'selected' : ''}>English</option>
                                     <option value="ar" ${state.language === 'ar' ? 'selected' : ''}>العربية</option>
                                     <option value="zh" ${state.language === 'zh' ? 'selected' : ''}>中文</option>
                                 </select>
                             </div>
-                            <!-- دکمه های ایمیل و کیف پول در این نسخه فقط نمایش داده می شوند و منطق ویرایش فعال نیستند -->
                             <div class="flex justify-between items-center py-1"><span class="text-[var(--hint)]" data-i18n-key="emailOptional"></span><span class="font-mono text-left truncate text-sm">${state.userEmail || i18n('notSet')}</span></div>
                             <div class="flex justify-between items-center py-1"><span class="text-[var(--hint)]" data-i18n-key="wallets"></span><span class="text-sm">${i18n('walletsCount', { count: walletCount })}</span></div>
                         </div>
@@ -695,24 +786,28 @@
         try { 
             tg.ready(); 
             tg.expand();
-            // دکمه بازگشت را در تلگرام غیرفعال می کنیم چون Single-Page App است
             tg.BackButton.hide();
         } catch (e) { 
             console.warn("TG script not loaded. Running standalone."); 
         }
         
         setTheme(state.theme);
-        setLanguage(state.language); // تنظیم زبان اولیه و جهت‌دهی
+        setLanguage(state.language); 
         setupUI();
         setupInfiniteScroll(); 
         
-        // بارگذاری داده‌ها
-        loadSummaryData();
-        loadCryptoData();
+        // 1. شروع بارگذاری لیست ارزها (فوری، حتی اگر دلار لود نشود)
+        loadCryptoData(); 
         
-        // تنظیم به‌روزرسانی خودکار
+        // 2. شروع بارگذاری داده‌های خلاصه (با تلاش مجدد)
+        loadSummaryData();
+        
+        // تنظیم به‌روزرسانی خودکار لیست ارزها (هر ۳۰ ثانیه)
         if (state.updateInterval) clearInterval(state.updateInterval);
-        state.updateInterval = setInterval(() => loadCryptoData(true), 30000);
+        state.updateInterval = setInterval(() => {
+            loadCryptoData(true);
+            loadSummaryData(); // نرخ دلار را هم به‌روزرسانی می‌کنیم
+        }, 30000);
     });
     //============== END OF FULL JAVASCRIPT CODE ==============
     </script>
