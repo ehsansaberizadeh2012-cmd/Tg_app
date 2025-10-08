@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
     <title>Shelby Bet - بازارها</title>
+    <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Font -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* تعریف متغیرهای تم تاریک و روشن */
@@ -46,13 +49,23 @@
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         /* استایل‌های مدال */
         .modal-backdrop { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); z-index: 40; backdrop-filter: blur(5px); }
-        .modal { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--secondary-bg); z-index: 50; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 1.5rem; transform: translateY(100%); transition: transform 0.3s ease-out; }
+        .modal { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--secondary-bg); z-index: 50; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 1.5rem; transform: translateY(100%); transition: transform 0.3s ease-out; max-height: 90vh; overflow-y: auto; }
         .modal.open { transform: translateY(0); }
         .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 10px 20px; border-radius: 8px; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; }
         /* لیست ارزها: برای اسکرول مجازی */
         #coin-list-container { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
         .coin-row { transition: background-color 0.1s; }
+        
+        /* حالت ویژوال کیبوردی برای اینپوت‌های مدال */
+        .modal input[type="text"], .modal select {
+             background-color: var(--bg);
+             border: 1px solid var(--header-border);
+             color: var(--text);
+             padding: 10px;
+             border-radius: 8px;
+             width: 100%;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -119,12 +132,27 @@
     </nav>
 
     <div id="modal-backdrop" class="modal-backdrop hidden" onclick="closeModal()"></div>
-    <div id="modal" class="modal"><div id="modal-content" class="h-[70vh] overflow-y-auto"></div></div>
+    <div id="modal" class="modal"><div id="modal-content"></div></div>
     <div id="toast" class="toast"></div>
 
-    <script>
+    <script type="module">
+    // 🔥 Firebase Imports for Single File App (REQUIRED for persistence)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, query, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+    
     //============== START OF FULL JAVASCRIPT CODE ==============
     
+    // --- Global Firebase & Auth State ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    let db, auth;
+    let userId = '';
+    let isAuthReady = false; 
+
     // متغیرهای گلوبال تلگرام وب‌اپ
     const tg = window.Telegram.WebApp;
 
@@ -141,7 +169,7 @@
     };
     
     let activeLanguage = localStorage.getItem('language_v10') || 'fa';
-    let isRTL = ['fa', 'ar'].includes(activeLanguage); // به‌روزرسانی متغیر گلوبال
+    let isRTL = ['fa', 'ar'].includes(activeLanguage); 
     
     // تابع ترجمه
     const i18n = (key, params = {}) => {
@@ -158,12 +186,12 @@
 
     const state = {
         allCoins: [], dollarPrice: 0, summaryData: null,
-        watchlist: JSON.parse(localStorage.getItem('watchlist_v10')) || [],
+        watchlist: JSON.parse(localStorage.getItem('watchlist_v10')) || [], // Watchlist is local
         activeTab: localStorage.getItem('activeTab_v10') || 'all',
         currentSort: localStorage.getItem('currentSort_v10') || 'market_cap_desc',
         searchQuery: '',
-        userEmail: localStorage.getItem('userEmail_v10') || '',
-        wallets: JSON.parse(localStorage.getItem('wallets_v10')) || {},
+        userEmail: '', // 💥 Now stored in Firestore
+        wallets: {},   // 💥 Now stored in Firestore
         theme: localStorage.getItem('theme_v10') || 'dark',
         language: activeLanguage, 
         isLoading: { summary: true, crypto: true },
@@ -171,6 +199,7 @@
         updateInterval: null,
         maxPages: 4, 
         loadedPages: 1, 
+        isDataLoadedFromFirestore: false, // New flag for profile data readiness
     };
     
     // 📢 آدرس API جدید (حاجی وب‌سرویس) - دارای نرخ دلار و طلا
@@ -181,6 +210,19 @@
     const formatNum = (n, dec = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: true }).format(n);
     const formatPercent = (p) => `${parseFloat(p||0) >= 0 ? '+' : ''}${formatNum(p||0)}%`;
     const getChangeClass = (p) => (parseFloat(p||0) >= 0 ? 'text-[var(--positive)]' : 'text-[var(--negative)]');
+    const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+    /**
+     * تابع نمایش Toast Message (به جای alert)
+     * @param {string} message 
+     * @param {number} duration 
+     */
+    function showToast(message, duration = 2000) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), duration);
+    }
     
     /**
      * اجرای fetch با timeout و retry (برای APIهایی که پایداری کمتری دارند)
@@ -188,7 +230,7 @@
     async function fetchWithRetry(url, maxRetries = 3, initialDelay = 1000) {
         for (let i = 0; i < maxRetries; i++) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 ثانیه تایم‌اوت
+            const timeoutId = setTimeout(() => controller.abort(), 10000); 
             try {
                 const response = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -218,12 +260,10 @@
         state.isLoading.summary = true; 
         state.errors.summary = null; 
         
-        // نرخ دلار ذخیره شده قبلی (برای مواقع خطا)
         const lastDollarPriceToman = parseFloat(localStorage.getItem('lastDollarPrice_v10')) || 0; 
-        state.dollarPrice = lastDollarPriceToman; // ابتدا نرخ ذخیره‌شده را اعمال می‌کنیم
+        state.dollarPrice = lastDollarPriceToman; 
         
         try {
-            // 🚀 استفاده از API جدید حاجی وب‌سرویس برای دلار و طلا
             const response = await fetchWithRetry(HAJI_API_URL);
             const result = await response.json();
             
@@ -232,30 +272,24 @@
             let dollarChangePercent = 0;
             let goldChangePercent = 0;
 
-            // 🛑 توجه: این کد بر اساس حدس منطقی از ساختار رایج APIهای ایرانی نوشته شده است.
-            // اگر API کار نکرد، باید لاگ پاسخ را بررسی کرده و کلیدها را اصلاح کنید.
             if (result && Array.isArray(result.arz)) {
-                // جستجوی دلار/تتر و طلای ۱۸ عیار
                 const dollarData = result.arz.find(item => item.name && (item.name.includes('دلار') || item.name.includes('آمریکا') || item.name.includes('تتر')));
                 const goldData = result.arz.find(item => item.name && item.name.includes('گرم طلا ۱۸ عیار')); 
 
                 if (dollarData && dollarData.price) {
-                    // فرض می‌کنیم قیمت در تومان است و باید کاماها حذف شوند.
                     newDollarPriceToman = parseFloat(String(dollarData.price).replace(/,/g, '')) || 0; 
                     dollarChangePercent = parseFloat(dollarData.change_percent) || 0;
                 }
                 if (goldData && goldData.price) {
-                    // فرض می‌کنیم قیمت در تومان است.
                     newGoldPriceToman = parseFloat(String(goldData.price).replace(/,/g, '')) || 0;
                     goldChangePercent = parseFloat(goldData.change_percent) || 0;
                 }
             } else if (result && result.status === 'error') {
-                 // اگر API پاسخ خطا (مثلاً پایان لایسنس) داد
                  throw new Error(result.message || "Haji-API returned an error status.");
             }
             
             if (newDollarPriceToman > 0) {
-                state.dollarPrice = newDollarPriceToman; // نرخ دلار جدید به تومان
+                state.dollarPrice = newDollarPriceToman; 
                 localStorage.setItem('lastDollarPrice_v10', newDollarPriceToman); 
             }
 
@@ -265,7 +299,7 @@
             };
 
         } catch (error) { 
-            console.error("Summary (Haji-API) API Error (Retry failed):", error); 
+            console.error("Summary (Haji-API) API Error:", error); 
             
             if (lastDollarPriceToman > 0) {
                 state.dollarPrice = lastDollarPriceToman;
@@ -275,10 +309,9 @@
                 state.errors.summary = `${i18n('errorFetchSummary')}. ${i18n('tryAgain')}`;
             }
             
-            // اگر قیمت دلار به‌روز نشد، از داده‌های Mock (صفر یا کش شده) استفاده می‌کنیم
             state.summaryData = {
                  dollar: { price: state.dollarPrice, change: 0 },
-                 gold: { price: 0, change: 0 } // قیمت طلا را صفر نمایش می‌دهیم
+                 gold: { price: 0, change: 0 } 
             };
         } finally { 
             state.isLoading.summary = false; 
@@ -290,17 +323,14 @@
         const container = document.getElementById('summary-container');
         
         if (state.isLoading.summary) {
-            // در زمان لودینگ، Skeleton را نمایش می‌دهیم
             container.innerHTML = `<div class="h-16 skeleton rounded-xl"></div><div class="h-16 skeleton rounded-xl"></div>`;
             return;
         }
 
         const renderCard = (titleKey, price, change, symbol) => {
             const changeClass = getChangeClass(change);
-            // اگر قیمت صفر باشد، --- نمایش می‌دهیم، در غیر این صورت با جداکننده هزارگان نمایش می‌دهیم
             const formattedPrice = price > 0 ? formatNum(price, 0) : '---'; 
             
-            // نمایش یک کلاس هشدار در صورت استفاده از قیمت دلار کش شده
             const isCachedDollar = state.errors.summary && titleKey === 'dollar' && price > 0 && price === parseFloat(localStorage.getItem('lastDollarPrice_v10'));
             const errorClass = isCachedDollar ? 'border border-yellow-500/50' : '';
             
@@ -321,7 +351,6 @@
         `;
         
         if (state.errors.summary) {
-             // نمایش پیام خطا در زیر کارت‌ها
             const errorEl = document.createElement('div');
             errorEl.className = 'col-span-full text-center text-sm p-2 text-yellow-500/90 rounded-xl mt-1';
             errorEl.textContent = state.errors.summary;
@@ -331,12 +360,11 @@
         translateUI();
     }
     
-    // تابع بارگذاری داده‌های کریپتو
     async function loadCryptoData(isUpdate = false) {
         if (!isUpdate && state.loadedPages === 1) { 
             state.isLoading.crypto = true; 
             state.errors.crypto = null; 
-            if (state.allCoins.length === 0) renderCryptoList(); // نمایش لودینگ Skeleton
+            if (state.allCoins.length === 0) renderCryptoList(); 
         }
         
         const pageUrl = `${CRYPTO_BASE_URL}&page=${state.loadedPages}&order=${state.currentSort}`;
@@ -347,7 +375,6 @@
             fetchPromises.push(fetch(pageUrl)); 
 
             if (state.loadedPages === 1) {
-                 // فقط در صفحه اول، ارزهای اضافی را اضافه می‌کنیم
                  fetchPromises.push(fetch(extraCoinsUrl));
             }
 
@@ -361,12 +388,16 @@
             const marketCapIds = new Set(marketCapData.map(c => c.id));
             const uniqueExtraCoins = extraCoinsData.filter(c => !marketCapIds.has(c.id));
             
+            // Deduplication and combining data
+            let newCoins;
             if (state.loadedPages === 1) {
-                // اگر صفحه اول بود، لیست را بازنشانی می‌کنیم
-                state.allCoins = uniqueExtraCoins.concat(marketCapData);
+                newCoins = uniqueExtraCoins.concat(marketCapData);
+                state.allCoins = newCoins;
             } else {
-                // در غیر این صورت، به انتهای لیست اضافه می‌کنیم
-                state.allCoins = state.allCoins.concat(marketCapData);
+                // Ensure no duplicates when paginating
+                const existingIds = new Set(state.allCoins.map(c => c.id));
+                const filteredNewCoins = marketCapData.filter(c => !existingIds.has(c.id));
+                state.allCoins = state.allCoins.concat(filteredNewCoins);
             }
             
             state.errors.crypto = null;
@@ -387,14 +418,12 @@
         const listEl = document.getElementById('coin-list');
         const messageEl = document.getElementById('message-container');
         
-        // اگر هنوز در حال لودینگ صفحه اول هستیم و لیست خالی است، Skeleton نمایش داده شود
         if (state.isLoading.crypto && state.loadedPages === 1 && state.allCoins.length === 0) { 
             listEl.innerHTML = `<div class="p-4 space-y-2">${Array(10).fill('').map(() => `<div class="h-[68px] skeleton"></div>`).join('')}</div>`;
             messageEl.classList.add('hidden');
             return;
         }
 
-        // اگر خطا رخ داده
         if (state.errors.crypto) { 
             container.style.display = 'none';
             messageEl.classList.remove('hidden');
@@ -408,15 +437,12 @@
         
         container.style.display = 'block';
 
-        // فیلتر و مرتب‌سازی
         let coinsToRender = (state.activeTab === 'all') ? state.allCoins : state.allCoins.filter(c => state.watchlist.includes(c.id));
         
-        // مرتب‌سازی داخلی (اگر از فیلترهای Gainers/Losers استفاده شود)
         if (state.currentSort === 'gainers') coinsToRender.sort((a, b) => (b.price_change_percentage_24h || -999) - (a.price_change_percentage_24h || -999));
         else if (state.currentSort === 'losers') coinsToRender.sort((a, b) => (a.price_change_percentage_24h || 999) - (b.price_change_percentage_24h || 999));
-        else if (state.activeTab === 'all') coinsToRender.sort((a, b) => (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999)); // مرتب‌سازی بر اساس رتبه فقط در تب All
+        else if (state.activeTab === 'all') coinsToRender.sort((a, b) => (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999)); 
 
-        // جستجو
         const query = state.searchQuery.toLowerCase().trim();
         if (query) {
             coinsToRender = coinsToRender.filter(c => c.name.toLowerCase().includes(query) || c.symbol.toLowerCase().includes(query) || (PERSIAN_NAMES[c.id] && PERSIAN_NAMES[c.id].toLowerCase().includes(query)));
@@ -429,16 +455,15 @@
         }
 
         // منطق Virtual Scrolling
-        const ROW_HEIGHT = 68; // ارتفاع ثابت هر سطر
+        const ROW_HEIGHT = 68; 
         const containerHeight = container.clientHeight;
         const totalHeight = coinsToRender.length * ROW_HEIGHT;
         const scrollTop = container.scrollTop;
         
-        // محاسبه ایندکس شروع و پایان آیتم‌های قابل مشاهده
-        const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2); // -2 برای Buffer
-        const endIndex = Math.min(coinsToRender.length, startIndex + Math.ceil(containerHeight / ROW_HEIGHT) + 4); // +4 برای Buffer
+        const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2); 
+        const endIndex = Math.min(coinsToRender.length, startIndex + Math.ceil(containerHeight / ROW_HEIGHT) + 4); 
 
-        listEl.style.height = `${totalHeight}px`; // ارتفاع کل کانتینر برای اسکرول‌بار
+        listEl.style.height = `${totalHeight}px`; 
 
         const fragment = document.createDocumentFragment();
         for (let i = startIndex; i < endIndex; i++) {
@@ -450,21 +475,15 @@
             row.innerHTML = renderCoinRow(coin);
             fragment.appendChild(row);
         }
-        listEl.innerHTML = ''; // پاک کردن و جایگزینی آیتم‌های قبلی
+        listEl.innerHTML = ''; 
         listEl.appendChild(fragment);
     }
     
     function renderCoinRow(coin) {
         const isWatched = state.watchlist.includes(coin.id);
         
-        // 💰 محاسبه قیمت تومانی: قیمت دلاری * نرخ دلار تومانی (state.dollarPrice)
-        // اگر نرخ دلار (به تومان) بزرگتر از صفر باشد، محاسبه را انجام بده
         const tomanPriceNum = state.dollarPrice > 0 ? coin.current_price * state.dollarPrice : 0;
-        
-        // نمایش سه رقم اعشار برای قیمت‌های کمتر از ۱ سنت
         const usdDecimal = coin.current_price < 0.01 ? 5 : 2;
-        
-        // اگر قیمت تومانی معتبر بود، فرمت شده آن را نمایش بده، در غیر این صورت '---'
         const tomanPrice = tomanPriceNum > 0 ? formatNum(tomanPriceNum, 0) : '---';
 
         let nativeName = '';
@@ -475,7 +494,6 @@
         const priceUSD = formatNum(coin.current_price, usdDecimal);
         const changePercent = formatPercent(coin.price_change_percentage_24h);
         
-        // فضای کافی برای نمایش کامل نام و قیمت تومانی
         return `
             <div class="flex items-center px-4 h-full cursor-pointer transition duration-150 hover:bg-[var(--header-border)]">
                 <div class="flex-1 flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''} min-w-0">
@@ -497,7 +515,6 @@
             </div>`;
     }
     
-    // تابع ساخت Sparkline (حالا فقط برای داخل مدال استفاده می‌شود)
     function generateSparkline(data, change, w = 300, h = 160) {
         if (!data || data.length < 2) return `<div class="text-[var(--hint)] text-center w-full">${i18n('chartUnavailable')}</div>`;
         
@@ -530,62 +547,53 @@
             state.watchlist.push(coinId);
         }
         localStorage.setItem('watchlist_v10', JSON.stringify(state.watchlist));
-        renderCryptoList(); // رندر مجدد لیست برای اعمال تغییر
+        renderCryptoList(); 
     }
 
-    // تابع تنظیمات UI و مدیریت کلیک‌ها
     function setupUI() {
-        // مدیریت کلیک‌های نوار پیمایش
         document.querySelectorAll('.nav-button').forEach(btn => {
             btn.onclick = (e) => {
                 const pageId = e.currentTarget.dataset.page;
                 const pageKey = e.currentTarget.dataset.pageKey;
                 
-                // تغییر کلاس‌های Active
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById(pageId).classList.add('active');
                 document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
                 e.currentTarget.classList.add('active');
                 
-                // رندر محتوای صفحات بر اساس pageId
                 if (pageId === 'profile-page') renderProfilePage();
                 else if (pageId === 'coming-soon-page') renderComingSoonPage(pageKey);
-                // markets-page (صفحه اصلی) نیاز به رندر مجدد ندارد، فقط لیست را به‌روز می‌کنیم
             };
         });
 
-        // مدیریت تب‌ها
         document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', e => {
             document.querySelector('.tab-button.active').classList.remove('active');
             e.currentTarget.classList.add('active');
             state.activeTab = e.currentTarget.id.replace('tab-', '');
             localStorage.setItem('activeTab_v10', state.activeTab);
-            state.loadedPages = 1; // بازنشانی لود صفحه
+            state.loadedPages = 1; 
             loadCryptoData();
         }));
         
-        // مدیریت سورت
         document.querySelectorAll('.sort-button').forEach(btn => btn.addEventListener('click', e => {
             document.querySelector('.sort-button.active').classList.remove('active');
             e.currentTarget.classList.add('active');
             state.currentSort = e.currentTarget.dataset.sort;
             localStorage.setItem('currentSort_v10', state.currentSort);
-            state.loadedPages = 1; // بازنشانی لود صفحه
+            state.loadedPages = 1; 
             loadCryptoData();
         }));
         
-        // مدیریت جستجو
         let searchTimeout;
         document.getElementById('search-input').addEventListener('input', e => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => { 
                 state.searchQuery = e.target.value; 
-                state.loadedPages = 1; // در جستجو همیشه صفحه اول را لود می‌کنیم
+                state.loadedPages = 1; 
                 renderCryptoList(); 
             }, 300);
         });
         
-        // مدیریت کلیک روی سطرها (جزئیات و ستاره)
         document.getElementById('coin-list').addEventListener('click', e => {
             const star = e.target.closest('.star-icon');
             const row = e.target.closest('.coin-row');
@@ -596,16 +604,12 @@
         });
     }
     
-    // تابع پیاده‌سازی Infinite Scroll (فقط برای رندر کردن آیتم‌های قابل مشاهده)
     function setupInfiniteScroll() {
         const container = document.getElementById('coin-list-container');
         container.addEventListener('scroll', () => {
-            // 1. رندر کردن آیتم‌های قابل مشاهده (Virtual Scroll)
             renderCryptoList(); 
 
-            // 2. چک کردن رسیدن به انتهای لیست (برای لود صفحات بعدی)
             if (container.scrollHeight - container.scrollTop <= container.clientHeight * 1.5) {
-                // اگر در حال لود نیستیم، به پایان صفحه نرسیده‌ایم، در تب All هستیم و جستجویی فعال نیست:
                 if (!state.isLoading.crypto && state.loadedPages < state.maxPages && state.activeTab === 'all' && !state.searchQuery) {
                     state.loadedPages++;
                     loadCryptoData(true);
@@ -614,7 +618,6 @@
         });
     }
 
-    // تابع نمایش صفحه "به زودی"
     function renderComingSoonPage(pageKey) {
         const page = document.getElementById('coming-soon-page');
         const pageName = i18n(pageKey) || pageKey;
@@ -627,13 +630,12 @@
         translateUI();
     }
     
-    // تابع تغییر زبان
     function setLanguage(lang) {
         state.language = lang; localStorage.setItem('language_v10', lang);
         const newIsRTL = ['fa', 'ar'].includes(lang);
         document.documentElement.lang = lang; 
         document.documentElement.dir = newIsRTL ? 'rtl' : 'ltr';
-        isRTL = newIsRTL; // به‌روزرسانی متغیر گلوبال
+        isRTL = newIsRTL; 
 
         const activeNavButton = document.querySelector('.nav-button.active');
         const pageId = activeNavButton?.dataset.page;
@@ -644,7 +646,6 @@
         else render();
     }
     
-    // تابع اعمال ترجمه در UI
     function translateUI() {
         document.querySelectorAll('[data-i18n-key]').forEach(el => {
             const key = el.dataset.i18nKey;
@@ -661,21 +662,22 @@
         });
     }
     
-    // تابع تغییر تم
     function setTheme(theme) {
         state.theme = theme; localStorage.setItem('theme_v10', theme);
         document.body.classList.toggle('light-theme', theme === 'light');
-        tg.isDark = (theme === 'dark');
-        tg.setHeaderColor(theme === 'dark' ? '#1E1E1E' : '#FFFFFF');
-        tg.setBackgroundColor(theme === 'dark' ? '#121212' : '#FFFFFF');
+        try {
+            // تلگرام وب‌اپ را نیز به‌روزرسانی می‌کنیم
+            tg.isDark = (theme === 'dark');
+            tg.setHeaderColor(theme === 'dark' ? '#1E1E1E' : '#FFFFFF');
+            tg.setBackgroundColor(theme === 'dark' ? '#121212' : '#FFFFFF');
+        } catch(e) { /* ignore if not in TG environment */ }
 
         if (document.getElementById('profile-page').classList.contains('active')) {
             renderProfilePage();
         }
-        render(); // رندر مجدد لیست برای به‌روزرسانی رنگ‌های پس‌زمینه
+        render(); 
     }
     
-    // تابع باز کردن مدال (برای Detail)
     function openDetailsModal(coin) {
         if (!coin) return;
         
@@ -684,7 +686,6 @@
         const changeClass = getChangeClass(coin.price_change_percentage_24h);
         const change = formatPercent(coin.price_change_percentage_24h);
         
-        // نمودار: استفاده از داده‌های sparkline_in_7d برای ایجاد یک نمودار نمادین ۲۴ ساعته
         const chartHtml = generateSparkline(coin.sparkline_in_7d.price, coin.price_change_percentage_24h);
         
         const detailsHtml = `
@@ -748,11 +749,203 @@
         `;
     }
 
+    // --- Profile & Firestore Logic ---
+    
+    const PROFILE_COLLECTION = 'shelby_profile';
+    const PROFILE_DOC_ID = 'user_data';
+
+    /**
+     * مسیردهی به داکیومنت اختصاصی کاربر در Firestore
+     * @returns {DocumentReference}
+     */
+    function getUserProfileDocRef() {
+        return doc(db, 'artifacts', appId, 'users', userId, PROFILE_COLLECTION, PROFILE_DOC_ID);
+    }
+
+    /**
+     * ذخیره داده‌های پروفایل در Firestore
+     * @param {object} updates - شیء حاوی فیلدهایی که باید به‌روزرسانی شوند.
+     */
+    async function saveProfileData(updates) {
+        if (!isAuthReady) return console.error("Firestore not ready.");
+        
+        try {
+            await setDoc(getUserProfileDocRef(), updates, { merge: true });
+            console.log("Profile updated successfully.");
+        } catch (e) {
+            console.error("Error updating profile:", e);
+            showToast("Error saving data. Please try again.");
+        }
+    }
+
+    /**
+     * باز کردن مدال برای ویرایش ایمیل
+     */
+    function openEditEmailModal() {
+        const emailModalHtml = `
+            <h2 class="text-xl font-bold mb-6 text-center" data-i18n-key="editEmail"></h2>
+            <input type="text" id="email-input" placeholder="${i18n('enterEmail')}" value="${state.userEmail}" class="mb-4">
+            <button onclick="saveEmail()" class="w-full bg-[var(--button)] text-white p-3 rounded-xl font-bold" data-i18n-key="save"></button>
+            <button onclick="closeModal()" class="w-full text-[var(--hint)] p-3 mt-2 font-bold" data-i18n-key="back"></button>
+        `;
+        openModal(emailModalHtml);
+    }
+    
+    /**
+     * ذخیره ایمیل کاربر در Firestore
+     */
+    async function saveEmail() {
+        const emailInput = document.getElementById('email-input');
+        const email = emailInput.value.trim();
+        
+        if (email && !isValidEmail(email)) {
+            emailInput.style.border = '1px solid var(--negative)';
+            return showToast(i18n('invalidEmail'));
+        }
+        
+        emailInput.style.border = '1px solid var(--header-border)';
+        
+        try {
+            await saveProfileData({ email: email });
+            closeModal();
+            showToast(i18n('emailSaved'));
+        } catch (e) {
+            // Error handling is in saveProfileData
+        }
+    }
+
+    /**
+     * باز کردن مدال برای مدیریت کیف پول‌ها
+     */
+    function openEditWalletsModal() {
+        const walletsArray = Object.values(state.wallets);
+        const walletListHtml = walletsArray.map(w => `
+            <div class="flex items-center justify-between p-3 bg-[var(--bg)] rounded-xl mb-3">
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-sm">${w.symbol.toUpperCase()}</p>
+                    <p class="text-xs text-[var(--hint)] truncate">${w.address}</p>
+                </div>
+                <div class="flex space-x-2 space-x-reverse ml-3">
+                    <button onclick="openAddWalletModal('${w.id}')" class="text-sm text-[var(--button)]">✏️</button>
+                    <button onclick="promptDeleteWallet('${w.id}', '${w.symbol}')" class="text-sm text-[var(--negative)]">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+
+        const modalHtml = `
+            <h2 class="text-xl font-bold mb-6 text-center" data-i18n-key="editWallets"></h2>
+            <div id="wallet-list-container">
+                ${walletsArray.length === 0 ? `<p class="text-center text-[var(--hint)]">${i18n('noWallets')}</p>` : walletListHtml}
+            </div>
+            <button onclick="openAddWalletModal()" class="w-full bg-[var(--positive)] text-white p-3 rounded-xl mt-6 font-bold" data-i18n-key="addNewWallet"></button>
+            <button onclick="closeModal()" class="w-full text-[var(--hint)] p-3 mt-2 font-bold" data-i18n-key="back"></button>
+        `;
+        openModal(modalHtml);
+    }
+    
+    /**
+     * باز کردن مدال افزودن/ویرایش کیف پول
+     * @param {string} [walletId] - شناسه کیف پول برای ویرایش (اختیاری)
+     */
+    function openAddWalletModal(walletId) {
+        const isEditing = !!walletId;
+        const wallet = isEditing ? state.wallets[walletId] : {};
+        
+        // لیست تمام ارزها برای Dropdown
+        const allSymbols = state.allCoins.map(c => c.symbol.toUpperCase());
+        const uniqueSymbols = [...new Set(allSymbols)].sort();
+
+        const symbolOptions = uniqueSymbols.map(sym => 
+            `<option value="${sym}" ${wallet.symbol === sym ? 'selected' : ''}>${sym}</option>`
+        ).join('');
+
+        const modalHtml = `
+            <h2 class="text-xl font-bold mb-6 text-center" data-i18n-key="${isEditing ? 'editWallet' : 'addWallet'}"></h2>
+            <form id="wallet-form" onsubmit="event.preventDefault(); saveWallet('${walletId || ''}')">
+                <label class="block text-sm font-medium mb-1" data-i18n-key="selectCoin"></label>
+                <select id="wallet-symbol" class="mb-4" ${isEditing ? 'disabled' : ''}>
+                    ${symbolOptions}
+                </select>
+                
+                <label class="block text-sm font-medium mb-1" data-i18n-key="walletAddress"></label>
+                <input type="text" id="wallet-address" placeholder="${i18n('walletAddress')}" value="${wallet.address || ''}" class="mb-4">
+                
+                <label class="block text-sm font-medium mb-1" data-i18n-key="cryptoAmount"></label>
+                <input type="text" id="wallet-amount" placeholder="0.00" value="${wallet.amount || ''}" class="mb-4">
+                
+                <button type="submit" class="w-full bg-[var(--button)] text-white p-3 rounded-xl font-bold" data-i18n-key="save"></button>
+                <button type="button" onclick="openEditWalletsModal()" class="w-full text-[var(--hint)] p-3 mt-2 font-bold" data-i18n-key="back"></button>
+            </form>
+        `;
+        openModal(modalHtml);
+    }
+
+    window.saveWallet = async function(walletId) {
+        const symbol = document.getElementById('wallet-symbol').value;
+        const address = document.getElementById('wallet-address').value.trim();
+        const amount = parseFloat(document.getElementById('wallet-amount').value) || 0;
+        
+        if (!symbol || address.length < 10) {
+            document.getElementById('wallet-address').style.border = '1px solid var(--negative)';
+            return showToast("Please check symbol and address.");
+        }
+        document.getElementById('wallet-address').style.border = '1px solid var(--header-border)';
+
+        const newWalletId = walletId || crypto.randomUUID();
+        
+        const newWallets = { ...state.wallets, [newWalletId]: { id: newWalletId, symbol, address, amount } };
+
+        try {
+            await saveProfileData({ wallets: newWallets });
+            closeModal();
+            showToast(i18n('walletSaved'));
+        } catch (e) {
+             // Error handling is in saveProfileData
+        }
+    }
+    
+    window.promptDeleteWallet = function(id, symbol) {
+        const confirmationHtml = `
+            <h2 class="text-xl font-bold mb-6 text-center">${i18n('confirmDelete', { symbol })}</h2>
+            <button onclick="deleteWallet('${id}')" class="w-full bg-[var(--negative)] text-white p-3 rounded-xl font-bold mb-3">حذف</button>
+            <button onclick="openEditWalletsModal()" class="w-full text-[var(--hint)] p-3 font-bold" data-i18n-key="back"></button>
+        `;
+        openModal(confirmationHtml);
+    }
+    
+    window.deleteWallet = async function(walletId) {
+        const newWallets = { ...state.wallets };
+        delete newWallets[walletId];
+        
+        try {
+            await saveProfileData({ wallets: newWallets });
+            closeModal();
+            showToast(i18n('walletDeleted'));
+        } catch (e) {
+            // Error handling is in saveProfileData
+        }
+    }
+
+    /**
+     * رندر صفحه پروفایل
+     */
     function renderProfilePage() {
         const user = tg.initDataUnsafe.user || { first_name: i18n('name'), username: i18n('notSet'), id: '0' };
         const profilePage = document.getElementById('profile-page');
         const walletCount = Object.keys(state.wallets).length;
         
+        // اگر هنوز اطلاعات از Firestore لود نشده، اسکلتون نمایش بده
+        if (!state.isDataLoadedFromFirestore) {
+            profilePage.innerHTML = `<div class="p-4 space-y-4">
+                <div class="flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''} mb-6">
+                     <div class="w-20 h-20 rounded-full skeleton"></div>
+                     <div class="space-y-2"><div class="h-5 w-40 skeleton"></div><div class="h-3 w-32 skeleton"></div></div>
+                </div>
+                <div class="h-60 skeleton rounded-xl"></div>
+            </div>`;
+            return;
+        }
+
         profilePage.innerHTML = `
             <div class="p-4">
                  <div class="flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''} mb-6">
@@ -760,9 +953,29 @@
                     <div>
                         <h1 class="text-xl font-bold">${user.first_name || i18n('name')} ${user.last_name || ''}</h1>
                         <p class="text-[var(--hint)] text-sm">@${user.username || i18n('notSet')}</p>
+                        <p class="text-[var(--hint)] text-xs font-mono mt-1 select-all">ID: ${userId}</p>
                     </div>
                 </div>
                 <div class="space-y-4">
+                    <div class="bg-[var(--secondary-bg)] p-4 rounded-xl">
+                        <h2 data-i18n-key="userInfo" class="font-bold mb-3 text-lg"></h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center py-1"><span class="text-[var(--hint)]" data-i18n-key="userId"></span><span class="font-mono text-left truncate text-sm select-all">${userId}</span></div>
+                            <div class="flex justify-between items-center py-1 cursor-pointer hover:bg-[var(--bg)] p-2 rounded-lg -m-2" onclick="openEditEmailModal()">
+                                <span class="text-[var(--hint)]" data-i18n-key="emailOptional"></span>
+                                <span class="font-mono text-left truncate text-sm">${state.userEmail || i18n('notSet')} <span class="text-[var(--button)] mr-2">✏️</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[var(--secondary-bg)] p-4 rounded-xl">
+                        <h2 data-i18n-key="wallets" class="font-bold mb-3 text-lg"></h2>
+                        <div class="flex justify-between items-center py-1 cursor-pointer hover:bg-[var(--bg)] p-2 rounded-lg -m-2" onclick="openEditWalletsModal()">
+                            <span class="text-[var(--hint)]" data-i18n-key="walletsCount" data-count="${walletCount}"></span>
+                            <span class="text-sm text-[var(--button)]">${i18n('editWallets')}</span>
+                        </div>
+                    </div>
+                    
                     <div class="bg-[var(--secondary-bg)] p-4 rounded-xl">
                         <h2 data-i18n-key="settings" class="font-bold mb-3 text-lg"></h2>
                         <div class="space-y-3">
@@ -775,8 +988,6 @@
                                     <option value="zh" ${state.language === 'zh' ? 'selected' : ''}>中文</option>
                                 </select>
                             </div>
-                            <div class="flex justify-between items-center py-1"><span class="text-[var(--hint)]" data-i18n-key="emailOptional"></span><span class="font-mono text-left truncate text-sm">${state.userEmail || i18n('notSet')}</span></div>
-                            <div class="flex justify-between items-center py-1"><span class="text-[var(--hint)]" data-i18n-key="wallets"></span><span class="text-sm">${i18n('walletsCount', { count: walletCount })}</span></div>
                         </div>
                     </div>
                 </div>
@@ -784,10 +995,89 @@
         document.querySelectorAll('.theme-btn').forEach(btn => btn.onclick = (e) => setTheme(e.currentTarget.dataset.theme));
         document.getElementById('lang-select').onchange = (e) => setLanguage(e.target.value);
         translateUI();
+        
+        // Expose functions globally for modal buttons
+        window.openEditEmailModal = openEditEmailModal;
+        window.openEditWalletsModal = openEditWalletsModal;
+    }
+
+    // --- Firebase Initialization and Listeners ---
+
+    async function initializeFirebase() {
+        if (!firebaseConfig) {
+            console.error("Firebase config is missing.");
+            return;
+        }
+        
+        // setLogLevel('Debug'); // Enable for debugging
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        // Sign in using custom token or anonymously
+        try {
+            if (initialAuthToken) {
+                const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                userId = userCredential.user.uid;
+            } else {
+                const userCredential = await signInAnonymously(auth);
+                userId = userCredential.user.uid;
+            }
+        } catch (e) {
+            console.error("Firebase Auth Error:", e);
+            userId = 'guest_' + crypto.randomUUID(); // Fallback ID
+        } finally {
+            isAuthReady = true;
+            console.log("Firebase initialized. User ID:", userId);
+            setupProfileListener();
+        }
+    }
+    
+    function setupProfileListener() {
+        if (!db || !userId) return;
+        
+        // مسیر داده‌ی اختصاصی کاربر: /artifacts/{appId}/users/{userId}/shelby_profile/user_data
+        const profileRef = getUserProfileDocRef();
+
+        onSnapshot(profileRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                state.userEmail = data.email || '';
+                state.wallets = data.wallets || {};
+                
+                // Ensure wallets have unique IDs
+                if (Object.keys(state.wallets).length > 0 && !Object.values(state.wallets)[0].id) {
+                     // If IDs are missing, regenerate structure (fallback)
+                     const updatedWallets = Object.fromEntries(
+                        Object.entries(data.wallets).map(([key, w]) => [key, { ...w, id: key }])
+                     );
+                     state.wallets = updatedWallets;
+                     // Try to update Firestore silently
+                     setDoc(profileRef, { wallets: updatedWallets }, { merge: true }).catch(console.error);
+                }
+
+            } else {
+                // If the document doesn't exist, set initial empty data
+                state.userEmail = '';
+                state.wallets = {};
+                console.log("Profile document created.");
+                // Create the document with default empty values
+                setDoc(profileRef, { email: '', wallets: {} }).catch(console.error);
+            }
+            
+            state.isDataLoadedFromFirestore = true;
+            // اگر کاربر در صفحه پروفایل بود، آن را به‌روزرسانی کن
+            if (document.getElementById('profile-page').classList.contains('active')) {
+                 renderProfilePage();
+            }
+        }, (error) => {
+            console.error("Error listening to profile data:", error);
+            showToast("Failed to load user profile data.");
+        });
     }
 
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         try { 
             tg.ready(); 
             tg.expand();
@@ -796,26 +1086,37 @@
             console.warn("TG script not loaded. Running standalone."); 
         }
         
+        // 1. Firebase Initialization (Async)
+        await initializeFirebase();
+        
+        // 2. Initial Setup
         setTheme(state.theme);
         setLanguage(state.language); 
         setupUI();
         setupInfiniteScroll(); 
         
-        // 1. شروع بارگذاری لیست ارزها (فوری، حتی اگر دلار لود نشود)
+        // 3. Start data loading
         loadCryptoData(); 
-        
-        // 2. شروع بارگذاری داده‌های خلاصه (با تلاش مجدد)
         loadSummaryData();
         
-        // تنظیم به‌روزرسانی خودکار لیست ارزها (هر ۳۰ ثانیه)
+        // 4. Set auto refresh
         if (state.updateInterval) clearInterval(state.updateInterval);
         state.updateInterval = setInterval(() => {
             loadCryptoData(true);
-            loadSummaryData(); // نرخ دلار و طلا را هم به‌روزرسانی می‌کنیم
+            loadSummaryData(); 
         }, 30000);
+        
+        // Expose functions globally for HTML calls
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.saveEmail = saveEmail;
+        window.openAddWalletModal = openAddWalletModal;
+        window.saveWallet = saveWallet;
+        window.deleteWallet = deleteWallet;
+        window.promptDeleteWallet = promptDeleteWallet;
     });
     //============== END OF FULL JAVASCRIPT CODE ==============
     </script>
 </body>
 </html>
-```eof
+
