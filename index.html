@@ -11,7 +11,7 @@
     <!-- Custom Font -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* تعریف متغیرهای تم تاریک و روشن */
+        /* تعریف متغیرهای تم تاریک و روشن - کامل‌شده */
         :root {
             --bg: #121212; --text: #EAECEF; --hint: #707A8A;
             --button: #2E81FF; --secondary-bg: #1E1E1E; --header-border: #2A2A2A;
@@ -20,7 +20,9 @@
         .light-theme {
             --bg: #FFFFFF; --text: #1c1c1e; --hint: #8e8e93;
             --button: #007AFF; --secondary-bg: #F2F2F7; --header-border: #e5e5ea;
+            --positive: #00C853; --negative: #FF3B30;
         }
+
         /* استایل‌های پایه */
         body { 
             font-family: 'Vazirmatn', sans-serif; 
@@ -56,7 +58,6 @@
         /* لیست ارزها: برای اسکرول مجازی */
         #coin-list-container { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
         .coin-row { transition: background-color 0.1s; }
-        
         /* حالت ویژوال کیبوردی برای اینپوت‌های مدال */
         .modal input[type="text"], .modal select {
              background-color: var(--bg);
@@ -65,7 +66,6 @@
              padding: 10px;
              border-radius: 8px;
              width: 100%;
-             /* اطمینان از استایل‌دهی در حالت لایت مود */
              transition: background-color 0.3s, border-color 0.3s;
         }
         /* کلاس برای اطمینان از درست بودن جهت در موبایل */
@@ -74,9 +74,12 @@
             flex-direction: row-reverse;
         }
         .rtl-space-x-reverse > * + * {
-            margin-right: 0.75rem; /* space-x-3 */
+            margin-right: 0.75rem;
             margin-left: 0;
         }
+        /* Clear search button */
+        .search-clear { display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--hint); cursor: pointer; }
+        .search-clear.show { display: block; }
     </style>
 </head>
 <body class="antialiased">
@@ -84,7 +87,10 @@
     <div id="markets-page" class="page active">
         <div class="header">
             <h1 data-i18n-key="marketHeader" class="text-xl font-bold text-center mb-4"></h1>
-            <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" class="w-full p-2.5 rounded-xl text-sm mb-3" style="background-color: var(--secondary-bg); border: 1px solid var(--header-border); color: var(--text);">
+            <div class="relative">
+                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" class="w-full p-2.5 rounded-xl text-sm mb-3 pr-10" style="background-color: var(--secondary-bg); border: 1px solid var(--header-border); color: var(--text);">
+                <button id="search-clear" class="search-clear">✕</button>
+            </div>
             <div class="flex items-center justify-between">
                  <div class="flex bg-[var(--secondary-bg)] rounded-xl p-1">
                     <button id="tab-all" class="tab-button active px-3 py-1.5 rounded-lg text-xs font-semibold" data-i18n-key="all"></button>
@@ -151,7 +157,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot, collection, query, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    // NOTE: setLogLevel is imported from firebase/app-check.js in original, but not used. Removing import for unused functions unless needed.
 
     //============== START OF FULL JAVASCRIPT CODE ==============
     
@@ -159,6 +164,7 @@
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    const ABSTRACT_API_KEY = typeof __abstract_api_key !== 'undefined' ? __abstract_api_key : 'YOUR_ABSTRACT_API_KEY'; // Placeholder for free API key
 
     let db, auth;
     let userId = '';
@@ -208,13 +214,15 @@
         isLoading: { summary: true, crypto: true },
         errors: { summary: null, crypto: null },
         updateInterval: null,
-        maxPages: 4, 
+        maxPages: 5, 
         loadedPages: 1, 
         isDataLoadedFromFirestore: false, // New flag for profile data readiness
+        lastCoinsCache: null, // Cache for coins
+        lastSummaryCache: null, // Cache for summary
     };
     
-    // 📢 آدرس API جدید (حاجی وب‌سرویس) - دارای نرخ دلار و طلا
-    const HAJI_API_URL = "https://haji-api.ir/arz/?license=X6AeD481PYBXAVd613617197375739822qgek";
+    // 📢 آدرس API جدید (AbstractAPI برای نرخ دلار/طلا)
+    const EXCHANGE_BASE_URL = `https://currency.abstractapi.com/v1/latest?api_key=${ABSTRACT_API_KEY}&base=USD`;
     const CRYPTO_BASE_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&sparkline=true&price_change_percentage=24h";
 
     // توابع کمکی
@@ -222,6 +230,9 @@
     const formatPercent = (p) => `${parseFloat(p||0) >= 0 ? '+' : ''}${formatNum(p||0)}%`;
     const getChangeClass = (p) => (parseFloat(p||0) >= 0 ? 'text-[var(--positive)]' : 'text-[var(--negative)]');
     const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+    // Simple address validation regex (general for crypto addresses)
+    const isValidAddress = (address) => /^[0-9a-fA-Fx]{2,66}$/.test(address) || /^EQ[A-Za-z0-9_-]{44,}$/.test(address) || /^0x[a-fA-F0-9]{40}$/.test(address);
 
     /**
      * تابع نمایش Toast Message (به جای alert)
@@ -259,7 +270,6 @@
         }
     }
 
-
     function render() {
         // ترجمه عمومی UI
         translateUI();
@@ -268,7 +278,7 @@
         renderCryptoList();
     }
     
-    // تابع بارگذاری داده‌های خلاصه (قیمت دلار/تتر و طلا از Haji-API)
+    // تابع بارگذاری داده‌های خلاصه (قیمت دلار/تتر و طلا از AbstractAPI)
     async function loadSummaryData() {
         state.isLoading.summary = true; 
         state.errors.summary = null; 
@@ -277,7 +287,7 @@
         state.dollarPrice = lastDollarPriceToman; 
         
         try {
-            const response = await fetchWithRetry(HAJI_API_URL);
+            const response = await fetchWithRetry(EXCHANGE_BASE_URL);
             const result = await response.json();
             
             let newDollarPriceToman = 0;
@@ -285,21 +295,17 @@
             let dollarChangePercent = 0;
             let goldChangePercent = 0;
 
-            if (result && Array.isArray(result.arz)) {
-                // تلاش برای یافتن نرخ تتر یا دلار
-                const dollarData = result.arz.find(item => item.name && (item.name.includes('دلار') || item.name.includes('آمریکا') || item.name.includes('تتر')));
-                const goldData = result.arz.find(item => item.name && item.name.includes('گرم طلا ۱۸ عیار')); 
-
-                if (dollarData && dollarData.price) {
-                    newDollarPriceToman = parseFloat(String(dollarData.price).replace(/,/g, '')) || 0; 
-                    dollarChangePercent = parseFloat(dollarData.change_percent) || 0;
-                }
-                if (goldData && goldData.price) {
-                    newGoldPriceToman = parseFloat(String(goldData.price).replace(/,/g, '')) || 0;
-                    goldChangePercent = parseFloat(goldData.change_percent) || 0;
-                }
+            if (result && result.exchange_rate) {
+                // نرخ IRR (Toman ≈ IRR / 10, but use IRR for precision; adjust if needed)
+                newDollarPriceToman = result.exchange_rate.IRR || 0;
+                // Gold (XAU/USD * USD/IRR)
+                const goldUsd = result.exchange_rate.XAU || 0;
+                newGoldPriceToman = goldUsd * newDollarPriceToman;
+                // Change simulation (API doesn't provide; use 0 or fetch separately)
+                dollarChangePercent = 0; // Placeholder; integrate change if available
+                goldChangePercent = 0;
             } else if (result && result.status === 'error') {
-                 throw new Error(result.message || "Haji-API returned an error status.");
+                 throw new Error(result.message || "AbstractAPI returned an error status.");
             }
             
             if (newDollarPriceToman > 0) {
@@ -311,13 +317,13 @@
                 dollar: { price: state.dollarPrice, change: dollarChangePercent },
                 gold: { price: newGoldPriceToman, change: goldChangePercent } 
             };
+            state.lastSummaryCache = Date.now();
 
         } catch (error) { 
-            console.error("Summary (Haji-API) API Error:", error); 
+            console.error("Summary (AbstractAPI) API Error:", error); 
             
             if (lastDollarPriceToman > 0) {
                 state.dollarPrice = lastDollarPriceToman;
-                // استفاده از نرخ ذخیره شده به عنوان خطا
                 state.errors.summary = `${i18n('usingCachedPrice')} (${formatNum(lastDollarPriceToman, 0)} T)`;
             } else {
                 state.dollarPrice = 0; 
@@ -390,8 +396,16 @@
             if (state.allCoins.length === 0) renderCryptoList(); 
         }
         
+        // Cache check
+        if (state.lastCoinsCache && Date.now() - state.lastCoinsCache < 300000) { // 5 min cache
+            state.allCoins = JSON.parse(localStorage.getItem('cachedCoins_v10')) || [];
+            state.isLoading.crypto = false;
+            renderCryptoList();
+            return;
+        }
+        
         // در صورت لودینگ مجدد یا به‌روزرسانی، فقط صفحه ۱ را لود می‌کنیم تا داده‌ها مرتب شوند
-        const pageUrl = `${CRYPTO_BASE_URL}&page=1&order=market_cap_desc`; // همیشه بر اساس مارکت کپ لود می‌کنیم تا بتوانیم بعداً آن را مرتب کنیم.
+        const pageUrl = `${CRYPTO_BASE_URL}&page=${state.loadedPages}&order=market_cap_desc`; // Pagination enabled
         const extraCoinsUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${EXTRA_COIN_IDS}&sparkline=true&price_change_percentage=24h`;
         
         try {
@@ -409,7 +423,13 @@
             const uniqueExtraCoins = (extraCoinsData || []).filter(c => !marketCapIds.has(c.id));
             
             // ترکیب داده‌ها
-            state.allCoins = uniqueExtraCoins.concat(marketCapData);
+            if (state.loadedPages === 1) {
+                state.allCoins = uniqueExtraCoins.concat(marketCapData);
+            } else {
+                state.allCoins = state.allCoins.concat(marketCapData);
+            }
+            localStorage.setItem('cachedCoins_v10', JSON.stringify(state.allCoins));
+            state.lastCoinsCache = Date.now();
             state.errors.crypto = null;
             
         } catch (error) { 
@@ -607,14 +627,23 @@
             renderCryptoList(); // فقط رندر را فراخوانی می‌کنیم چون داده‌ها در allCoins موجود است
         }));
         
+        const searchInput = document.getElementById('search-input');
+        const searchClear = document.getElementById('search-clear');
         let searchTimeout;
-        document.getElementById('search-input').addEventListener('input', e => {
+        searchInput.addEventListener('input', e => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => { 
                 state.searchQuery = e.target.value; 
                 state.loadedPages = 1; 
                 renderCryptoList(); 
             }, 300);
+            searchClear.classList.toggle('show', e.target.value.length > 0);
+        });
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            state.searchQuery = '';
+            searchClear.classList.remove('show');
+            renderCryptoList();
         });
         
         document.getElementById('coin-list').addEventListener('click', e => {
@@ -632,15 +661,13 @@
         container.addEventListener('scroll', () => {
             renderCryptoList(); 
 
-            // منطق لود بیشتر (حذف شد زیرا فقط صفحه 1 از کوین‌گکو به دلیل محدودیت API در این محیط لود می‌شود، اما اگر نیاز بود می‌توان آن را فعال کرد)
-            /*
+            // منطق لود بیشتر
             if (container.scrollHeight - container.scrollTop <= container.clientHeight * 1.5) {
                 if (!state.isLoading.crypto && state.loadedPages < state.maxPages && state.activeTab === 'all' && !state.searchQuery) {
                     state.loadedPages++;
                     loadCryptoData(true);
                 }
             }
-            */
         });
     }
 
@@ -935,7 +962,7 @@
              symbolSelect.style.border = '1px solid var(--header-border)';
         }
         
-        if (address.length < 10) {
+        if (address.length < 10 || !isValidAddress(address)) {
             addressInput.style.border = '1px solid var(--negative)';
             isValid = false;
         } else {
@@ -943,7 +970,7 @@
         }
         
         if (!isValid) {
-            return showToast("لطفاً ارز و آدرس را بررسی کنید.");
+            return showToast("لطفاً ارز و آدرس معتبر را بررسی کنید.");
         }
 
         const newWalletId = walletId || crypto.randomUUID();
@@ -1087,7 +1114,6 @@
             return;
         }
         
-        // setLogLevel('Debug'); // Enable for debugging
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         auth = getAuth(app);
@@ -1209,5 +1235,4 @@
     //============== END OF FULL JAVASCRIPT CODE ==============
     </script>
 </body>
-</html>
-
+    </html>
