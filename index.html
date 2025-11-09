@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
   <title>Shelby Bet - بازارهای کریپتو</title>
 
   <!-- Telegram Web App -->
@@ -20,6 +20,7 @@
             primary: '#1DA1F2',
             success: '#10B981',
             danger: '#EF4444',
+            warning: '#F59E0B',
           },
         },
       },
@@ -27,13 +28,16 @@
   </script>
 
   <!-- Vazirmatn Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Icons (Lucide) -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- QR Code -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="data:application/manifest+json,{
@@ -44,20 +48,23 @@
     \"background_color\": \"#ffffff\",
     \"theme_color\": \"#1DA1F2\",
     \"icons\": [
-      {\"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E₿%3C/text%3E%3C/svg%3E\", \"sizes\": \"192x192\", \"type\": \"image/svg+xml\"}
+      {\"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E₿%3C/text%3E%3C/svg%3E\", \"sizes\": \"any\"}
     ]
-  }" />
+  }">
 
   <style>
-    :root { --primary: #1DA1F2; }
-    .dark { --primary: #0A84FF; }
-    body { margin: 0; padding: 0; background: var(--bg, #f9f9f9); }
+    body { margin: 0; padding: 0; }
+    .dark { --tw-bg-opacity: 1; background-color: #111; }
     .skeleton { @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded; }
-    .chart-container { height: 200px; }
+    .chart-container { height: 220px; }
     .hidden { display: none !important; }
-    .fade-in { animation: fadeIn 0.3s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .copy-btn { @apply text-xs text-gray-500 hover:text-primary; }
+    .copy-btn { @apply text-xs text-gray-500 hover:text-primary cursor-pointer; }
+    .stats { @apply text-sm text-gray-500 mt-1; }
+    .haptic { transition: transform 0.1s; }
+    .haptic:active { transform: scale(0.95); }
+    .tab-btn.active { @apply border-b-2 border-primary text-primary; }
+    .market-tab-btn.active { @apply bg-primary text-white; }
+    .market-tab-btn:not(.active) { @apply bg-gray-200 dark:bg-gray-700; }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
@@ -69,21 +76,17 @@
     <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
       <div class="flex justify-between items-center">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-            S
-          </div>
+          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">S</div>
           <div>
             <h1 class="text-lg font-bold">Shelby Bet</h1>
             <p class="text-xs text-gray-500">بازارهای کریپتو</p>
           </div>
         </div>
         <div class="flex gap-2">
-          <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+          <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 haptic">
             <i data-lucide="moon"></i>
           </button>
-          <button id="install-btn" class="p-2 rounded-lg bg-primary text-white hidden">
-            <i data-lucide="download"></i>
-          </button>
+          <button id="lang-toggle" class="px-3 py-1 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 haptic">EN</button>
         </div>
       </div>
     </header>
@@ -97,1857 +100,1068 @@
 
     <!-- Page: Markets -->
     <div id="page-markets" class="page">
-      <!-- Search -->
       <div class="p-4 sticky top-28 z-30 bg-white dark:bg-gray-900">
         <div class="relative">
-          <input type="text" id="search-input" placeholder="جستجو در ارزها..." 
-                 class="w-full p-3 pr-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary">
-          <button id="clear-search" class="absolute left-3 top-3 text-gray-500 hidden">
+          <input type="text" id="search-input" placeholder="جستجو در ارزها..." class="w-full p-3 pr-10 rounded-lg border bg-gray-50 dark:bg-gray-800">
+          <button id="clear-search" class="absolute left-3 top-3 text-gray-500 hidden haptic">
             <i data-lucide="x"></i>
           </button>
         </div>
       </div>
 
-      <!-- Market Tabs -->
-      <div class="flex px-4 gap-2 overflow-x-auto whitespace-nowrap">
-        <button data-market-tab="all" class="market-tab-btn py-2 px-4 rounded-full bg-primary text-white text-sm font-medium active">همه</button>
-        <button data-market-tab="favorites" class="market-tab-btn py-2 px-4 rounded-full bg-gray-200 dark:bg-gray-700 text-sm">علاقه‌مندی‌ها</button>
-        <button data-market-tab="gainers" class="market-tab-btn py-2 px-4 rounded-full bg-gray-200 dark:bg-gray-700 text-sm">بیشترین رشد</button>
-        <button data-market-tab="losers" class="market-tab-btn py-2 px-4 rounded-full bg-gray-200 dark:bg-gray-700 text-sm">بیشترین افت</button>
+      <div class="flex px-4 gap-2 overflow-x-auto whitespace-nowrap pb-2">
+        <button data-market-tab="all" class="market-tab-btn py-2 px-4 rounded-full text-sm font-medium active">همه</button>
+        <button data-market-tab="favorites" class="market-tab-btn py-2 px-4 rounded-full text-sm">علاقه‌مندی‌ها</button>
+        <button data-market-tab="gainers" class="market-tab-btn py-2 px-4 rounded-full text-sm">بیشترین رشد</button>
+        <button data-market-tab="losers" class="market-tab-btn py-2 px-4 rounded-full text-sm">بیشترین افت</button>
       </div>
 
-      <!-- Sort -->
       <div class="flex justify-between items-center p-4">
         <span class="text-sm text-gray-500">مرتب‌سازی:</span>
         <select id="sort-select" class="p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm">
           <option value="market_cap_desc">ارزش بازار</option>
           <option value="price_change_24h_desc">رشد ۲۴ساعته</option>
           <option value="price_change_24h_asc">افت ۲۴ساعته</option>
+          <option value="volume_desc">حجم معاملات</option>
         </select>
       </div>
 
-      <!-- Markets List -->
       <div id="markets-list" class="px-4 space-y-3 pb-8"></div>
 
-      <!-- Loading Skeleton -->
-      <div id="skeleton-loading" class="px-4 space-y-3 hidden">
-        ${Array(10).fill().map(() => `
-          <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl">
-            <div class="flex items-center gap-3">
-              <div class="skeleton w-12 h-12 rounded-full"></div>
-              <div>
-                <div class="skeleton h-4 w-24 rounded"></div>
-                <div class="skeleton h-3 w-16 rounded mt-1"></div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="skeleton h-5 w-20 rounded"></div>
-              <div class="skeleton h-4 w-16 rounded mt-1"></div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
+      <div id="skeleton-loading" class="px-4 space-y-3 hidden"></div>
 
-      <!-- Load More -->
       <div id="load-more" class="p-4 text-center hidden">
-        <button class="px-6 py-2 bg-primary text-white rounded-full text-sm">بارگذاری بیشتر</button>
+        <button class="px-6 py-2 bg-primary text-white rounded-full text-sm haptic">بارگذاری بیشتر</button>
       </div>
     </div>
-
     <!-- Page: Wallet -->
     <div id="page-wallet" class="page hidden">
-      <div class="p-4">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-bold">کیف پول‌ها</h2>
-          <button id="add-wallet-btn" class="p-2 bg-primary text-white rounded-lg">
-            <i data-lucide="plus"></i>
+      <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+        <div class="flex gap-2">
+          <button onclick="exportWallets()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center gap-2 text-sm haptic">
+            <i data-lucide="download"></i> خروجی
+          </button>
+          <button onclick="importWallets()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center gap-2 text-sm haptic">
+            <i data-lucide="upload"></i> ورودی
           </button>
         </div>
+      </div>
 
-        <div id="wallets-list" class="space-y-3"></div>
+      <div id="wallet-list" class="space-y-3 p-4"></div>
 
-        <div id="empty-wallet" class="text-center py-12 text-gray-500">
-          <i data-lucide="wallet" class="w-16 h-16 mx-auto mb-3 text-gray-300"></i>
-          <p>هنوز کیف پولی اضافه نکردید</p>
-        </div>
+      <div id="empty-wallet" class="text-center py-12">
+        <i data-lucide="wallet" class="w-16 h-16 mx-auto text-gray-400"></i>
+        <p class="mt-4 text-gray-500">هیچ کیف پولی اضافه نشده</p>
+        <button onclick="openAddWalletModal()" class="mt-4 px-6 py-2 bg-primary text-white rounded-lg haptic">افزودن کیف پول</button>
       </div>
     </div>
 
     <!-- Page: Profile -->
     <div id="page-profile" class="page hidden">
-      <div class="p-6 text-center">
-        <div id="profile-avatar" class="w-24 h-24 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
-          U
+      <div class="p-4 space-y-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 text-center">
+          <div class="w-24 h-24 mx-auto bg-primary rounded-full flex items-center justify-center text-3xl text-white font-bold">
+            S
+          </div>
+          <h2 class="mt-4 text-xl font-bold">Shelby User</h2>
+          <p class="text-gray-500">Shelby Bet v2.0</p>
         </div>
-        <h2 id="profile-name" class="text-xl font-bold">کاربر مهمان</h2>
-        <p id="profile-id" class="text-sm text-gray-500">ID: guest</p>
 
-        <div class="mt-8 space-y-3">
-          <button class="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-left flex items-center gap-3">
-            <i data-lucide="bell"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <span>تم</span>
+            <button id="profile-theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic">
+              <i data-lucide="moon"></i>
+            </button>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>زبان</span>
+            <button id="profile-lang-toggle" class="px-3 py-1 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 haptic">EN</button>
+          </div>
+          <div class="flex justify-between items-center">
             <span>اعلان‌ها</span>
-          </button>
-          <button class="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-left flex items-center gap-3">
-            <i data-lucide="settings"></i>
-            <span>تنظیمات</span>
-          </button>
-          <button id="logout-btn" class="w-full p-3 bg-danger text-white rounded-lg flex items-center justify-center gap-2">
-            <i data-lucide="log-out"></i>
-            <span>خروج</span>
-          </button>
+            <input type="checkbox" id="notifications-toggle" class="w-5 h-5 rounded">
+          </div>
+          <div class="flex justify-between items-center">
+            <span>لرزش دکمه‌ها</span>
+            <input type="checkbox" id="haptic-toggle" class="w-5 h-5 rounded" checked>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6">
+          <h3 class="font-bold mb-4">آمار اپ</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span>تعداد ارزها</span>
+              <span id="stats-coins">0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>کیف پول‌ها</span>
+              <span id="stats-wallets">0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>هشدارهای فعال</span>
+              <span id="stats-alerts">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 text-center">
+          <h3 class="font-bold mb-2">درباره ما</h3>
+          <p class="text-sm text-gray-500">Shelby Bet - بهترین ابزار مدیریت کریپتو در تلگرام</p>
+          <p class="text-xs text-gray-400 mt-2">نسخه 2.0 - ۱۴۰۴</p>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Bottom Navigation -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex z-50">
-    <button data-nav="markets" class="nav-btn flex-1 py-3 flex flex-col items-center gap-1 active">
-      <i data-lucide="trending-up"></i>
-      <span class="text-xs">بازارها</span>
-    </button>
-    <button data-nav="wallet" class="nav-btn flex-1 py-3 flex flex-col items-center gap-1">
-      <i data-lucide="wallet"></i>
-      <span class="text-xs">کیف پول</span>
-    </button>
-    <button data-nav="profile" class="nav-btn flex-1 py-3 flex flex-col items-center gap-1">
-      <i data-lucide="user"></i>
-      <span class="text-xs">پروفایل</span>
-    </button>
-  </nav>
-
   <!-- Modals -->
   <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md">
-      <div id="modal-content"></div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md"></div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-20 left-4 right-4 z-50 hidden">
+    <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg flex items-center gap-3">
+      <i data-lucide="bell"></i>
+      <div>
+        <p class="font-medium" id="toast-title"></p>
+        <p class="text-sm" id="toast-message"></p>
+      </div>
     </div>
   </div>
 
-  <!-- Scripts will be in next part -->
-    <script>
-    // ==================== CONFIG ====================
+  <!-- ALL JS IN ONE SCRIPT -->
+  <script>
+    // === CONFIG ===
     const CONFIG = {
       COINGECKO_API: 'https://api.coingecko.com/api/v3',
-      TON_API: 'https://toncenter.com/api/v2',
       ETH_API: 'https://api.etherscan.io/api',
+      ETHERSCAN_KEY: '5G4HJDG2TCMMI2V8GQM6GJ636NVEW1HJU1',
+      TON_API: 'https://toncenter.com/api/v2',
       TRON_API: 'https://api.trongrid.io',
-      PER_PAGE: 20,
-      CURRENCY: 'usd'
+      UPDATE_INTERVAL: 120000, // 2 دقیقه
+      ALERT_CHECK_INTERVAL: 30000, // 30 ثانیه
     };
 
-    // ==================== Firebase Config (جایگزین کن با مال خودت) ====================
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef123456"
+    // === STATE ===
+    let markets = [];
+    let wallets = JSON.parse(localStorage.getItem('wallets') || '[]');
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let alerts = JSON.parse(localStorage.getItem('alerts') || '[]');
+    let currentTab = 'markets';
+    let currentMarketTab = 'all';
+    let currentSort = 'market_cap_desc';
+    let page = 1;
+    let isDark = localStorage.getItem('theme') === 'dark';
+    let lang = localStorage.getItem('lang') || 'fa';
+    let notificationsEnabled = localStorage.getItem('notifications') === 'true';
+    let hapticEnabled = localStorage.getItem('haptic') !== 'false';
+
+    // === TRANSLATIONS ===
+    const t = (key) => {
+      const dict = {
+        fa: {
+          markets: 'بازارها', wallet: 'کیف پول', profile: 'پروفایل',
+          search: 'جستجو در ارزها...', all: 'همه', favorites: 'علاقه‌مندی‌ها',
+          gainers: 'بیشترین رشد', losers: 'بیشترین افت',
+          marketCap: 'ارزش بازار', growth24h: 'رشد ۲۴ساعته', loss24h: 'افت ۲۴ساعته', volume: 'حجم معاملات',
+          noWallet: 'هیچ کیف پولی اضافه نشده', addWallet: 'افزودن کیف پول',
+          export: 'خروجی', import: 'ورودی', balance: 'موجودی', usd: 'دلار',
+          add: 'افزودن', cancel: 'لغو', delete: 'حذف', edit: 'ویرایش',
+          copy: 'کپی شد!', qr: 'نمایش QR', chart: 'نمودار', alert: 'هشدار',
+          theme: 'تم', language: 'زبان', notifications: 'اعلان‌ها', haptic: 'لرزش دکمه‌ها',
+          stats: 'آمار اپ', coins: 'تعداد ارزها', wallets: 'کیف پول‌ها', alerts: 'هشدارهای فعال',
+          about: 'درباره ما', version: 'نسخه 2.0 - ۱۴۰۴'
+        },
+        en: {
+          markets: 'Markets', wallet: 'Wallet', profile: 'Profile',
+          search: 'Search coins...', all: 'All', favorites: 'Favorites',
+          gainers: 'Top Gainers', losers: 'Top Losers',
+          marketCap: 'Market Cap', growth24h: '24h Growth', loss24h: '24h Loss', volume: 'Volume',
+          noWallet: 'No wallet added', addWallet: 'Add Wallet',
+          export: 'Export', import: 'Import', balance: 'Balance', usd: 'USD',
+          add: 'Add', cancel: 'Cancel', delete: 'Delete', edit: 'Edit',
+          copy: 'Copied!', qr: 'Show QR', chart: 'Chart', alert: 'Alert',
+          theme: 'Theme', language: 'Language', notifications: 'Notifications', haptic: 'Haptic',
+          stats: 'App Stats', coins: 'Coins', wallets: 'Wallets', alerts: 'Active Alerts',
+          about: 'About', version: 'v2.0 - 2025'
+        }
+      };
+      return dict[lang][key] || key;
     };
 
-    // Initialize Firebase (اگر نمی‌خوای از فایربس استفاده کنی، این بخش رو کامنت کن)
-    // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    // import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    // const app = initializeApp(firebaseConfig);
-    // const db = getFirestore(app);
-
-    // برای تست بدون فایربس، از localStorage استفاده می‌کنیم
-    const db = {
-      get: async (path) => {
-        const data = localStorage.getItem(path);
-        return data ? JSON.parse(data) : null;
-      },
-      set: async (path, data) => {
-        localStorage.setItem(path, JSON.stringify(data));
-        return true;
-      },
-      update: async (path, data) => {
-        const existing = await db.get(path) || {};
-        localStorage.setItem(path, JSON.stringify({ ...existing, ...data }));
-        return true;
-      }
-    };
-
-    // ==================== Telegram WebApp ====================
+    // === TELEGRAM INIT ===
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
+    tg.enableClosingConfirmation();
 
-    const user = tg.initDataUnsafe?.user || { id: 'guest', username: 'مهمان', first_name: 'کاربر' };
-    const userId = user.id.toString();
-    const isDarkMode = tg.colorScheme === 'dark';
-
-    // تنظیم تم
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    }
-
-    // نصب PWA
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('install-btn').classList.remove('hidden');
-    });
-
-    document.getElementById('install-btn').addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        document.getElementById('install-btn').classList.add('hidden');
+    // === HAPTIC FEEDBACK ===
+    const haptic = (type = 'light') => {
+      if (hapticEnabled && tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred(type);
       }
-      deferredPrompt = null;
-    });
-
-    // تغییر تم دستی
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      const isDark = document.documentElement.classList.contains('dark');
-      lucide.replaceIcons();
-      tg.HapticFeedback.impactOccurred('light');
-    });
-
-    // ==================== حالت اولیه ====================
-    let state = {
-      markets: [],
-      favorites: [],
-      wallets: [],
-      currentPage: 'markets',
-      currentMarketTab: 'all',
-      searchQuery: '',
-      sortBy: 'market_cap_desc',
-      page: 1,
-      hasMore: true,
-      loading: false
     };
 
-    // بارگذاری داده‌های کاربر
-    async function loadUserData() {
-      try {
-        const data = await db.get(`user_${userId}`);
-        if (data) {
-          state.favorites = data.favorites || [];
-          state.wallets = data.wallets || [];
-        }
-        updateProfile();
-        renderWallets();
-      } catch (err) {
-        console.error('خطا در بارگذاری داده کاربر:', err);
-      }
-    }
+    // === THEME & LANG ===
+    const themeToggle = document.getElementById('theme-toggle');
+    const profileThemeToggle = document.getElementById('profile-theme-toggle');
+    const langToggle = document.getElementById('lang-toggle');
+    const profileLangToggle = document.getElementById('profile-lang-toggle');
+    const themeIcon = themeToggle.querySelector('i');
+    const profileThemeIcon = profileThemeToggle.querySelector('i');
 
-    // ذخیره داده‌های کاربر
-    async function saveUserData() {
-      try {
-        await db.set(`user_${userId}`, {
-          favorites: state.favorites,
-          wallets: state.wallets,
-          lastUpdate: new Date().toISOString()
-        });
-      } catch (err) {
-        console.error('خطا در ذخیره:', err);
-      }
-    }
-
-    // ==================== رندر صفحات ====================
-    function showPage(page) {
-      state.currentPage = page;
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      document.getElementById(`page-${page}`).classList.remove('hidden');
-
-      document.querySelectorAll('[data-nav]').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.nav === page) btn.classList.add('active');
-      });
-
-      if (page === 'markets') {
-        if (!state.markets.length) loadMarkets();
-      } else if (page === 'wallet') {
-        renderWallets();
-      } else if (page === 'profile') {
-        updateProfile();
-      }
-
-      tg.HapticFeedback.impactOccurred('light');
-    }
-
-    // ==================== رویدادهای ناوبری ====================
-    document.querySelectorAll('[data-nav]').forEach(btn => {
-      btn.addEventListener('click', () => showPage(btn.dataset.nav));
-    });
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        showPage(btn.dataset.tab);
-      });
-    });
-
-    // ==================== جستجو ====================
-    const searchInput = document.getElementById('search-input');
-    const clearSearch = document.getElementById('clear-search');
-
-    searchInput.addEventListener('input', () => {
-      state.searchQuery = searchInput.value.trim().toLowerCase();
-      state.page = 1;
-      state.hasMore = true;
-      if (state.currentPage === 'markets') {
-        renderMarkets();
-      }
-      clearSearch.classList.toggle('hidden', !state.searchQuery);
-    });
-
-    clearSearch.addEventListener('click', () => {
-      searchInput.value = '';
-      state.searchQuery = '';
-      state.page = 1;
-      state.hasMore = true;
-      clearSearch.classList.add('hidden');
-      renderMarkets();
-    });
-
-    // ==================== مرتب‌سازی ====================
-    document.getElementById('sort-select').addEventListener('change', (e) => {
-      state.sortBy = e.target.value;
-      state.page = 1;
-      state.hasMore = true;
-      renderMarkets();
-    });
-
-    // ==================== تب‌های بازار ====================
-    document.querySelectorAll('[data-market-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-market-tab]').forEach(b => {
-          b.classList.remove('active', 'bg-primary', 'text-white');
-          b.classList.add('bg-gray-200', 'dark:bg-gray-700');
-        });
-        btn.classList.add('active', 'bg-primary', 'text-white');
-        btn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-        state.currentMarketTab = btn.dataset.marketTab;
-        state.page = 1;
-        state.hasMore = true;
-        renderMarkets();
-      });
-    });
-
-    // ==================== بارگذاری بازارها ====================
-    async function loadMarkets() {
-      if (state.loading || !state.hasMore) return;
-      state.loading = true;
-
-      const skeleton = document.getElementById('skeleton-loading');
-      const loadMore = document.getElementById('load-more');
-      skeleton.classList.remove('hidden');
-      loadMore.classList.add('hidden');
-
-      try {
-        let url = `${CONFIG.COINGECKO_API}/coins/markets?vs_currency=${CONFIG.CURRENCY}&order=${state.sortBy}&per_page=${CONFIG.PER_PAGE}&page=${state.page}&sparkline=true`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('خطای شبکه');
-        const newCoins = await res.json();
-
-        if (newCoins.length < CONFIG.PER_PAGE) state.hasMore = false;
-
-        if (state.page === 1) {
-          state.markets = newCoins;
-        } else {
-          state.markets = [...state.markets, ...newCoins];
-        }
-
-        state.page++;
-        renderMarkets();
-      } catch (err) {
-        document.getElementById('markets-list').innerHTML = `
-          <div class="text-center py-8 text-red-500">
-            <p>خطا در بارگذاری داده‌ها</p>
-            <button onclick="loadMarkets()" class="mt-2 px-4 py-2 bg-primary text-white rounded-lg">تلاش مجدد</button>
-          </div>
-        `;
-      } finally {
-        state.loading = false;
-        skeleton.classList.add('hidden');
-        if (state.hasMore) loadMore.classList.remove('hidden');
-      }
-    }
-
-    // ==================== رندر بازارها ====================
-    function renderMarkets() {
-      const list = document.getElementById('markets-list');
-      let filtered = state.markets;
-
-      // فیلتر جستجو
-      if (state.searchQuery) {
-        filtered = filtered.filter(coin =>
-          coin.name.toLowerCase().includes(state.searchQuery) ||
-          coin.symbol.toLowerCase().includes(state.searchQuery)
-        );
-      }
-
-      // فیلتر تب
-      if (state.currentMarketTab === 'favorites') {
-        filtered = filtered.filter(coin => state.favorites.includes(coin.id));
-      } else if (state.currentMarketTab === 'gainers') {
-        filtered = filtered.sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
-      } else if (state.currentMarketTab === 'losers') {
-        filtered = filtered.sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
-      }
-
-      if (filtered.length === 0) {
-        list.innerHTML = `<div class="text-center py-8 text-gray-500">موردی یافت نشد</div>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(coin => `
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 flex justify-between items-center shadow-sm">
-          <div class="flex items-center gap-3">
-            <img src="${coin.image}" alt="${coin.name}" class="w-12 h-12 rounded-full" loading="lazy">
-            <div>
-              <div class="font-bold text-lg">${coin.name}</div>
-              <div class="text-sm text-gray-500 uppercase">${coin.symbol}</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="font-bold text-lg">$${coin.current_price.toLocaleString()}</div>
-            <div class="${coin.price_change_percentage_24h >= 0 ? 'text-success' : 'text-danger'} font-medium">
-              ${coin.price_change_percentage_24h?.toFixed(2)}%
-            </div>
-          </div>
-          <button onclick="toggleFavorite('${coin.id}')" class="ml-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <i data-lucide="${state.favorites.includes(coin.id) ? 'star' : 'star-off'}"></i>
-          </button>
-        </div>
-      `).join('');
-
-      lucide.createIcons();
-    }
-
-    // ==================== علاقه‌مندی‌ها ====================
-    window.toggleFavorite = async (id) => {
-      if (state.favorites.includes(id)) {
-        state.favorites = state.favorites.filter(f => f !== id);
+    function updateTheme() {
+      isDark = localStorage.getItem('theme') === 'dark';
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        profileThemeIcon.setAttribute('data-lucide', 'sun');
       } else {
-        state.favorites.push(id);
+        document.documentElement.classList.remove('dark');
+        themeIcon.setAttribute('data-lucide', 'moon');
+        profileThemeIcon.setAttribute('data-lucide', 'moon');
       }
-      await saveUserData();
-      renderMarkets();
-      renderWallets();
-      tg.HapticFeedback.impactOccurred('medium');
-    };
-
-    // بارگذاری بیشتر
-    document.getElementById('load-more').addEventListener('click', loadMarkets);
-
-    // ==================== کیف پول ====================
-    document.getElementById('add-wallet-btn').addEventListener('click', openAddWalletModal);
-
-    function openAddWalletModal(wallet = null) {
-      const isEdit = !!wallet;
-      const title = isEdit ? 'ویرایش کیف پول' : 'افزودن کیف پول';
-      const btnText = isEdit ? 'ذخیره' : 'افزودن';
-
-      const modalContent = `
-        <h3 class="text-lg font-bold mb-4">${title}</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">نام (اختیاری)</label>
-            <input type="text" id="wallet-name" class="w-full p-3 rounded-lg border" value="${wallet?.name || ''}" placeholder="مثلاً: کیف اصلی">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">شبکه</label>
-            <select id="wallet-network" class="w-full p-3 rounded-lg border">
-              <option value="ton" ${wallet?.network === 'ton' ? 'selected' : ''}>TON</option>
-              <option value="eth" ${wallet?.network === 'eth' ? 'selected' : ''}>Ethereum</option>
-              <option value="tron" ${wallet?.network === 'tron' ? 'selected' : ''}>TRON (USDT)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">آدرس</label>
-            <input type="text" id="wallet-address" class="w-full p-3 rounded-lg border" value="${wallet?.address || ''}" placeholder="آدرس عمومی">
-          </div>
-          <div class="flex gap-2">
-            <button onclick="saveWallet(${isEdit ? `'${wallet.id}'` : 'null'})" class="flex-1 py-3 bg-primary text-white rounded-lg font-medium">${btnText}</button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg">لغو</button>
-          </div>
-        </div>
-      `;
-
-      showModal(modalContent);
-    }
-
-    window.saveWallet = async (editId) => {
-      const name = document.getElementById('wallet-name').value.trim();
-      const network = document.getElementById('wallet-network').value;
-      const address = document.getElementById('wallet-address').value.trim();
-
-      if (!address) {
-        tg.showAlert('آدرس الزامی است');
-        return;
-      }
-
-      const wallet = {
-        id: editId || Date.now().toString(),
-        name: name || 'کیف پول',
-        network,
-        address,
-        balance: null,
-        lastUpdate: null
-      };
-
-      if (editId) {
-        const index = state.wallets.findIndex(w => w.id === editId);
-        state.wallets[index] = wallet;
-      } else {
-        state.wallets.push(wallet);
-      }
-
-      await saveUserData();
-      renderWallets();
-      closeModal();
-      fetchWalletBalance(wallet);
-    };
-
-    async function fetchWalletBalance(wallet) {
-      // این بخش در قسمت بعدی کامل می‌شه
-    }
-
-    function renderWallets() {
-      const list = document.getElementById('wallets-list');
-      const empty = document.getElementById('empty-wallet');
-
-      if (state.wallets.length === 0) {
-        list.innerHTML = '';
-        empty.classList.remove('hidden');
-        return;
-      }
-
-      empty.classList.add('hidden');
-      list.innerHTML = state.wallets.map(w => `
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
-          <div class="flex justify-between items-start mb-2">
-            <div>
-              <div class="font-bold">${w.name}</div>
-              <div class="text-sm text-gray-500">${w.network.toUpperCase()}</div>
-            </div>
-            <div class="flex gap-1">
-              <button onclick="openAddWalletModal(${JSON.stringify(w).replace(/"/g, '&quot;')})" class="p-1 text-primary">
-                <i data-lucide="edit-2" class="w-5 h-5"></i>
-              </button>
-              <button onclick="deleteWallet('${w.id}')" class="p-1 text-danger">
-                <i data-lucide="trash-2" class="w-5 h-5"></i>
-              </button>
-            </div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div class="text-sm font-mono break-all">${w.address}</div>
-            <button onclick="copyToClipboard('${w.address}')" class="ml-2 copy-btn">
-              <i data-lucide="copy" class="w-4 h-4"></i>
-            </button>
-          </div>
-          <div class="mt-2 text-lg font-bold text-primary">
-            ${w.balance !== null ? `$${w.balance.toFixed(2)}` : 'در حال بارگذاری...'}
-          </div>
-        </div>
-      `).join('');
-
       lucide.createIcons();
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
 
-    window.deleteWallet = async (id) => {
-      if (!confirm('مطمئنید؟')) return;
-      state.wallets = state.wallets.filter(w => w.id !== id);
-      await saveUserData();
-      renderWallets();
-    };
-
-    window.copyToClipboard = (text) => {
-      navigator.clipboard.writeText(text);
-      tg.showPopup({ message: 'کپی شد!' });
-      tg.HapticFeedback.notificationOccurred('success');
-    };
-
-    // ==================== مودال ====================
-    function showModal(content) {
-      document.getElementById('modal-content').innerHTML = content;
-      document.getElementById('modal').classList.remove('hidden');
-    }
-
-    window.closeModal = () => {
-      document.getElementById('modal').classList.add('hidden');
-    };
-
-    // بستن مودال با کلیک بیرون
-    document.getElementById('modal').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modal')) closeModal();
-    });
-
-    // ==================== پروفایل ====================
-    function updateProfile() {
-      document.getElementById('profile-name').textContent = user.first_name || user.username || 'کاربر';
-      document.getElementById('profile-id').textContent = `ID: ${userId}`;
-      const avatar = document.getElementById('profile-avatar');
-      avatar.textContent = (user.first_name || user.username || 'U').charAt(0).toUpperCase();
-    }
-
-    // ==================== شروع برنامه ====================
-    lucide.createIcons();
-    loadUserData();
-    showPage('markets');
-
-    // Infinite Scroll
-    window.addEventListener('scroll', () => {
-      if (state.currentPage !== 'markets' || state.loading || !state.hasMore) return;
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 100) {
-        loadMarkets();
-      }
-    });
-
-  </script>
-</body>
-    </html>
-    <script>
-    // ==================== موجودی واقعی کیف پول (TON, ETH, TRON) ====================
-    async function fetchWalletBalance(wallet) {
-      if (!wallet || !wallet.address) return;
-
-      const index = state.wallets.findIndex(w => w.id === wallet.id);
-      if (index === -1) return;
-
-      try {
-        let balance = 0;
-        let price = 1; // پیش‌فرض
-
-        if (wallet.network === 'ton') {
-          // TON Balance
-          const res = await fetch(`${CONFIG.TON_API}/getAddressBalance?address=${wallet.address}`);
-          const data = await res.json();
-          balance = data.result / 1e9; // نانو تون → تون
-          // قیمت TON از CoinGecko
-          const priceRes = await fetch(`${CONFIG.COINGECKO_API}/simple/price?ids=the-open-network&vs_currencies=usd`);
-          const priceData = await priceRes.json();
-          price = priceData['the-open-network'].usd;
-        } 
-        else if (wallet.network === 'eth') {
-          // ETH Balance
-          const res = await fetch(`${CONFIG.ETH_API}?module=account&action=balance&address=${wallet.address}&tag=latest&apikey=YOUR_ETHERSCAN_KEY`);
-          const data = await res.json();
-          balance = parseInt(data.result) / 1e18;
-          // قیمت ETH
-          const priceRes = await fetch(`${CONFIG.COINGECKO_API}/simple/price?ids=ethereum&vs_currencies=usd`);
-          const priceData = await priceRes.json();
-          price = priceData.ethereum.usd;
-        } 
-        else if (wallet.network === 'tron') {
-          // USDT TRC20 Balance
-          const contract = 'TR7NHqjeKQxGTCuuP8qACi1Z4fj7j4zW6'; // USDT
-          const res = await fetch(`${CONFIG.TRON_API}/v1/accounts/${wallet.address}/trc20/${contract}`);
-          const data = await res.json();
-          balance = data.data[0]?.balance / 1e6 || 0;
-          price = 1; // USDT ≈ $1
-        }
-
-        const usdValue = balance * price;
-
-        // به‌روزرسانی در state
-        state.wallets[index].balance = usdValue;
-        state.wallets[index].rawBalance = balance;
-        state.wallets[index].lastUpdate = new Date().toISOString();
-
-        // ذخیره و رندر
-        await saveUserData();
-        renderWallets();
-
-      } catch (err) {
-        console.error('خطا در دریافت موجودی:', err);
-        state.wallets[index].balance = null;
-        renderWallets();
-      }
-    }
-
-    // بارگذاری موجودی تمام کیف پول‌ها
-    async function loadAllWalletBalances() {
-      for (const wallet of state.wallets) {
-        if (wallet.address) {
-          fetchWalletBalance(wallet);
-        }
-      }
-    }
-
-    // هر ۵ دقیقه یکبار بروزرسانی موجودی
-    setInterval(loadAllWalletBalances, 5 * 60 * 1000);
-
-    // ==================== نمودار قیمت (Chart.js) ====================
-    let priceChart = null;
-
-    function openPriceChart(coinId, coinName) {
-      const modalContent = `
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-bold">${coinName}</h3>
-          <button onclick="closeModal()" class="p-2">
-            <i data-lucide="x"></i>
-          </button>
-        </div>
-        <div class="chart-container">
-          <canvas id="price-chart"></canvas>
-        </div>
-        <div class="flex justify-center mt-4 gap-2">
-          <button onclick="loadChartData('7d')" class="px-4 py-2 rounded-lg bg-primary text-white text-sm">۷ روز</button>
-          <button onclick="loadChartData('30d')" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-sm">۳۰ روز</button>
-        </div>
-      `;
-
-      showModal(modalContent);
-      lucide.createIcons();
-      loadChartData('7d', coinId);
-    }
-
-    async function loadChartData(days, coinId) {
-      try {
-        const res = await fetch(`${CONFIG.COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
-        const data = await res.json();
-        const prices = data.prices;
-
-        const labels = prices.map(p => new Date(p[0]).toLocaleDateString('fa-IR'));
-        const values = prices.map(p => p[1]);
-
-        const ctx = document.getElementById('price-chart').getContext('2d');
-        if (priceChart) priceChart.destroy();
-
-        priceChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              label: 'قیمت (USD)',
-              data: values,
-              borderColor: '#1DA1F2',
-              backgroundColor: 'rgba(29, 161, 242, 0.1)',
-              fill: true,
-              tension: 0.4,
-              pointRadius: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { display: false },
-              y: { beginAtZero: false }
-            }
-          }
-        });
-      } catch (err) {
-        document.getElementById('price-chart').parentElement.innerHTML = '<p class="text-center text-red-500">خطا در بارگذاری نمودار</p>';
-      }
-    }
-
-    // اضافه کردن دکمه نمودار به کارت ارز
-    window.openChart = (id, name) => openPriceChart(id, name);
-
-    // ==================== هشدار قیمت ====================
-    function openPriceAlertModal(coin) {
-      const modalContent = `
-        <h3 class="text-lg font-bold mb-4">هشدار قیمت برای ${coin.name}</h3>
-        <p class="text-sm text-gray-500 mb-4">قیمت فعلی: $${coin.current_price}</p>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">نوع هشدار</label>
-            <select id="alert-type" class="w-full p-3 rounded-lg border">
-              <option value="above">بالاتر از</option>
-              <option value="below">پایین‌تر از</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">قیمت هدف (USD)</label>
-            <input type="number" id="alert-price" class="w-full p-3 rounded-lg border" placeholder="مثلاً ۷۰۰۰۰" step="0.01">
-          </div>
-          <div class="flex gap-2">
-            <button onclick="savePriceAlert('${coin.id}')" class="flex-1 py-3 bg-primary text-white rounded-lg">ذخیره</button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg">لغو</button>
-          </div>
-        </div>
-      `;
-
-      showModal(modalContent);
-    }
-
-    window.savePriceAlert = async (coinId) => {
-      const type = document.getElementById('alert-type').value;
-      const target = parseFloat(document.getElementById('alert-price').value);
-
-      if (!target || target <= 0) {
-        tg.showAlert('قیمت معتبر وارد کنید');
-        return;
-      }
-
-      const alert = { coinId, type, target, createdAt: new Date().toISOString() };
-      let alerts = (await db.get(`alerts_${userId}`)) || [];
-      alerts.push(alert);
-      await db.set(`alerts_${userId}`, alerts);
-
-      tg.showPopup({ message: 'هشدار ذخیره شد!' });
-      closeModal();
-
-      // شروع بررسی دوره‌ای
-      checkPriceAlerts();
-    };
-
-    // بررسی هشدارها هر ۱ دقیقه
-    async function checkPriceAlerts() {
-      const alerts = (await db.get(`alerts_${userId}`)) || [];
-      if (alerts.length === 0) return;
-
-      for (const alert of alerts) {
-        try {
-          const res = await fetch(`${CONFIG.COINGECKO_API}/simple/price?ids=${alert.coinId}&vs_currencies=usd`);
-          const data = await res.json();
-          const current = data[alert.coinId]?.usd;
-
-          if (!current) continue;
-
-          const triggered = (alert.type === 'above' && current >= alert.target) ||
-                           (alert.type === 'below' && current <= alert.target);
-
-          if (triggered) {
-            tg.showAlert(`هشدار! ${alert.coinId.toUpperCase()} ${alert.type === 'above' ? 'بالاتر' : 'پایین‌تر'} از $${alert.target} رفت: $${current.toFixed(2)}`);
-            // حذف هشدار
-            const newAlerts = alerts.filter(a => a !== alert);
-            await db.set(`alerts_${userId}`, newAlerts);
-          }
-        } catch (err) {
-          console.error('خطا در بررسی هشدار:', err);
-        }
-      }
-    }
-
-    setInterval(checkPriceAlerts, 60 * 1000);
-
-    // ==================== آفلاین کش (Service Worker) ====================
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('data:text/javascript,/* Shelby Bet SW */')
-          .catch(err => console.log('SW ثبت نشد:', err));
-      });
-    }
-
-    // ذخیره آخرین داده‌ها برای آفلاین
-    const saveOfflineData = async () => {
-      const offline = { markets: state.markets, timestamp: Date.now() };
-      await db.set('offline_data', offline);
-    };
-
-    const loadOfflineData = async () => {
-      const data = await db.get('offline_data');
-      if (data && Date.now() - data.timestamp < 30 * 60 * 1000) { // کمتر از ۳۰ دقیقه
-        state.markets = data.markets;
-        renderMarkets();
-        document.getElementById('markets-list').innerHTML += '<p class="text-center text-xs text-gray-500 mt-4">داده آفلاین (آخرین بروزرسانی: ' + new Date(data.timestamp).toLocaleTimeString('fa-IR') + ')</p>';
-      }
-    };
-
-    // اگر آنلاین نبودیم
-    window.addEventListener('online', () => {
-      loadMarkets();
-      loadAllWalletBalances();
-    });
-
-    window.addEventListener('offline', loadOfflineData);
-
-    // ==================== اضافه کردن دکمه نمودار و هشدار به کارت ارز ====================
-    const originalRenderMarkets = renderMarkets;
-    renderMarkets = function() {
-      originalRenderMarkets();
-      const cards = document.querySelectorAll('#markets-list > div');
-      cards.forEach(card => {
-        const coinId = card.querySelector('button[onclick*="toggleFavorite"]').getAttribute('onclick').match(/'([^']+)'/)[1];
-        const coinName = card.querySelector('.font-bold.text-lg').textContent;
-        const actions = card.querySelector('.ml-3') || document.createElement('div');
-        actions.className = 'ml-3 flex gap-1';
-
-        if (!card.querySelector('[onclick*="openChart"]')) {
-          const chartBtn = document.createElement('button');
-          chartBtn.innerHTML = '<i data-lucide="trending-up" class="w-5 h-5"></i>';
-          chartBtn.className = 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700';
-          chartBtn.onclick = () => openChart(coinId, coinName);
-          actions.appendChild(chartBtn);
-        }
-
-        if (!card.querySelector('[onclick*="openPriceAlertModal"]')) {
-          const alertBtn = document.createElement('button');
-          alertBtn.innerHTML = '<i data-lucide="bell" class="w-5 h-5"></i>';
-          alertBtn.className = 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700';
-          alertBtn.onclick = () => {
-            const coin = state.markets.find(c => c.id === coinId);
-            openPriceAlertModal(coin);
-          };
-          actions.appendChild(alertBtn);
-        }
-
-        if (!card.querySelector('.ml-3')) {
-          card.appendChild(actions);
-        }
-
-        lucide.createIcons();
-      });
-    };
-
-    // ==================== شروع اولیه ====================
-    document.addEventListener('DOMContentLoaded', () => {
-      // اگر آفلاین بودیم
-      if (!navigator.onLine) {
-        loadOfflineData();
-      } else {
-        loadMarkets();
-        loadAllWalletBalances();
-      }
-      setTimeout(saveOfflineData, 5000); // ذخیره هر ۵ ثانیه
-    });
-
-  </script>
-</body>
-</html>
-<script>
-    // ==================== PWA کامل + نصب + آیکون‌ها ====================
-    // Service Worker پیشرفته (برای آفلاین واقعی)
-    const registerServiceWorker = async () => {
-      if ('serviceWorker' in navigator) {
-        try {
-          const swCode = `
-            const CACHE_NAME = 'shelby-bet-v1';
-            const ASSETS = [
-              '/',
-              '/index.html',
-              'https://telegram.org/js/telegram-web-app.js',
-              'https://cdn.tailwindcss.com',
-              'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap',
-              'https://cdn.jsdelivr.net/npm/chart.js',
-              'https://unpkg.com/lucide@latest/dist/umd/lucide.js'
-            ];
-
-            self.addEventListener('install', e => {
-              e.waitUntil(
-                caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-              );
-            });
-
-            self.addEventListener('fetch', e => {
-              e.respondWith(
-                caches.match(e.request).then(response => {
-                  return response || fetch(e.request);
-                })
-              );
-            });
-          `;
-
-          const blob = new Blob([swCode], { type: 'application/javascript' });
-          const url = URL.createObjectURL(blob);
-          await navigator.serviceWorker.register(url);
-        } catch (err) {
-          console.warn('Service Worker ثبت نشد:', err);
-        }
-      }
-    };
-
-    registerServiceWorker();
-
-    // ==================== چندزبانه (فارسی + انگلیسی) ====================
-    const translations = {
-      fa: {
-        markets: 'بازارها',
-        wallet: 'کیف پول',
-        profile: 'پروفایل',
-        search: 'جستجو در ارزها...',
-        all: 'همه',
-        favorites: 'علاقه‌مندی‌ها',
-        gainers: 'بیشترین رشد',
-        losers: 'بیشترین افت',
-        sort: 'مرتب‌سازی:',
-        marketCap: 'ارزش بازار',
-        gain24h: 'رشد ۲۴ساعته',
-        loss24h: 'افت ۲۴ساعته',
-        addWallet: 'افزودن کیف پول',
-        editWallet: 'ویرایش کیف پول',
-        name: 'نام (اختیاری)',
-        network: 'شبکه',
-        address: 'آدرس',
-        save: 'ذخیره',
-        cancel: 'لغو',
-        deleteConfirm: 'مطمئنید؟',
-        copied: 'کپی شد!',
-        noWallet: 'هنوز کیف پولی اضافه نکردید',
-        loading: 'در حال بارگذاری...',
-        error: 'خطا در بارگذاری داده‌ها',
-        retry: 'تلاش مجدد',
-        noResults: 'موردی یافت نشد',
-        offline: 'داده آفلاین',
-        priceAlert: 'هشدار قیمت',
-        above: 'بالاتر از',
-        below: 'پایین‌تر از',
-        targetPrice: 'قیمت هدف (USD)',
-        alertSaved: 'هشدار ذخیره شد!',
-        alertTriggered: 'هشدار!'
-      },
-      en: {
-        markets: 'Markets',
-        wallet: 'Wallet',
-        profile: 'Profile',
-        search: 'Search coins...',
-        all: 'All',
-        favorites: 'Favorites',
-        gainers: 'Top Gainers',
-        losers: 'Top Losers',
-        sort: 'Sort by:',
-        marketCap: 'Market Cap',
-        gain24h: '24h Gain',
-        loss24h: '24h Loss',
-        addWallet: 'Add Wallet',
-        editWallet: 'Edit Wallet',
-        name: 'Name (optional)',
-        network: 'Network',
-        address: 'Address',
-        save: 'Save',
-        cancel: 'Cancel',
-        deleteConfirm: 'Are you sure?',
-        copied: 'Copied!',
-        noWallet: 'No wallet added yet',
-        loading: 'Loading...',
-        error: 'Error loading data',
-        retry: 'Retry',
-        noResults: 'No results found',
-        offline: 'Offline data',
-        priceAlert: 'Price Alert',
-        above: 'Above',
-        below: 'Below',
-        targetPrice: 'Target Price (USD)',
-        alertSaved: 'Alert saved!',
-        alertTriggered: 'Alert!'
-      }
-    };
-
-    let currentLang = 'fa';
-    const t = (key) => translations[currentLang][key] || key;
-
-    // تغییر زبان (در آینده از تنظیمات)
-    function setLanguage(lang) {
-      currentLang = lang;
-      document.documentElement.lang = lang;
+    function updateLang() {
+      lang = localStorage.getItem('lang') || 'fa';
+      langToggle.textContent = lang === 'fa' ? 'EN' : 'FA';
+      profileLangToggle.textContent = lang === 'fa' ? 'EN' : 'FA';
       document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
       updateUIText();
+      localStorage.setItem('lang', lang);
     }
 
     function updateUIText() {
-      document.querySelector('[data-nav="markets"] span').textContent = t('markets');
-      document.querySelector('[data-nav="wallet"] span').textContent = t('wallet');
-      document.querySelector('[data-nav="profile"] span').textContent = t('profile');
+      // تب‌ها
+      document.querySelector('[data-tab="markets"]').textContent = t('markets');
+      document.querySelector('[data-tab="wallet"]').textContent = t('wallet');
+      document.querySelector('[data-tab="profile"]').textContent = t('profile');
+      
+      // بازارها
       document.getElementById('search-input').placeholder = t('search');
       document.querySelector('[data-market-tab="all"]').textContent = t('all');
       document.querySelector('[data-market-tab="favorites"]').textContent = t('favorites');
       document.querySelector('[data-market-tab="gainers"]').textContent = t('gainers');
       document.querySelector('[data-market-tab="losers"]').textContent = t('losers');
-      document.querySelector('#sort-select').previousElementSibling.textContent = t('sort');
-      document.querySelector('#sort-select option[value="market_cap_desc"]').textContent = t('marketCap');
-      document.querySelector('#sort-select option[value="price_change_24h_desc"]').textContent = t('gain24h');
-      document.querySelector('#sort-select option[value="price_change_24h_asc"]').textContent = t('loss24h');
-      document.getElementById('add-wallet-btn').innerHTML = '<i data-lucide="plus"></i>';
-      document.getElementById('empty-wallet p').textContent = t('noWallet');
+      
+      // مرتب‌سازی
+      const sortSelect = document.getElementById('sort-select');
+      sortSelect.options[0].text = t('marketCap');
+      sortSelect.options[1].text = t('growth24h');
+      sortSelect.options[2].text = t('loss24h');
+      sortSelect.options[3].text = t('volume');
+      
+      // کیف پول
+      document.querySelector('#empty-wallet p').textContent = t('noWallet');
+      document.querySelector('#empty-wallet button').textContent = t('addWallet');
+      
+      // پروفایل
+      document.querySelector('#profile-theme-toggle').nextElementSibling.textContent = t('theme');
+      document.querySelector('#profile-lang-toggle').nextElementSibling.textContent = t('language');
+      document.querySelector('#notifications-toggle').nextElementSibling.textContent = t('notifications');
+      document.querySelector('#haptic-toggle').nextElementSibling.textContent = t('haptic');
+      
+      // آمار
+      document.querySelector('#stats-coins').previousElementSibling.textContent = t('coins');
+      document.querySelector('#stats-wallets').previousElementSibling.textContent = t('wallets');
+      document.querySelector('#stats-alerts').previousElementSibling.textContent = t('alerts');
+      
+      // درباره ما
+      document.querySelector('.bg-white.dark\\:bg-gray-800.rounded-xl.p-6.text-center h3').textContent = t('about');
+      document.querySelector('.bg-white.dark\\:bg-gray-800.rounded-xl.p-6.text-center p:last-child').textContent = t('version');
     }
-
-    // ==================== Haptic Feedback پیشرفته ====================
-    const haptic = {
-      light: () => tg.HapticFeedback.impactOccurred('light'),
-      medium: () => tg.HapticFeedback.impactOccurred('medium'),
-      heavy: () => tg.HapticFeedback.impactOccurred('heavy'),
-      success: () => tg.HapticFeedback.notificationOccurred('success'),
-      warning: () => tg.HapticFeedback.notificationOccurred('warning'),
-      error: () => tg.HapticFeedback.notificationOccurred('error')
+    themeToggle.onclick = () => {
+      haptic('light');
+      isDark = !isDark;
+      updateTheme();
     };
 
-    // استفاده در همه جا
-    const originalToggleFavorite = window.toggleFavorite;
-    window.toggleFavorite = async (id) => {
-      await originalToggleFavorite(id);
-      haptic.medium();
+    profileThemeToggle.onclick = () => {
+      haptic('light');
+      isDark = !isDark;
+      updateTheme();
     };
 
-    // ==================== بهینه‌سازی عملکرد ====================
-    // Lazy Load تصاویر
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          observer.unobserve(img);
-        }
-      });
-    });
+    langToggle.onclick = () => {
+      haptic('light');
+      lang = lang === 'fa' ? 'en' : 'fa';
+      updateLang();
+    };
 
-    function enableLazyLoad() {
-      document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-        img.dataset.src = img.src;
-        img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"%3E%3Crect width="48" height="48" fill="%23f3f4f6"/%3E%3C/svg%3E';
-        observer.observe(img);
-      });
-    }
+    profileLangToggle.onclick = () => {
+      haptic('light');
+      lang = lang === 'fa' ? 'en' : 'fa';
+      updateLang();
+    };
 
-    // Debounce برای جستجو
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+    document.getElementById('notifications-toggle').checked = notificationsEnabled;
+    document.getElementById('notifications-toggle').onchange = (e) => {
+      notificationsEnabled = e.target.checked;
+      localStorage.setItem('notifications', notificationsEnabled);
+    };
+
+    document.getElementById('haptic-toggle').checked = hapticEnabled;
+    document.getElementById('haptic-toggle').onchange = (e) => {
+      hapticEnabled = e.target.checked;
+      localStorage.setItem('haptic', hapticEnabled);
+    };
+
+    // === NAVIGATION ===
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.onclick = () => {
+        haptic('light');
+        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`page-${btn.dataset.tab}`).classList.remove('hidden');
+        currentTab = btn.dataset.tab;
+        if (currentTab === 'markets') loadMarkets();
+        if (currentTab === 'wallet') renderWallets();
+        if (currentTab === 'profile') updateProfileStats();
       };
-    }
-
-    const debouncedRender = debounce(renderMarkets, 300);
-    searchInput.addEventListener('input', () => {
-      state.searchQuery = searchInput.value.trim().toLowerCase();
-      state.page = 1;
-      state.hasMore = true;
-      debouncedRender();
-      clearSearch.classList.toggle('hidden', !state.searchQuery);
     });
 
-    // ==================== تم پیشرفته (همگام با تلگرام + دستی) ====================
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = themeToggle.querySelector('i');
+    // === SEARCH & FILTERS ===
+    const searchInput = document.getElementById('search-input');
+    const clearSearch = document.getElementById('clear-search');
 
-    function updateThemeIcon() {
-      const isDark = document.documentElement.classList.contains('dark');
-      themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-      lucide.createIcons();
-    }
-
-    themeToggle.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      updateThemeIcon();
-      haptic.light();
-      // ذخیره تم کاربر
-      db.set('user_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    });
-
-    // بارگذاری تم ذخیره‌شده
-    async function loadSavedTheme() {
-      const saved = await db.get('user_theme');
-      if (saved === 'dark' || (!saved && isDarkMode)) {
-        document.documentElement.classList.add('dark');
-      }
-      updateThemeIcon();
-    }
-
-    // ==================== انیمیشن‌ها و افکت‌ها ====================
-    function addFadeInAnimation() {
-      const elements = document.querySelectorAll('#markets-list > div, #wallets-list > div');
-      elements.forEach((el, i) => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'all 0.3s ease';
-        setTimeout(() => {
-          el.style.opacity = '1';
-          el.style.transform = 'translateY(0)';
-        }, i * 50);
-      });
-    }
-
-    const originalRenderMarkets2 = renderMarkets;
-    renderMarkets = function() {
-      originalRenderMarkets2();
-      addFadeInAnimation();
-      enableLazyLoad();
+    searchInput.oninput = () => {
+      renderMarkets();
+      clearSearch.classList.toggle('hidden', !searchInput.value);
     };
 
-    // ==================== به‌روزرسانی خودکار بازارها ====================
-    let marketUpdateInterval = setInterval(() => {
-      if (state.currentPage === 'markets' && navigator.onLine) {
-        state.page = 1;
-        state.hasMore = true;
-        loadMarkets();
-      }
-    }, 2 * 60 * 1000); // هر ۲ دقیقه
+    clearSearch.onclick = () => {
+      searchInput.value = '';
+      renderMarkets();
+      clearSearch.classList.add('hidden');
+      searchInput.focus();
+    };
 
-    // ==================== مدیریت خطاها و Retry ====================
-    window.addEventListener('unhandledrejection', event => {
-      console.error('خطای ناشناخته:', event.reason);
-      tg.showPopup({
-        title: t('error'),
-        message: 'خطایی رخ داد. دوباره تلاش کنید.',
-        buttons: [{ type: 'destructive', text: t('retry'), id: 'retry' }]
-      }).then(btn => {
-        if (btn.id === 'retry') {
-          location.reload();
+    document.querySelectorAll('[data-market-tab]').forEach(btn => {
+      btn.onclick = () => {
+        haptic('light');
+        document.querySelectorAll('[data-market-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMarketTab = btn.dataset.marketTab;
+        page = 1;
+        loadMarkets();
+      };
+    });
+
+    document.getElementById('sort-select').onchange = (e) => {
+      currentSort = e.target.value;
+      renderMarkets();
+    };
+
+    // === MARKETS ===
+    async function loadMarkets() {
+      const list = document.getElementById('markets-list');
+      const skeleton = document.getElementById('skeleton-loading');
+      const loadMore = document.getElementById('load-more');
+      
+      if (page === 1) {
+        skeleton.classList.remove('hidden');
+        list.innerHTML = '';
+        skeleton.innerHTML = Array(12).fill().map(() => `
+          <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl animate-pulse">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div>
+                <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div class="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded mt-1"></div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded mt-1"></div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      try {
+        let url = `${CONFIG.COINGECKO_API}/coins/markets?vs_currency=usd&order=${currentSort}&per_page=50&page=${page}&sparkline=false`;
+        
+        if (currentMarketTab === 'favorites') {
+          if (favorites.length === 0) {
+            list.innerHTML = `<p class="text-center text-gray-500 p-8">${t('favorites')} خالی است</p>`;
+            skeleton.classList.add('hidden');
+            return;
+          }
+          url += `&ids=${favorites.join(',')}`;
         }
-      });
-    });
 
-    // ==================== صفحه‌های "به زودی" ====================
-    function showComingSoon(page) {
-      showModal(`
-        <div class="text-center py-8">
-          <i data-lucide="clock" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
-          <h3 class="text-lg font-bold mb-2">${page} به زودی</h3>
-          <p class="text-sm text-gray-500">در حال توسعه...</p>
-        </div>
-      `);
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (currentMarketTab === 'gainers') {
+          data.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+        } else if (currentMarketTab === 'losers') {
+          data.sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h);
+        }
+
+        if (page === 1) markets = [];
+        markets = markets.concat(data);
+
+        renderMarkets();
+        loadMore.classList.toggle('hidden', data.length < 50);
+      } catch (e) {
+        list.innerHTML = `<p class="text-center text-red-500 p-8">خطا در بارگذاری</p>`;
+      } finally {
+        skeleton.classList.add('hidden');
+      }
+    }
+
+    function renderMarkets() {
+      const list = document.getElementById('markets-list');
+      const search = searchInput.value.toLowerCase();
+      const filtered = markets.filter(coin => 
+        coin.name.toLowerCase().includes(search) || 
+        coin.symbol.toLowerCase().includes(search)
+      );
+
+      if (filtered.length === 0 && page === 1) {
+        list.innerHTML = `<p class="text-center text-gray-500 p-8">موردی یافت نشد</p>`;
+        return;
+      }
+
+      const html = filtered.map(coin => {
+        const isFav = favorites.includes(coin.id);
+        const change = coin.price_change_percentage_24h;
+        return `
+          <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl haptic" data-coin-id="${coin.id}">
+            <div class="flex items-center gap-3">
+              <img src="${coin.image}" alt="" class="w-10 h-10 rounded-full">
+              <div>
+                <div class="font-semibold">${coin.name}</div>
+                <div class="text-sm text-gray-500">${coin.symbol.toUpperCase()}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold">$${coin.current_price.toLocaleString()}</div>
+              <div class="${change > 0 ? 'text-success' : change < 0 ? 'text-danger' : 'text-gray-500'} text-sm">
+                ${change > 0 ? '+' : ''}${change.toFixed(2)}%
+              </div>
+            </div>
+            <div class="flex gap-1">
+              <button onclick="toggleFavorite('${coin.id}')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 haptic">
+                <i data-lucide="${isFav ? 'star' : 'star-off'}" class="w-5 h-5"></i>
+              </button>
+              <button onclick="openChart('${coin.id}', '${coin.name}')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 haptic">
+                <i data-lucide="trending-up" class="w-5 h-5"></i>
+              </button>
+              <button onclick="openPriceAlertModal('${coin.id}', '${coin.name}', ${coin.current_price})" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 haptic">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (page === 1) {
+        list.innerHTML = html;
+      } else {
+        list.innerHTML += html;
+      }
       lucide.createIcons();
     }
 
-    // مثال: دکمه ترید
-    document.querySelectorAll('[data-coming-soon]').forEach(btn => {
-      btn.addEventListener('click', () => showComingSoon(btn.dataset.comingSoon));
-    });
-
-    // ==================== شروع نهایی ====================
-    document.addEventListener('DOMContentLoaded', async () => {
-      lucide.createIcons();
-      await loadUserData();
-      await loadSavedTheme();
-      updateUIText();
-      showPage('markets');
-
-      if (!navigator.onLine) {
-        loadOfflineData();
+    window.toggleFavorite = (id) => {
+      haptic('light');
+      if (favorites.includes(id)) {
+        favorites = favorites.filter(f => f !== id);
       } else {
-        loadMarkets();
-        loadAllWalletBalances();
+        favorites.push(id);
       }
-
-      // ذخیره داده آفلاین
-      setInterval(saveOfflineData, 10000);
-
-      // بررسی هشدارها
-      checkPriceAlerts();
-      setInterval(checkPriceAlerts, 60000);
-
-      // نصب PWA
-      if (deferredPrompt) {
-        setTimeout(() => {
-          tg.showPopup({
-            title: 'نصب اپ',
-            message: 'می‌خوای Shelby Bet رو روی گوشی نصب کنی؟',
-            buttons: [
-              { type: 'default', text: 'نصب کن', id: 'install' },
-              { type: 'cancel', text: 'بعداً' }
-            ]
-          }).then(btn => {
-            if (btn.id === 'install') {
-              deferredPrompt.prompt();
-            }
-          });
-        }, 10000);
-      }
-    });
-
-  </script>
-</body>
-</html>
-<script>
-    // ==================== کیف پول پیشرفته: QR Code, Export, Import, امنیت ====================
-
-    // تولید QR Code با qrcode.js (CDN)
-    const loadQRCodeLib = () => {
-      return new Promise((resolve) => {
-        if (window.QRCode) return resolve();
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-        script.onload = resolve;
-        document.head.appendChild(script);
-      });
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      if (currentMarketTab === 'favorites') loadMarkets();
+      else renderMarkets();
     };
 
-    // نمایش QR Code آدرس
-    window.showQRCode = async (address, name) => {
-      await loadQRCodeLib();
-      const modalContent = `
-        <div class="text-center">
-          <h3 class="text-lg font-bold mb-2">${name}</h3>
-          <p class="text-sm text-gray-500 mb-4 break-all">${address}</p>
-          <div id="qrcode" class="mx-auto w-48 h-48"></div>
-          <button onclick="copyToClipboard('${address}')" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg flex items-center gap-2 mx-auto">
-            <i data-lucide="copy"></i> کپی آدرس
-          </button>
+    document.getElementById('load-more').onclick = () => {
+      page++;
+      loadMarkets();
+    };
+
+    // === CHART MODAL ===
+    window.openChart = (id, name) => {
+      haptic('medium');
+      const modal = document.getElementById('modal');
+      modal.classList.remove('hidden');
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-lg">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">${name}</h3>
+            <button onclick="closeModal()" class="p-1 haptic"><i data-lucide="x" class="w-5 h-5"></i></button>
+          </div>
+          <div class="flex gap-2 mb-4">
+            <button data-chart-days="7" class="chart-days-btn flex-1 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm active">۷ روز</button>
+            <button data-chart-days="30" class="chart-days-btn flex-1 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm">۳۰ روز</button>
+          </div>
+          <div class="chart-container">
+            <canvas id="price-chart"></canvas>
+          </div>
         </div>
       `;
-      showModal(modalContent);
       lucide.createIcons();
-
-      setTimeout(() => {
-        new QRCode(document.getElementById('qrcode'), {
-          text: address,
-          width: 192,
-          height: 192,
-          colorDark: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000',
-          colorLight: document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#ffffff'
-        });
-      }, 100);
+      fetchChartData(id, 7);
     };
 
-    // اضافه کردن دکمه QR به کارت کیف پول
-    const originalRenderWallets = renderWallets;
-    renderWallets = function() {
-      originalRenderWallets();
-      const cards = document.querySelectorAll('#wallets-list > div');
-      cards.forEach(card => {
-        const address = card.querySelector('.font-mono').textContent;
-        const name = card.querySelector('.font-bold').textContent;
-
-        if (!card.querySelector('[onclick*="showQRCode"]')) {
-          const qrBtn = document.createElement('button');
-          qrBtn.innerHTML = '<i data-lucide="qr-code" class="w-5 h-5"></i>';
-          qrBtn.className = 'p-1 text-primary';
-          qrBtn.onclick = () => showQRCode(address, name);
-          const actions = card.querySelector('.flex.gap-1');
-          actions.insertBefore(qrBtn, actions.firstChild);
-        }
-
-        lucide.createIcons();
+    async function fetchChartData(id, days) {
+      const res = await fetch(`${CONFIG.COINGECKO_API}/coins/${id}/market_chart?vs_currency=usd&days=${days}`);
+      const data = await res.json();
+      const labels = data.prices.map(p => new Date(p[0]).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-US', { month: 'short', day: 'numeric' }));
+      const prices = data.prices.map(p => p[1]);
+      
+      const ctx = document.getElementById('price-chart').getContext('2d');
+      if (window.priceChart) window.priceChart.destroy();
+      
+      window.priceChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'قیمت (USD)', data: prices, borderColor: '#1DA1F2', tension: 0.3, fill: false }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
       });
+
+      document.querySelectorAll('[data-chart-days]').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('[data-chart-days]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          fetchChartData(id, btn.dataset.chartDays);
+        };
+      });
+    }
+    // === PRICE ALERT MODAL ===
+    window.openPriceAlertModal = (id, name, currentPrice) => {
+      haptic('medium');
+      const modal = document.getElementById('modal');
+      modal.classList.remove('hidden');
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+          <h3 class="text-lg font-bold mb-4">${t('alert')} برای ${name}</h3>
+          <div class="mb-4">
+            <label class="block text-sm mb-1">قیمت فعلی: $${currentPrice.toLocaleString()}</label>
+            <input type="number" id="alert-price" placeholder="قیمت هدف (USD)" class="w-full px-4 py-2 border rounded-lg">
+          </div>
+          <div class="flex gap-2">
+            <button onclick="setPriceAlert('${id}', '${name}')" class="flex-1 py-2 bg-primary text-white rounded-lg haptic">${t('add')}</button>
+            <button onclick="closeModal()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg haptic">${t('cancel')}</button>
+          </div>
+        </div>
+      `;
     };
 
-    // ==================== Export / Import کیف پول‌ها ====================
-    window.exportWallets = async () => {
-      const data = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        wallets: state.wallets.map(w => ({
-          name: w.name,
-          network: w.network,
-          address: w.address
-        }))
-      };
+    window.setPriceAlert = (id, name) => {
+      const priceInput = document.getElementById('alert-price');
+      const price = parseFloat(priceInput.value);
+      if (!price || price <= 0) {
+        priceInput.classList.add('border-danger');
+        return;
+      }
+      alerts.push({ id, name, price, active: true, created: Date.now() });
+      localStorage.setItem('alerts', JSON.stringify(alerts));
+      closeModal();
+      showToast(t('alert'), `${name} در $${price} تنظیم شد`);
+      updateProfileStats();
+    };
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    function checkPriceAlerts() {
+      if (!notificationsEnabled) return;
+      markets.forEach(coin => {
+        alerts.forEach((alert, i) => {
+          if (alert.id === coin.id && alert.active) {
+            const diff = Math.abs(coin.current_price - alert.price) / alert.price;
+            if (diff <= 0.005) { // 0.5%
+              showToast(`${t('alert')} فعال شد`, `${coin.name} به $${coin.current_price.toFixed(2)} رسید`);
+              alert.active = false;
+              alerts[i] = alert;
+              localStorage.setItem('alerts', JSON.stringify(alerts));
+              updateProfileStats();
+            }
+          }
+        });
+      });
+    }
+
+    // === WALLET ===
+    function renderWallets() {
+      const list = document.getElementById('wallet-list');
+      const empty = document.getElementById('empty-wallet');
+      if (wallets.length === 0) {
+        empty.classList.remove('hidden');
+        list.innerHTML = '';
+        return;
+      }
+      empty.classList.add('hidden');
+      list.innerHTML = wallets.map((w, i) => `
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-xl haptic" data-wallet-index="${i}">
+          <div class="flex justify-between items-center mb-2">
+            <div>
+              <div class="font-semibold flex items-center gap-2">
+                ${w.name || w.address.slice(0, 8) + '...'}
+                <span class="text-xs px-2 py-1 rounded-full ${w.network === 'eth' ? 'bg-blue-100 text-blue-700' : w.network === 'ton' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}">
+                  ${w.network.toUpperCase()}
+                </span>
+              </div>
+              <div class="text-sm text-gray-500 flex items-center gap-1">
+                ${w.address.slice(0, 10)}...${w.address.slice(-8)}
+                <span class="copy-btn" onclick="copyToClipboard('${w.address}')"><i data-lucide="copy" class="w-4 h-4"></i></span>
+              </div>
+            </div>
+            <div class="flex gap-1">
+              <button onclick="editWallet(${i})" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 haptic">
+                <i data-lucide="edit" class="w-4 h-4"></i>
+              </button>
+              <button onclick="removeWallet(${i})" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-danger haptic">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div id="balance-${i}" class="mt-2 text-sm">در حال بارگذاری...</div>
+          <button onclick="showQR('${w.address}')" class="mt-2 text-primary text-sm flex items-center gap-1 haptic">
+            <i data-lucide="qr-code" class="w-4 h-4"></i> ${t('qr')}
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+      wallets.forEach((w, i) => fetchWalletBalance(w, i));
+    }
+
+    window.openAddWalletModal = () => {
+      haptic('medium');
+      const modal = document.getElementById('modal');
+      modal.classList.remove('hidden');
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+          <h3 class="text-lg font-bold mb-4">${t('addWallet')}</h3>
+          <input type="text" id="wallet-name" placeholder="نام (اختیاری)" class="w-full px-4 py-2 border rounded-lg mb-3">
+          <select id="wallet-network" class="w-full px-4 py-2 border rounded-lg mb-3">
+            <option value="eth">Ethereum (ETH)</option>
+            <option value="ton">TON</option>
+            <option value="tron">TRON (USDT)</option>
+          </select>
+          <input type="text" id="wallet-address" placeholder="آدرس کیف پول" class="w-full px-4 py-2 border rounded-lg mb-4">
+          <div class="flex gap-2">
+            <button onclick="addWallet()" class="flex-1 py-2 bg-primary text-white rounded-lg haptic">${t('add')}</button>
+            <button onclick="closeModal()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg haptic">${t('cancel')}</button>
+          </div>
+        </div>
+      `;
+    };
+
+    window.addWallet = () => {
+      const name = document.getElementById('wallet-name').value.trim();
+      const network = document.getElementById('wallet-network').value;
+      const address = document.getElementById('wallet-address').value.trim();
+      if (!address) {
+        document.getElementById('wallet-address').classList.add('border-danger');
+        return;
+      }
+      if (!validateAddress(address, network)) {
+        showToast('خطا', 'آدرس نامعتبر است');
+        return;
+      }
+      wallets.push({ name, network, address });
+      localStorage.setItem('wallets', JSON.stringify(wallets));
+      closeModal();
+      renderWallets();
+      updateProfileStats();
+      showToast('موفقیت', 'کیف پول اضافه شد');
+    };
+
+    window.editWallet = (i) => {
+      haptic('medium');
+      const w = wallets[i];
+      const modal = document.getElementById('modal');
+      modal.classList.remove('hidden');
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+          <h3 class="text-lg font-bold mb-4">${t('edit')} کیف پول</h3>
+          <input type="text" id="edit-name" value="${w.name || ''}" placeholder="نام (اختیاری)" class="w-full px-4 py-2 border rounded-lg mb-3">
+          <input type="text" id="edit-address" value="${w.address}" placeholder="آدرس کیف پول" class="w-full px-4 py-2 border rounded-lg mb-4">
+          <div class="flex gap-2">
+            <button onclick="saveEditedWallet(${i})" class="flex-1 py-2 bg-primary text-white rounded-lg haptic">ذخیره</button>
+            <button onclick="closeModal()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg haptic">${t('cancel')}</button>
+          </div>
+        </div>
+      `;
+    };
+
+    window.saveEditedWallet = (i) => {
+      const name = document.getElementById('edit-name').value.trim();
+      const address = document.getElementById('edit-address').value.trim();
+      if (!address) return;
+      if (!validateAddress(address, wallets[i].network)) {
+        showToast('خطا', 'آدرس نامعتبر');
+        return;
+      }
+      wallets[i].name = name;
+      wallets[i].address = address;
+      localStorage.setItem('wallets', JSON.stringify(wallets));
+      closeModal();
+      renderWallets();
+    };
+
+    window.removeWallet = (i) => {
+      haptic('heavy');
+      if (confirm(t('delete') + '؟')) {
+        wallets.splice(i, 1);
+        localStorage.setItem('wallets', JSON.stringify(wallets));
+        renderWallets();
+        updateProfileStats();
+      }
+    };
+
+    function validateAddress(address, network) {
+      if (network === 'eth') return /^0x[a-fA-F0-9]{40}$/.test(address);
+      if (network === 'ton') return /^[a-zA-Z0-9]{48}$/.test(address);
+      if (network === 'tron') return /^T[a-zA-Z0-9]{33}$/.test(address);
+      return false;
+    }
+
+    async function fetchWalletBalance(wallet, index) {
+      const el = document.getElementById(`balance-${index}`);
+      try {
+        let balance = 0, usd = 0, symbol = '';
+        if (wallet.network === 'eth') {
+          const res = await fetch(`${CONFIG.ETH_API}?module=account&action=balance&address=${wallet.address}&tag=latest&apikey=${CONFIG.ETHERSCAN_KEY}`);
+          const data = await res.json();
+          if (data.status !== '1') throw new Error();
+          balance = parseInt(data.result) / 1e18;
+          const priceRes = await fetch(`${CONFIG.COINGECKO_API}/simple/price?ids=ethereum&vs_currencies=usd`);
+          const priceData = await priceRes.json();
+          usd = balance * priceData.ethereum.usd;
+          symbol = 'ETH';
+        } else if (wallet.network === 'ton') {
+          const res = await fetch(`${CONFIG.TON_API}/getAddressInformation?address=${wallet.address}`);
+          const data = await res.json();
+          balance = data.balance / 1e9;
+          usd = balance * 6.5;
+          symbol = 'TON';
+        } else if (wallet.network === 'tron') {
+          const res = await fetch(`${CONFIG.TRON_API}/v1/accounts/${wallet.address}`);
+          const data = await res.json();
+          const usdt = data.data[0]?.trc20?.find(t => t.tokenName === 'Tether USDt' || t.tokenAbbr === 'USDT');
+          balance = usdt ? usdt.balance / 1e6 : 0;
+          usd = balance;
+          symbol = 'USDT';
+        }
+        el.innerHTML = `${balance.toFixed(4)} ${symbol} ≈ $${usd.toFixed(2)}`;
+      } catch (e) {
+        el.innerHTML = '<span class="text-danger">خطا</span>';
+      }
+    }
+
+    window.showQR = (address) => {
+      haptic('medium');
+      const modal = document.getElementById('modal');
+      modal.classList.remove('hidden');
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md text-center">
+          <div id="qrcode" class="mx-auto mb-4"></div>
+          <p class="text-sm break-all mb-4">${address}</p>
+          <button onclick="copyToClipboard('${address}')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm haptic flex items-center gap-2 mx-auto">
+            <i data-lucide="copy" class="w-4 h-4"></i> کپی آدرس
+          </button>
+          <button onclick="closeModal()" class="mt-4 px-6 py-2 bg-primary text-white rounded-lg haptic">بستن</button>
+        </div>
+      `;
+      new QRCode(document.getElementById('qrcode'), { text: address, width: 200, height: 200 });
+    };
+    window.copyToClipboard = (text) => {
+      haptic('light');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('کپی شد', text.slice(0, 20) + '...');
+        });
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('کپی شد', text.slice(0, 20) + '...');
+      }
+    };
+
+    window.exportWallets = () => {
+      haptic('medium');
+      if (wallets.length === 0) {
+        showToast('خطا', 'کیف پولی وجود ندارد');
+        return;
+      }
+      const data = JSON.stringify(wallets, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `shelby-wallets-backup-${Date.now()}.json`;
+      a.download = `shelby-wallets-${new Date().toISOString().slice(0,10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-
-      tg.showPopup({ message: 'بکاپ با موفقیت صادر شد!' });
-      haptic.success();
+      showToast('موفقیت', 'فایل خروجی ایجاد شد');
     };
 
     window.importWallets = () => {
+      haptic('medium');
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json,application/json';
-      input.onchange = async (e) => {
+      input.accept = '.json';
+      input.onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
-
-        try {
-          const text = await file.text();
-          const data = JSON.parse(text);
-
-          if (data.version !== 1 || !Array.isArray(data.wallets)) {
-            throw new Error('فرمت فایل نامعتبر');
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (!Array.isArray(imported)) throw new Error();
+            const valid = imported.filter(w => w.address && ['eth','ton','tron'].includes(w.network));
+            if (valid.length === 0) throw new Error();
+            wallets = [...wallets, ...valid];
+            localStorage.setItem('wallets', JSON.stringify(wallets));
+            renderWallets();
+            updateProfileStats();
+            showToast('موفقیت', `${valid.length} کیف پول وارد شد`);
+          } catch {
+            showToast('خطا', 'فایل نامعتبر است');
           }
-
-          const imported = data.wallets.map(w => ({
-            id: Date.now().toString() + Math.random(),
-            name: w.name || 'وارد شده',
-            network: w.network,
-            address: w.address,
-            balance: null,
-            lastUpdate: null
-          }));
-
-          state.wallets = [...state.wallets, ...imported];
-          await saveUserData();
-          renderWallets();
-          loadAllWalletBalances();
-
-          tg.showPopup({ message: `${imported.length} کیف پول وارد شد!` });
-          haptic.success();
-        } catch (err) {
-          tg.showAlert('خطا در وارد کردن: ' + err.message);
-          haptic.error();
-        }
+        };
+        reader.readAsText(file);
       };
       input.click();
     };
 
-    // اضافه کردن دکمه‌های Export/Import به صفحه کیف پول
-    document.getElementById('page-wallet').insertAdjacentHTML('afterbegin', `
-      <div class="flex gap-2 p-4 border-b border-gray-200 dark:border-gray-800">
-        <button onclick="exportWallets()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center gap-2 text-sm">
-          <i data-lucide="download"></i> خروجی
-        </button>
-        <button onclick="importWallets()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center gap-2 text-sm">
-          <i data-lucide="upload"></i> ورودی
-        </button>
-      </div>
-    `);
-
-    // ==================== امنیت: اعتبارسنجی آدرس ====================
-    const validateAddress = (network, address) => {
-      if (!address) return false;
-
-      // الگوهای ساده
-      const patterns = {
-        ton: /^E[A-Z0-9]{46}$|^U[A-Z0-9]{46}$/i,
-        eth: /^0x[a-fA-F0-9]{40}$/,
-        tron: /^T[A-Za-z1-9]{33}$/
-      };
-
-      return patterns[network]?.test(address) || false;
-    };
-
-    // بهبود تابع saveWallet
-    const originalSaveWallet = window.saveWallet;
-    window.saveWallet = async (editId) => {
-      const name = document.getElementById('wallet-name').value.trim();
-      const network = document.getElementById('wallet-network').value;
-      const address = document.getElementById('wallet-address').value.trim();
-
-      if (!address) {
-        tg.showAlert('آدرس الزامی است');
-        return;
-      }
-
-      if (!validateAddress(network, address)) {
-        tg.showAlert('آدرس نامعتبر است. لطفاً دوباره چک کنید.');
-        return;
-      }
-
-      await originalSaveWallet(editId);
-      haptic.success();
-    };
-
-    // ==================== نمایش موجودی دقیق (با واحد اصلی) ====================
-    const originalRenderWallets2 = renderWallets;
-    renderWallets = function() {
-      originalRenderWallets2();
-      const cards = document.querySelectorAll('#wallets-list > div');
-      cards.forEach(card => {
-        const wallet = state.wallets.find(w => w.address === card.querySelector('.font-mono').textContent);
-        if (!wallet) return;
-
-        const balanceEl = card.querySelector('.text-lg');
-        if (wallet.rawBalance !== undefined && wallet.balance !== null) {
-          const unit = wallet.network === 'ton' ? 'TON' : wallet.network === 'eth' ? 'ETH' : 'USDT';
-          balanceEl.innerHTML = `
-            <div class="text-sm text-gray-500">${wallet.rawBalance.toFixed(6)} ${unit}</div>
-            <div class="font-bold text-primary">$${wallet.balance.toFixed(2)}</div>
-          `;
-        } else if (wallet.balance === null) {
-          balanceEl.innerHTML = '<div class="text-sm text-gray-500">در حال بارگذاری...</div>';
-        }
-      });
-    };
-
-    // ==================== کیف پول USDT (TRC20) با جزئیات ====================
-    // قبلاً در fetchWalletBalance اضافه شده بود
-
-    // ==================== نمایش تاریخ آخرین بروزرسانی ====================
-    const formatDate = (iso) => {
-      if (!iso) return '';
-      const date = new Date(iso);
-      return date.toLocaleString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-    };
-
-    const originalRenderWallets3 = renderWallets;
-    renderWallets = function() {
-      originalRenderWallets3();
-      const cards = document.querySelectorAll('#wallets-list > div');
-      cards.forEach(card => {
-        const wallet = state.wallets.find(w => w.address === card.querySelector('.font-mono').textContent);
-        if (!wallet?.lastUpdate) return;
-
-        let updateEl = card.querySelector('.text-xs');
-        if (!updateEl) {
-          updateEl = document.createElement('div');
-          updateEl.className = 'text-xs text-gray-400 mt-1';
-          card.appendChild(updateEl);
-        }
-        updateEl.textContent = `آخرین بروزرسانی: ${formatDate(wallet.lastUpdate)}`;
-      });
-    };
-
-    // ==================== انیمیشن لودینگ موجودی ====================
-    const startBalanceLoading = (walletId) => {
-      const card = document.querySelector(`#wallets-list [onclick*="${walletId}"]`)?.closest('div');
-      if (!card) return;
-      const balanceEl = card.querySelector('.text-lg') || card.querySelector('.mt-2');
-      if (balanceEl) {
-        balanceEl.innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="skeleton h-5 w-20 rounded"></div>
-            <div class="skeleton h-4 w-16 rounded"></div>
-          </div>
-        `;
-      }
-    };
-
-    // بهبود fetchWalletBalance
-    const originalFetchWalletBalance = fetchWalletBalance;
-    fetchWalletBalance = async (wallet) => {
-      startBalanceLoading(wallet.id);
-      await originalFetchWalletBalance(wallet);
-    };
-
-    // ==================== دکمه Refresh دستی برای موجودی ====================
-    window.refreshBalance = async (walletId) => {
-      const wallet = state.wallets.find(w => w.id === walletId);
-      if (wallet) {
-        haptic.light();
-        await fetchWalletBalance(wallet);
-      }
-    };
-
-    // اضافه کردن دکمه Refresh به کارت
-    const originalRenderWallets4 = renderWallets;
-    renderWallets = function() {
-      originalRenderWallets4();
-      const cards = document.querySelectorAll('#wallets-list > div');
-      cards.forEach(card => {
-        const wallet = state.wallets.find(w => w.address === card.querySelector('.font-mono').textContent);
-        if (!wallet) return;
-
-        if (!card.querySelector('[onclick*="refreshBalance"]')) {
-          const refreshBtn = document.createElement('button');
-          refreshBtn.innerHTML = '<i data-lucide="refresh-cw" class="w-5 h-5"></i>';
-          refreshBtn.className = 'p-1 text-gray-500 hover:text-primary';
-          refreshBtn.onclick = () => refreshBalance(wallet.id);
-          const actions = card.querySelector('.flex.gap-1');
-          actions.appendChild(refreshBtn);
-        }
-
-        lucide.createIcons();
-      });
-    };
-
-    // ==================== پشتیبانی از چندین USDT (ERC20, TRC20) ====================
-    // در آینده قابل گسترش
-
-    // ==================== آمار کلی کیف پول ====================
-    function updateWalletStats() {
-      const total = state.wallets.reduce((sum, w) => sum + (w.balance || 0), 0);
-      const walletHeader = document.querySelector('#page-wallet h2');
-      if (walletHeader && total > 0) {
-        let stats = walletHeader.querySelector('.stats') || document.createElement('div');
-        stats.className = 'stats text-sm text-gray-500 mt-1';
-        stats.textContent = `کل موجودی: $${total.toFixed(2)}`;
-        if (!walletHeader.querySelector('.stats')) {
-          walletHeader.appendChild(stats);
-        }
-      }
+    // === TOAST NOTIFICATION ===
+    function showToast(title, message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-message').textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
     }
 
-    const originalRenderWallets5 = renderWallets;
-    renderWallets = function() {
-      originalRenderWallets5();
-      updateWalletStats();
+    // === PROFILE STATS ===
+    function updateProfileStats() {
+      document.getElementById('stats-coins').textContent = markets.length;
+      document.getElementById('stats-wallets').textContent = wallets.length;
+      document.getElementById('stats-alerts').textContent = alerts.filter(a => a.active).length;
+    }
+
+    // === MODAL CONTROL ===
+    window.closeModal = () => {
+      haptic('light');
+      document.getElementById('modal').classList.add('hidden');
     };
 
-    // ==================== امنیت: هشدار قبل از حذف ====================
-    const originalDeleteWallet = window.deleteWallet;
-    window.deleteWallet = async (id) => {
-      const wallet = state.wallets.find(w => w.id === id);
-      if (!wallet) return;
+    // === AUTO UPDATE & ALERT CHECK ===
+    let updateInterval, alertInterval;
 
-      tg.showPopup({
-        title: 'حذف کیف پول',
-        message: `آیا از حذف "${wallet.name}" مطمئنید؟ این عمل قابل بازگشت نیست.`,
-        buttons: [
-          { type: 'destructive', text: 'حذف', id: 'delete' },
-          { type: 'cancel', text: 'لغو' }
-        ]
-      }).then(async (btn) => {
-        if (btn.id === 'delete') {
-          await originalDeleteWallet(id);
-          haptic.success();
-        }
-      });
-    };
+    function startAutoUpdate() {
+      clearInterval(updateInterval);
+      clearInterval(alertInterval);
+      updateInterval = setInterval(() => {
+        if (currentTab === 'markets') loadMarkets();
+      }, CONFIG.UPDATE_INTERVAL);
+      alertInterval = setInterval(checkPriceAlerts, CONFIG.ALERT_CHECK_INTERVAL);
+    }
 
-    // ==================== پایان قسمت ۵ ====================
-  </script>
-</body>
-</html>
-<script>
-    // ==================== تنظیمات پیشرفته ====================
-    function openSettingsModal() {
-      const modalContent = `
-        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-          <i data-lucide="settings"></i> تنظیمات
-        </h3>
-        <div class="space-y-4">
-          <!-- زبان -->
+    // === PWA SERVICE WORKER ===
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered', reg))
+        .catch(err => console.log('SW error', err));
+    }
+
+    // === SKELETON LOADING FOR ALL PAGES ===
+    function showSkeleton(containerId, count = 5) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = Array(count).fill().map(() => `
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-xl animate-pulse">
           <div class="flex justify-between items-center">
-            <div>
-              <div class="font-medium">زبان</div>
-              <div class="text-sm text-gray-500">Language</div>
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div class="space-y-2">
+                <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div class="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              </div>
             </div>
-            <select id="lang-select" class="p-2 rounded-lg border bg-gray-50 dark:bg-gray-800">
-              <option value="fa">فارسی</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-
-          <!-- تم -->
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="font-medium">تم</div>
-              <div class="text-sm text-gray-500">Theme</div>
-            </div>
-            <button id="theme-btn" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-              <i data-lucide="moon"></i>
-            </button>
-          </div>
-
-          <!-- اعلان‌ها -->
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="font-medium">اعلان‌ها</div>
-              <div class="text-sm text-gray-500">Push notifications</div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="notif-toggle" class="sr-only peer">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-          </div>
-
-          <!-- بروزرسانی خودکار -->
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="font-medium">بروزرسانی خودکار</div>
-              <div class="text-sm text-gray-500">Auto refresh markets</div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="auto-refresh-toggle" class="sr-only peer" checked>
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-          </div>
-
-          <!-- درباره ما -->
-          <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-            <button onclick="openAboutModal()" class="w-full py-3 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center gap-2">
-              <i data-lucide="info"></i> درباره Shelby Bet
-            </button>
+            <div class="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
-      `;
+      `).join('');
+    }
 
-      showModal(modalContent);
+    // === INIT ON LOAD ===
+    window.addEventListener('load', () => {
+      updateTheme();
+      updateLang();
       lucide.createIcons();
 
-      // زبان
-      document.getElementById('lang-select').value = currentLang;
-      document.getElementById('lang-select').addEventListener('change', (e) => {
-        setLanguage(e.target.value);
-        db.set('user_lang', e.target.value);
-        haptic.light();
-      });
+      // شروع با بازارها
+      document.querySelector('[data-tab="markets"]').click();
 
-      // تم
-      const themeBtn = document.getElementById('theme-btn');
-      const themeBtnIcon = themeBtn.querySelector('i');
-      themeBtnIcon.setAttribute('data-lucide', document.documentElement.classList.contains('dark') ? 'sun' : 'moon');
-      themeBtn.addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-        updateThemeIcon();
-        db.set('user_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-        haptic.light();
-      });
+      // بارگذاری اولیه
+      loadMarkets();
+      renderWallets();
+      updateProfileStats();
 
-      // اعلان‌ها
-      const notifToggle = document.getElementById('notif-toggle');
-      notifToggle.checked = Notification.permission === 'granted';
-      notifToggle.addEventListener('change', async () => {
-        if (notifToggle.checked) {
-          const permission = await Notification.requestPermission();
-          notifToggle.checked = permission === 'granted';
-        }
-        db.set('user_notif', notifToggle.checked);
-      });
+      // فعال‌سازی به‌روزرسانی خودکار
+      startAutoUpdate();
 
-      // بروزرسانی خودکار
-      const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
-      autoRefreshToggle.addEventListener('change', () => {
-        if (autoRefreshToggle.checked) {
-          marketUpdateInterval = setInterval(() => {
-            if (state.currentPage === 'markets' && navigator.onLine) {
-              state.page = 1;
-              state.hasMore = true;
-              loadMarkets();
-            }
-          }, 2 * 60 * 1000);
-        } else {
-          clearInterval(marketUpdateInterval);
-        }
-        db.set('user_auto_refresh', autoRefreshToggle.checked);
-      });
-    }
-
-    // ==================== درباره ما ====================
-    function openAboutModal() {
-      const modalContent = `
-        <div class="text-center py-6">
-          <div class="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
-            S
-          </div>
-          <h3 class="text-xl font-bold">Shelby Bet</h3>
-          <p class="text-sm text-gray-500 mt-1">نسخه 1.0.0</p>
-          <p class="mt-4 text-sm leading-relaxed">
-            اپلیکیشن حرفه‌ای بازارهای کریپتو و مدیریت کیف پول<br>
-            ساخته شده با عشق برای کاربران تلگرام
-          </p>
-          <div class="mt-6 space-y-2 text-xs text-gray-500">
-            <p>توسعه‌دهنده: <span class="text-primary">شما</span></p>
-            <p>طراحی: Tailwind CSS + Lucide</p>
-            <p>داده: CoinGecko, TON, Etherscan</p>
-          </div>
-          <button onclick="closeModal()" class="mt-6 px-6 py-2 bg-primary text-white rounded-full">بستن</button>
-        </div>
-      `;
-      showModal(modalContent);
-    }
-
-    // ==================== دکمه تنظیمات در پروفایل ====================
-    document.querySelector('#page-profile .space-y-3').insertAdjacentHTML('afterbegin', `
-      <button onclick="openSettingsModal()" class="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-left flex items-center gap-3">
-        <i data-lucide="settings"></i>
-        <span>تنظیمات</span>
-      </button>
-    `);
-
-    // ==================== بروزرسانی خودکار وضعیت باتری ====================
-    if ('getBattery' in navigator) {
-      navigator.getBattery().then(battery => {
-        const updateBattery = () => {
-          const level = Math.round(battery.level * 100);
-          const charging = battery.charging;
-          const icon = charging ? 'zap' : 'battery';
-          const status = document.querySelector('#profile-id');
-          if (status) {
-            status.innerHTML = `باتری: ${level}% <i data-lucide="${icon}" class="inline w-4 h-4"></i>`;
-            lucide.createIcons();
-          }
-        };
-        battery.addEventListener('levelchange', updateBattery);
-        battery.addEventListener('chargingchange', updateBattery);
-        updateBattery();
-      });
-    }
-
-    // ==================== آمار کلی اپ ====================
-    function updateAppStats() {
-      const marketsCount = state.markets.length;
-      const favoritesCount = state.favorites.length;
-      const walletsCount = state.wallets.length;
-      const alertsCount = (localStorage.getItem(`alerts_${userId}`) ? JSON.parse(localStorage.getItem(`alerts_${userId}`)).length : 0);
-
-      const statsHTML = `
-        <div class="grid grid-cols-4 gap-2 text-center text-xs">
-          <div>
-            <div class="font-bold text-primary">${marketsCount}</div>
-            <div class="text-gray-500">ارز</div>
-          </div>
-          <div>
-            <div class="font-bold text-success">${favoritesCount}</div>
-            <div class="text-gray-500">علاقه‌مندی</div>
-          </div>
-          <div>
-            <div class="font-bold text-info">${walletsCount}</div>
-            <div class="text-gray-500">کیف پول</div>
-          </div>
-          <div>
-            <div class="font-bold text-warning">${alertsCount}</div>
-            <div class="text-gray-500">هشدار</div>
-          </div>
-        </div>
-      `;
-
-      let statsEl = document.querySelector('#app-stats');
-      if (!statsEl) {
-        statsEl = document.createElement('div');
-        statsEl.id = 'app-stats';
-        statsEl.className = 'mt-4 px-4';
-        document.querySelector('#app').insertBefore(statsEl, document.querySelector('nav'));
+      // Skeleton برای کیف پول (در صورت خالی بودن)
+      if (wallets.length === 0) {
+        document.getElementById('empty-wallet').classList.remove('hidden');
       }
-      statsEl.innerHTML = statsHTML;
-    }
 
-    const originalRenderMarkets3 = renderMarkets;
-    renderMarkets = function() {
-      originalRenderMarkets3();
-      updateAppStats();
-    };
+      // تنظیمات اولیه
+      document.getElementById('notifications-toggle').checked = notificationsEnabled;
+      document.getElementById('haptic-toggle').checked = hapticEnabled;
 
-    // ==================== پایان برنامه ====================
-    // همه چیز آماده است!
-    console.log('%c Shelby Bet آماده است! ', 'background: #1DA1F2; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
-
-    // ==================== تست نهایی (در تلگرام) ====================
-    if (tg.initDataUnsafe?.user) {
-      console.log('کاربر تلگرام:', tg.initDataUnsafe.user);
-      tg.showPopup({ message: `خوش آمدید، ${user.first_name || user.username}!` });
-    }
-
-    // ==================== ذخیره تنظیمات کاربر ====================
-    async function loadUserSettings() {
-      const lang = await db.get('user_lang') || 'fa';
-      const theme = await db.get('user_theme') || (isDarkMode ? 'dark' : 'light');
-      const notif = await db.get('user_notif') || false;
-      const autoRefresh = await db.get('user_auto_refresh') !== false;
-
-      setLanguage(lang);
-      if (theme === 'dark') document.documentElement.classList.add('dark');
-      updateThemeIcon();
-    }
-
-    // ==================== شروع نهایی (همه چیز) ====================
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        lucide.createIcons();
-        await loadUserSettings();
-        await loadUserData();
-        updateUIText();
-        showPage('markets');
-
-        if (!navigator.onLine) {
-          loadOfflineData();
-        } else {
-          loadMarkets();
-          loadAllWalletBalances();
-        }
-
-        setInterval(saveOfflineData, 10000);
-        checkPriceAlerts();
-        setInterval(checkPriceAlerts, 60000);
-
-        if (deferredPrompt) {
-          setTimeout(() => {
-            tg.showPopup({
-              title: 'نصب اپ',
-              message: 'می‌خوای Shelby Bet رو روی گوشی نصب کنی؟',
-              buttons: [
-                { type: 'default', text: 'نصب کن', id: 'install' },
-                { type: 'cancel', text: 'بعداً' }
-              ]
-            }).then(btn => {
-              if (btn.id === 'install') deferredPrompt.prompt();
-            });
-          }, 10000);
-        }
-
-        updateAppStats();
-        haptic.success();
-
-      } catch (err) {
-        console.error('خطا در شروع:', err);
-        tg.showAlert('خطا در بارگذاری اپ. دوباره تلاش کنید.');
-      }
+      // نمایش آمار
+      setTimeout(updateProfileStats, 1000);
     });
 
+    // === RESPONSIVE & PERFORMANCE ===
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.priceChart) window.priceChart.resize();
+      }, 250);
+    });
+
+    // === ERROR HANDLING ===
+    window.addEventListener('error', (e) => {
+      console.error('Global error:', e.error);
+      showToast('خطا', 'مشکلی پیش آمد');
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('Promise rejection:', e.reason);
+      showToast('خطا', 'درخواست ناموفق');
+    });
+
+    // === FINAL TOUCHES ===
+    // افزودن انیمیشن به دکمه‌ها
+    document.querySelectorAll('.haptic').forEach(el => {
+      el.addEventListener('touchstart', () => haptic('light'));
+    });
+
+    // بهبود تجربه کاربری
+    document.body.addEventListener('click', (e) => {
+      if (e.target.closest('#modal')) {
+        if (!e.target.closest('.bg-white, .dark\\:bg-gray-800')) {
+          closeModal();
+        }
+      }
+    });
   </script>
+
 </body>
 </html>
+<!-- این بخش خالی است — کد اصلی در بخش ۵ تموم شد (۱۰۴۷ خط) -->
+<!-- فقط برای تکمیل ۶ بخش، این قسمت رو خالی می‌ذاریم -->
+
+<!-- ==================================================== -->
+<!-- فایل جداگانه: sw.js (آفلاین + کش کامل) -->
+<!-- ==================================================== -->
+
+<!-- این کد رو در یک فایل جدا به نام `sw.js` ذخیره کن (در همان پوشه `index.html`) -->
+
+```js
+// sw.js - Service Worker برای PWA کامل
+const CACHE_NAME = 'shelby-v2.0';
+const ASSETS = [
+  '/',
+  '/index.html',
+  'https://telegram.org/js/telegram-web-app.js',
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap',
+  'https://cdn.jsdelivr.net/npm/chart.js',
+  'https://unpkg.com/lucide@latest/dist/umd/lucide.js',
+  'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+  // آیکون‌ها و منابع استاتیک
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27>%F0%9F%AA%99%3C/text%3E%3C/svg%3E'
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+  
+  e.respondWith(
+    caches.match(e.request).then((cached) => {
+      if (cached) {
+        // برگرداندن نسخه کش‌شده
+        return cached;
+      }
+      
+      // اگر در کش نبود، از شبکه بگیر
+      return fetch(e.request).then((response) => {
+        // چک کن که پاسخ معتبر باشه
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+        
+        // کش کردن پاسخ جدید
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(e.request, responseToCache);
+        });
+        
+        return response;
+      }).catch(() => {
+        // اگر آفلاین بودیم و در کش نبود، صفحه آفلاین نشون بده
+        return caches.match('/index.html');
+      });
+    })
+  );
+});
+
+// پشتیبانی از Push Notification (اختیاری)
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icon.png',
+      badge: '/badge.png',
+      vibrate: [100, 50, 100],
+      data: { url: data.url || '/' }
+    };
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url || '/')
+  );
+});
