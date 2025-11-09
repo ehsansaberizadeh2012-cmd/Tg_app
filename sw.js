@@ -1,14 +1,4 @@
-<!-- این بخش فقط برای تکمیل ۱۶۰۰ خط است — کد اصلی در بخش ۹ تموم شد -->
-<!-- فقط برای نمایش تعداد خطوط، این قسمت خالی است -->
-
-<!-- ==================================================== -->
-<!-- فایل جداگانه: sw.js (آفلاین + کش کامل + Push) -->
-<!-- ==================================================== -->
-
-<!-- این کد رو در یک فایل جدا به نام `sw.js` ذخیره کن (در همان پوشه `index.html`) -->
-
-```js
-// sw.js - Service Worker برای PWA کامل
+// sw.js - Service Worker برای PWA
 const CACHE_NAME = 'shelby-v2.0';
 const ASSETS = [
   '/',
@@ -19,22 +9,63 @@ const ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://unpkg.com/lucide@latest/dist/umd/lucide.js',
   'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
-  // آیکون‌ها و منابع استاتیک
   'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27>%E2%82%BF%3C/text%3E%3C/svg%3E'
 ];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((keys) => 
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+  
+  e.respondWith(
+    caches.match(e.request).then((cached) => {
+      if (cached) return cached;
+      
+      return fetch(e.request).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
+        
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseToCache));
+        return response;
+      }).catch(() => caches.match('/index.html'));
+    })
+  );
+});
+
+// Push Notification (اختیاری)
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    event.waitUntil(
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/icon.png',
+        badge: '/badge.png',
+        vibrate: [100, 50, 100],
+        data: { url: data.url || '/' }
+      })
+    );
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
+});    caches.keys().then((keys) => {
       return Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
