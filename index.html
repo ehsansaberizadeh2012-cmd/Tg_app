@@ -3,41 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Shelby Bet - بازارهای کریپتو</title>
+  <title>Shelby Bet</title>
 
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {-sans: ['Vazirmatn', 'sans-serif']},
-          colors: {
-            primary: '#1DA1F2', success: '#10B981', danger: '#EF4444',
-            warning: '#F59E0B', info: '#3B82F6'
-          },
-          borderRadius: { '2xl': '1rem' },
-          boxShadow: { 'lg': '0 10px 15px -3px rgba(0,0,0,0.1)' }
-        }
-      }
-    };
-  </script>
-
-  <!-- Vazirmatn Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-
-  <!-- QR Code -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="data:application/manifest+json,{
@@ -45,362 +14,471 @@
     \"short_name\": \"Shelby\",
     \"start_url\": \"/\",
     \"display\": \"standalone\",
-    \"background_color\": \"#ffffff\",
+    \"background_color\": \"#0f0f0f\",
     \"theme_color\": \"#1DA1F2\",
     \"icons\": [{\"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%82%BF%3C/text%3E%3C/svg%3E\", \"sizes\": \"any\"}]
   }">
 
   <style>
-    :root { --primary: #1DA1F2; }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: #f9f9f9; color: #111; transition: background 0.3s, color 0.3s; }
-    .dark { background: #111; color: #f5f5f5; }
-    .container { max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
-    .skeleton { @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded; }
-    .chart-container { height: 220px; margin: 16px 0; }
-    .hidden { display: none !important; }
-    .copy-btn { @apply text-xs text-gray-500 hover:text-primary cursor-pointer; }
-    .haptic { transition: transform 0.1s; }
-    .haptic:active { transform: scale(0.95); }
-    .tab-btn { @apply flex-1 py-3 font-medium text-center transition-colors; }
-    .tab-btn.active { @apply border-b-2 border-primary text-primary; }
-    .market-tab-btn { @apply py-2 px-4 rounded-full text-sm font-medium transition-all; }
-    .market-tab-btn.active { @apply bg-primary text-white; }
-    .market-tab-btn:not(.active) { @apply bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300; }
-    .badge { @apply px-2 py-1 text-xs rounded-full font-medium; }
-    .badge-eth { @apply bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300; }
-    .badge-ton { @apply bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300; }
-    .badge-tron { @apply bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300; }
-    .price-up { @apply text-success; }
-    .price-down { @apply text-danger; }
-    .price-flat { @apply text-gray-500; }
-    .loading-spinner { width: 18px; height: 18px; border: 2px solid #e5e7eb; border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* === iOS 26 Haptic Bubble Style === */
+    :root {
+      --primary: #1DA1F2;
+      --success: #10B981;
+      --danger: #EF4444;
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --text: #f5f5f5;
+      --text-secondary: #a0a0a0;
+      --border: #2a2a2a;
+      --bubble: rgba(255,255,255,0.08);
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 90px;
+      transition: background 0.3s ease;
+    }
+
+    .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+    /* Header */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px);
+      background: rgba(15,15,15,0.8);
+      border-bottom: 1px solid var(--border);
+      padding: 16px;
+    }
+    .header .row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .header .logo span {
+      width: 40px; height: 40px;
+      background: var(--primary);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; color: white; font-size: 20px;
+      box-shadow: var(--shadow);
+    }
+    .header .logo h1 {
+      font-size: 18px; font-weight: 700;
+    }
+    .header .logo p {
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .header .actions {
+      display: flex; gap: 8px;
+    }
+    .header .btn {
+      width: 36px; height: 36px;
+      background: var(--bubble);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 18px;
+    }
+    .header .btn:active {
+      transform: scale(0.9);
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex; background: var(--card); border-radius: 16px;
+      margin: 16px; padding: 6px; gap: 8px;
+      box-shadow: var(--shadow);
+    }
+    .tab {
+      flex: 1; padding: 12px; border-radius: 12px;
+      text-align: center; font-weight: 600; font-size: 14px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .tab.active {
+      background: var(--primary); color: white;
+      box-shadow: 0 4px 12px rgba(29,161,242,0.4);
+    }
+    .tab::after {
+      content: ''; position: absolute; bottom: 0; left: 50%; width: 0; height: 3px;
+      background: var(--primary); border-radius: 2px; transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+    .tab.active::after { width: 60%; }
+
+    /* Search */
+    .search {
+      margin: 16px; position: relative;
+    }
+    .search input {
+      width: 100%; padding: 14px 48px 14px 16px;
+      background: var(--card); border: none; border-radius: 16px;
+      color: var(--text); font-size: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+    .search input::placeholder { color: var(--text-secondary); }
+    .search .icon {
+      position: absolute; right: 16px; top: 14px; color: var(--text-secondary);
+      font-size: 18px;
+    }
+
+    /* Skeleton */
+    .skeleton {
+      background: var(--card); border-radius: 20px; padding: 16px; margin: 12px 16px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
-
+<body>
   <div class="container">
 
     <!-- Header -->
-    <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 backdrop-blur-sm bg-opacity-90">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">S</div>
+    <header class="header">
+      <div class="row">
+        <div class="logo">
+          <span>S</span>
           <div>
-            <h1 class="text-lg font-bold">Shelby Bet</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">بازارهای کریپتو</p>
+            <h1>Shelby Bet</h1>
+            <p>بازارهای کریپتو</p>
           </div>
         </div>
-        <div class="flex gap-2">
-          <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 haptic shadow-sm">
-            <i data-lucide="moon" class="w-5 h-5"></i>
-          </button>
-          <button id="lang-toggle" class="px-3 py-1 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 haptic shadow-sm">EN</button>
+        <div class="actions">
+          <button class="btn" id="theme-toggle">Moon</button>
+          <button class="btn" id="lang-toggle">EN</button>
         </div>
       </div>
     </header>
 
     <!-- Tabs -->
-    <div class="flex border-b border-gray-200 dark:border-gray-800 sticky top-16 z-40 bg-white dark:bg-gray-900 backdrop-blur-sm bg-opacity-90">
-      <button data-tab="markets" class="tab-btn active">بازارها</button>
-      <button data-tab="wallet" class="tab-btn">کیف پول</button>
-      <button data-tab="profile" class="tab-btn">پروفایل</button>
+    <div class="tabs">
+      <div class="tab active" data-tab="markets">بازارها</div>
+      <div class="tab" data-tab="wallet">کیف پول</div>
+      <div class="tab" data-tab="profile">پروفایل</div>
     </div>
 
-    <!-- Page: Markets -->
-    <div id="page-markets" class="page">
-      <!-- Search -->
-      <div class="p-4 sticky top-28 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div class="relative">
-          <input type="text" id="search-input" placeholder="جستجو در ارزها..." class="w-full p-3 pr-10 rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-          <button id="clear-search" class="absolute left-3 top-3 text-gray-500 dark:text-gray-400 hidden haptic">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
-          <div class="absolute right-3 top-3 text-gray-400">
-            <i data-lucide="search" class="w-5 h-5"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- Market Tabs -->
-      <div class="flex px-4 gap-2 overflow-x-auto whitespace-nowrap py-3 border-b border-gray-200 dark:border-gray-800 scrollbar-hide">
-        <button data-market-tab="all" class="market-tab-btn active">همه</button>
-        <button data-market-tab="favorites" class="market-tab-btn">علاقه‌مندی‌ها</button>
-        <button data-market-tab="gainers" class="market-tab-btn">بیشترین رشد</button>
-        <button data-market-tab="losers" class="market-tab-btn">بیشترین افت</button>
-      </div>
-
-      <!-- Sort & Refresh -->
-      <div class="flex justify-between items-center px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">مرتب‌سازی:</span>
-          <select id="sort-select" class="p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-            <option value="market_cap_desc">ارزش بازار (نزولی)</option>
-            <option value="market_cap_asc">ارزش بازار (صعودی)</option>
-            <option value="price_change_24h_desc">رشد ۲۴ساعته</option>
-            <option value="price_change_24h_asc">افت ۲۴ساعته</option>
-          </select>
-        </div>
-        <button id="refresh-markets" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 haptic">
-          <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <!-- Markets List -->
-      <div id="markets-list" class="px-4 space-y-3 py-4"></div>
-
-      <!-- Skeleton -->
-      <div id="skeleton-loading" class="px-4 space-y-3 py-4 hidden">
-        ${Array(12).fill().map(() => `
-          <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm animate-pulse">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                <div class="space-y-2">
-                  <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  <div class="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                </div>
-              </div>
-              <div class="text-right space-y-2">
-                <div class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-
-      <!-- Load More -->
-      <div id="load-more" class="p-4 text-center hidden">
-        <button class="px-6 py-2 bg-primary text-white rounded-full text-sm font-medium haptic shadow-md flex items-center gap-2 mx-auto">
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          بارگذاری بیشتر
-        </button>
-      </div>
-    </div>
-    <!-- Page: Wallet -->
-    <div id="page-wallet" class="page hidden">
-      <!-- Wallet Actions -->
-      <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div class="flex gap-2">
-          <button onclick="exportWallets()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center gap-2 text-sm font-medium haptic shadow-sm">
-            <i data-lucide="download" class="w-4 h-4"></i>
-            خروجی
-          </button>
-          <button onclick="importWallets()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center gap-2 text-sm font-medium haptic shadow-sm">
-            <i data-lucide="upload" class="w-4 h-4"></i>
-            ورودی
-          </button>
-          <button onclick="openAddWalletModal()" class="flex-1 py-2 bg-primary text-white rounded-2xl flex items-center justify-center gap-2 text-sm font-medium haptic shadow-md">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            افزودن
-          </button>
-        </div>
-      </div>
-
-      <!-- Wallet List -->
-      <div id="wallet-list" class="space-y-3 p-4"></div>
-
-      <!-- Empty State -->
-      <div id="empty-wallet" class="text-center py-20">
-        <div class="w-24 h-24 mx-auto bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-          <i data-lucide="wallet" class="w-12 h-12 text-gray-400"></i>
-        </div>
-        <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">هیچ کیف پولی اضافه نشده</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">برای شروع، یک کیف پول جدید اضافه کنید</p>
-        <button onclick="openAddWalletModal()" class="px-6 py-3 bg-primary text-white rounded-2xl font-medium haptic shadow-lg">
-          افزودن کیف پول
-        </button>
-      </div>
+    <!-- Search -->
+    <div class="search">
+      <input type="text" id="search" placeholder="جستجو در ارزها...">
+      <div class="icon">Search</div>
     </div>
 
-    <!-- Page: Profile -->
-    <div id="page-profile" class="page hidden">
-      <div class="p-4 space-y-5">
-
-        <!-- User Card -->
-        <div class="bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-6 text-white shadow-xl">
-          <div class="flex items-center gap-4">
-            <div id="profile-avatar" class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold backdrop-blur-sm">
-              <span id="profile-initial">S</span>
+    <!-- Skeleton Loading -->
+    <div id="skeleton">
+      ${Array(6).fill().map(() => `
+        <div class="skeleton">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div style="width:44px;height:44px;background:#333;border-radius:50%;"></div>
+            <div style="flex:1;">
+              <div style="height:16px;background:#333;border-radius:8px;width:60%;margin-bottom:8px;"></div>
+              <div style="height:12px;background:#333;border-radius:8px;width:40%;"></div>
             </div>
-            <div class="flex-1">
-              <h2 class="text-xl font-bold" id="profile-name">Shelby User</h2>
-              <p class="text-sm opacity-90" id="profile-id">ID: ...</p>
-              <p class="text-xs opacity-80 mt-1" id="profile-username">@username</p>
-            </div>
-          </div>
-          <div class="mt-4 flex justify-between text-xs">
-            <div>
-              <p class="opacity-80">عضو از</p>
-              <p class="font-medium" id="profile-joined">۱۴۰۴</p>
-            </div>
-            <div>
-              <p class="opacity-80">نسخه</p>
-              <p class="font-medium">v2.0</p>
+            <div style="text-align:right;">
+              <div style="height:18px;background:#333;border-radius:8px;width:70px;margin-bottom:8px;"></div>
+              <div style="height:12px;background:#333;border-radius:8px;width:50px;"></div>
             </div>
           </div>
         </div>
-
-        <!-- Settings -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg space-y-5">
-          <h3 class="font-bold text-lg flex items-center gap-2">
-            <i data-lucide="settings" class="w-5 h-5"></i>
-            تنظیمات
-          </h3>
-
-          <div class="space-y-4">
-            <!-- Theme -->
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <i data-lucide="moon" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
-                <div>
-                  <p class="font-medium">تم</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">تیره / روشن</p>
-                </div>
-              </div>
-              <button id="profile-theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic shadow-sm">
-                <i data-lucide="moon" class="w-5 h-5"></i>
-              </button>
-            </div>
-
-            <!-- Language -->
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <i data-lucide="globe" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
-                <div>
-                  <p class="font-medium">زبان</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">فارسی / English</p>
-                </div>
-              </div>
-              <button id="profile-lang-toggle" class="px-3 py-1 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 haptic shadow-sm">EN</button>
-            </div>
-
-            <!-- Notifications -->
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
-                <div>
-                  <p class="font-medium">اعلان‌ها</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">هشدار قیمت</p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="notifications-toggle" class="sr-only peer">
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-
-            <!-- Haptic -->
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <i data-lucide="zap" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
-                <div>
-                  <p class="font-medium">لرزش دکمه‌ها</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">بازخورد لمسی</p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="haptic-toggle" class="sr-only peer" checked>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h3 class="font-bold text-lg flex items-center gap-2 mb-5">
-            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-            آمار اپ
-          </h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-              <p class="text-2xl font-bold text-primary" id="stats-coins">0</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">تعداد ارزها</p>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-              <p class="text-2xl font-bold text-success" id="stats-wallets">0</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">کیف پول‌ها</p>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-              <p class="text-2xl font-bold text-warning" id="stats-alerts">0</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">هشدار فعال</p>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
-              <p class="text-2xl font-bold text-info" id="stats-total">$0</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">کل موجودی</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- About -->
-        <div class="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-lg text-center">
-          <h3 class="font-bold text-lg mb-3">درباره Shelby Bet</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-            بهترین ابزار مدیریت کریپتو در تلگرام<br>
-            با پشتیبانی از ETH، TON، TRON و USDT
-          </p>
-          <div class="mt-5 flex justify-center gap-3">
-            <a href="#" class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm haptic">
-              <i data-lucide="github" class="w-5 h-5"></i>
-            </a>
-            <a href="#" class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm haptic">
-              <i data-lucide="twitter" class="w-5 h-5"></i>
-            </a>
-            <button onclick="openTelegram()" class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm haptic">
-              <i data-lucide="send" class="w-5 h-5"></i>
-            </button>
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-5">نسخه 2.0 - ۱۴۰۴</p>
-        </div>
-
-      </div>
+      `).join('')}
+    </div>
+ <!-- Markets Page -->
+    <div id="page-markets">
+      <div id="markets-list"></div>
     </div>
 
+    <!-- Market Card Template (CSS) -->
+    <style>
+      /* Market Card */
+      .market-card {
+        background: var(--card); border-radius: 20px; padding: 16px;
+        margin: 12px 16px; box-shadow: var(--shadow);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        backdrop-filter: blur(12px);
+      }
+      .market-card:active { transform: scale(0.98); }
+      .market-card .row {
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .market-card .coin {
+        display: flex; align-items: center; gap: 12px;
+      }
+      .market-card .coin img {
+        width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+        background: white; padding: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+      .market-card .coin-name {
+        font-weight: 700; font-size: 16px;
+      }
+      .market-card .coin-symbol {
+        color: var(--text-secondary); font-size: 13px;
+      }
+      .market-card .price {
+        text-align: right;
+      }
+      .market-card .price-main {
+        font-weight: 700; font-size: 18px;
+      }
+      .market-card .price-change {
+        font-size: 13px; font-weight: 600; margin-top: 4px;
+      }
+      .up { color: var(--success); }
+      .down { color: var(--danger); }
+
+      /* Actions */
+      .actions {
+        display: flex; gap: 8px; margin-top: 12px;
+      }
+      .actions button {
+        flex: 1; height: 40px; border-radius: 12px;
+        background: var(--bubble); display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s ease; font-size: 18px;
+      }
+      .actions button:active { 
+        transform: scale(0.92); 
+        background: var(--primary); 
+        color: white; 
+      }
+
+      /* Empty State */
+      .empty {
+        text-align: center; padding: 60px 20px;
+      }
+      .empty-icon {
+        width: 80px; height: 80px; background: var(--bubble);
+        border-radius: 50%; margin: 0 auto 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 36px;
+      }
+      .empty-title {
+        font-size: 18px; font-weight: 600; margin-bottom: 8px;
+      }
+      .empty-desc {
+        color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;
+      }
+      .btn-primary {
+        padding: 14px 32px; background: var(--primary); color: white;
+        border: none; border-radius: 16px; font-weight: 600;
+        box-shadow: 0 4px 12px rgba(29,161,242,0.4);
+      }
+
+      /* Modal */
+      .modal {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+        backdrop-filter: blur(12px);
+      }
+      .modal-content {
+        background: var(--card); border-radius: 24px; width: 100%; max-width: 400px;
+        padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes modalIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .modal-title {
+        font-size: 18px; font-weight: 700; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .modal-close {
+        position: absolute; top: 16px; left: 16px;
+        width: 36px; height: 36px; background: var(--bubble);
+        border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+        background: var(--card); color: white; padding: 12px 20px;
+        border-radius: 16px; box-shadow: var(--shadow); z-index: 1001;
+        display: flex; align-items: center; gap: 12px; font-size: 14px;
+        animation: toastIn 0.3s ease;
+      }
+      @keyframes toastIn {
+        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+      .toast-icon { font-size: 18px; }
+
+      /* Hidden */
+      .hidden { display: none !important; }
+    </style>
   </div>
 
   <!-- Modal -->
-  <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl modal">
-      <div id="modal-content"></div>
+  <div id="modal" class="hidden modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">Close</button>
+      <div id="modal-body"></div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed bottom-20 left-4 right-4 z-50 hidden max-w-sm mx-auto">
-    <div class="bg-gray-900 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3 toast">
-      <div class="w-10 h-10 bg-primary bg-opacity-20 rounded-full flex items-center justify-center">
-        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
-      </div>
-      <div class="flex-1">
-        <p class="font-medium" id="toast-title"></p>
-        <p class="text-sm opacity-90" id="toast-message"></p>
-      </div>
-      <button onclick="closeToast()" class="p-1 haptic">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
-    </div>
+  <div id="toast" class="hidden toast">
+    <div class="toast-icon">Check</div>
+    <div id="toast-msg">موفقیت!</div>
   </div>
-  <!-- ALL JS IN ONE SCRIPT -->
-  <script>
-    // === CONFIG & CONSTANTS ===
+  <!-- Wallet Page -->
+    <div id="page-wallet" class="hidden">
+      <div class="empty">
+        <div class="empty-icon">Wallet</div>
+        <p class="empty-title">هیچ کیف پولی اضافه نشده</p>
+        <p class="empty-desc">برای شروع، یک کیف پول جدید اضافه کنید</p>
+        <button class="btn-primary" onclick="openAddWallet()">افزودن کیف پول</button>
+      </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="page-profile" class="hidden">
+      <!-- User Card -->
+      <div style="background:linear-gradient(135deg, var(--primary), #0d8bd9);border-radius:24px;margin:16px;padding:24px;color:white;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent 50%);"></div>
+        <div style="position:relative;z-index:1;display:flex;gap:16px;align-items:center;">
+          <div id="profile-avatar" style="width:72px;height:72px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;backdrop-filter:blur(8px);">
+            S
+          </div>
+          <div>
+            <h2 id="profile-name" style="font-size:20px;font-weight:700;">Shelby User</h2>
+            <p id="profile-id" style="font-size:13px;opacity:0.9;">ID: ...</p>
+            <p id="profile-username" style="font-size:12px;opacity:0.8;margin-top:4px;">@username</p>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:12px;">
+          <div>
+            <p style="opacity:0.8;">عضو از</p>
+            <p id="profile-joined" style="font-weight:600;">۱۴۰۴</p>
+          </div>
+          <div>
+            <p style="opacity:0.8;">نسخه</p>
+            <p style="font-weight:600;">v3.0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
+        <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+          Settings تنظیمات
+        </h3>
+
+        <!-- Theme -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            Moon تم
+            <p style="color:var(--text-secondary);font-size:13px;">تیره / روشن</p>
+          </div>
+          <button id="profile-theme-toggle" class="btn">Moon</button>
+        </div>
+
+        <!-- Language -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            Globe زبان
+            <p style="color:var(--text-secondary);font-size:13px;">فارسی / English</p>
+          </div>
+          <button id="profile-lang-toggle" class="btn">EN</button>
+        </div>
+
+        <!-- Notifications -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            Bell اعلان‌ها
+            <p style="color:var(--text-secondary);font-size:13px;">هشدار قیمت</p>
+          </div>
+          <label style="position:relative;display:inline-block;width:56px;height:32px;">
+            <input type="checkbox" id="notifications-toggle" style="opacity:0;width:0;height:0;">
+            <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#333;border-radius:34px;transition:.3s;">
+              <span style="position:absolute;content:'';height:26px;width:26px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;"></span>
+            </span>
+          </label>
+        </div>
+
+        <!-- Haptic -->
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            Zap لرزش دکمه‌ها
+            <p style="color:var(--text-secondary);font-size:13px;">بازخورد لمسی</p>
+          </div>
+          <label style="position:relative;display:inline-block;width:56px;height:32px;">
+            <input type="checkbox" id="haptic-toggle" checked style="opacity:0;width:0;height:0;">
+            <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--primary);border-radius:34px;transition:.3s;">
+              <span style="position:absolute;content:'';height:26px;width:26px;left:27px;bottom:3px;background:white;border-radius:50%;transition:.3s;"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
+        <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+          Bar Chart آمار اپ
+        </h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+            <p id="stats-coins" style="font-size:24px;font-weight:700;color:var(--primary);">0</p>
+            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">تعداد ارزها</p>
+          </div>
+          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+            <p id="stats-wallets" style="font-size:24px;font-weight:700;color:var(--success);">0</p>
+            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">کیف پول‌ها</p>
+          </div>
+          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+            <p id="stats-alerts" style="font-size:24px;font-weight:700;color:var(--danger);">0</p>
+            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">هشدار فعال</p>
+          </div>
+          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+            <p id="stats-total" style="font-size:24px;font-weight:700;color:#10B981;">$0</p>
+            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">کل موجودی</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div style="background:linear-gradient(135deg, #1a1a1a, #2a2a2a);border-radius:20px;margin:16px;padding:24px;text-align:center;box-shadow:var(--shadow);">
+        <h3 style="font-weight:600;margin-bottom:12px;">درباره Shelby Bet</h3>
+        <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">
+          بهترین ابزار مدیریت کریپتو در تلگرام<br>
+          با پشتیبانی از ETH، TON، TRON و USDT
+        </p>
+        <div style="display:flex;justify-content:center;gap:12px;margin:20px 0;">
+          <a href="#" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
+            Github
+          </a>
+          <a href="#" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
+            Twitter
+          </a>
+          <button onclick="openTelegram()" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
+            Send
+          </button>
+        </div>
+        <p style="color:var(--text-secondary);font-size:12px;">نسخه 3.0 - ۱۴۰۴</p>
+      </div>
+    </div>
+    <script>
+    // === STATE & CONSTANTS ===
     const CONFIG = {
       COINGECKO_API: 'https://api.coingecko.com/api/v3',
-      ETH_API: 'https://api.etherscan.io/api',
       ETHERSCAN_KEY: '5G4HJDG2TCMMI2V8GQM6GJ636NVEW1HJU1',
-      TON_API: 'https://toncenter.com/api/v2',
-      TRON_API: 'https://api.trongrid.io',
-      UPDATE_INTERVAL: 120000, // 2 دقیقه
-      ALERT_CHECK_INTERVAL: 30000, // 30 ثانیه
-      CHART_DAYS: [7, 30],
-      PRICE_ALERT_THRESHOLD: 0.005, // 0.5%
+      UPDATE_INTERVAL: 120000,
+      ALERT_CHECK_INTERVAL: 30000,
       CURRENCY: 'usd',
-      LOCALE: 'fa-IR',
+      PRICE_ALERT_THRESHOLD: 0.005,
     };
 
-    // === STATE ===
     let state = {
       markets: [],
       wallets: JSON.parse(localStorage.getItem('wallets') || '[]'),
@@ -421,7 +499,7 @@
       profilePhoto: null,
     };
 
-    // === TRANSLATIONS (FA & EN) ===
+    // === TRANSLATIONS ===
     const translations = {
       fa: {
         markets: 'بازارها', wallet: 'کیف پول', profile: 'پروفایل',
@@ -429,14 +507,14 @@
         gainers: 'بیشترین رشد', losers: 'بیشترین افت', volume: 'حجم بالا',
         marketCap: 'ارزش بازار (نزولی)', marketCapAsc: 'ارزش بازار (صعودی)',
         growth24h: 'رشد ۲۴ساعته', loss24h: 'افت ۲۴ساعته', volume24h: 'حجم معاملات',
-        nameAsc: 'نام (الفبا)',
-        noWallet: 'هیچ کیف پولی اضافه نشده', addWallet: 'افزودن کیف پول',
-        export: 'خروجی', import: 'ورودی', balance: 'موجودی', usd: 'دلار',
-        add: 'افزودن', cancel: 'لغو', delete: 'حذف', edit: 'ویرایش',
-        copy: 'کپی شد!', qr: 'نمایش QR', chart: 'نمودار', alert: 'هشدار',
-        theme: 'تم', language: 'زبان', notifications: 'اعلان‌ها', haptic: 'لرزش دکمه‌ها',
-        stats: 'آمار اپ', coins: 'تعداد ارزها', wallets: 'کیف پول‌ها', alerts: 'هشدار فعال',
-        totalBalance: 'کل موجودی', about: 'درباره ما', version: 'نسخه 2.0 - ۱۴۰۴',
+        nameAsc: 'نام (الفبا)', noWallet: 'هیچ کیف پولی اضافه نشده',
+        addWallet: 'افزودن کیف پول', export: 'خروجی', import: 'ورودی',
+        balance: 'موجودی', usd: 'دلار', add: 'افزودن', cancel: 'لغو',
+        delete: 'حذف', edit: 'ویرایش', copy: 'کپی شد!', qr: 'نمایش QR',
+        chart: 'نمودار', alert: 'هشدار', theme: 'تم', language: 'زبان',
+        notifications: 'اعلان‌ها', haptic: 'لرزش دکمه‌ها', stats: 'آمار اپ',
+        coins: 'تعداد ارزها', wallets: 'کیف پول‌ها', alerts: 'هشدار فعال',
+        totalBalance: 'کل موجودی', about: 'درباره ما', version: 'نسخه 3.0 - ۱۴۰۴',
         days7: '۷ روز', days30: '۳۰ روز', priceTarget: 'قیمت هدف (USD)',
         currentPrice: 'قیمت فعلی', alertSet: 'هشدار تنظیم شد',
         alertTriggered: 'هشدار فعال شد', copied: 'کپی شد',
@@ -459,14 +537,14 @@
         gainers: 'Top Gainers', losers: 'Top Losers', volume: 'High Volume',
         marketCap: 'Market Cap (Desc)', marketCapAsc: 'Market Cap (Asc)',
         growth24h: '24h Growth', loss24h: '24h Loss', volume24h: 'Volume',
-        nameAsc: 'Name (A-Z)',
-        noWallet: 'No wallet added', addWallet: 'Add Wallet',
-        export: 'Export', import: 'Import', balance: 'Balance', usd: 'USD',
-        add: 'Add', cancel: 'Cancel', delete: 'Delete', edit: 'Edit',
-        copy: 'Copied!', qr: 'Show QR', chart: 'Chart', alert: 'Alert',
-        theme: 'Theme', language: 'Language', notifications: 'Notifications', haptic: 'Haptic',
-        stats: 'App Stats', coins: 'Coins', wallets: 'Wallets', alerts: 'Active Alerts',
-        totalBalance: 'Total Balance', about: 'About', version: 'v2.0 - 2025',
+        nameAsc: 'Name (A-Z)', noWallet: 'No wallet added',
+        addWallet: 'Add Wallet', export: 'Export', import: 'Import',
+        balance: 'Balance', usd: 'USD', add: 'Add', cancel: 'Cancel',
+        delete: 'Delete', edit: 'Edit', copy: 'Copied!', qr: 'Show QR',
+        chart: 'Chart', alert: 'Alert', theme: 'Theme', language: 'Language',
+        notifications: 'Notifications', haptic: 'Haptic', stats: 'App Stats',
+        coins: 'Coins', wallets: 'Wallets', alerts: 'Active Alerts',
+        totalBalance: 'Total Balance', about: 'About', version: 'v3.0 - 2025',
         days7: '7 Days', days30: '30 Days', priceTarget: 'Target Price (USD)',
         currentPrice: 'Current Price', alertSet: 'Alert set',
         alertTriggered: 'Alert triggered', copied: 'Copied',
@@ -503,51 +581,36 @@
         document.getElementById('profile-id').textContent = `ID: ${user.id}`;
         document.getElementById('profile-username').textContent = 
           user.username ? `@${user.username}` : '—';
-        document.getElementById('profile-initial').textContent = 
+        document.getElementById('profile-avatar').textContent = 
           (user.first_name?.[0] || 'S').toUpperCase();
 
-        // Photo URL
         if (user.photo_url) {
           state.profilePhoto = user.photo_url;
           const avatar = document.getElementById('profile-avatar');
-          avatar.innerHTML = `<img src="${user.photo_url}" class="w-full h-full rounded-full object-cover">`;
+          avatar.innerHTML = `<img src="${user.photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         }
       } else {
-        // If not from Telegram, show name selection modal
         setTimeout(() => {
-          if (!localStorage.getItem('customName')) {
-            openNameSelectionModal();
-          }
+          if (!localStorage.getItem('customName')) openNameSelectionModal();
         }, 500);
       }
 
-      // Set joined date
       const joined = new Date().toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US', { year: 'numeric', month: 'long' });
       document.getElementById('profile-joined').textContent = joined;
     }
 
     function openNameSelectionModal() {
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-          <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-            <i data-lucide="user" class="w-5 h-5 text-primary"></i>
-            ${t('selectName')}
-          </h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">${t('selectNameDesc')}</p>
-          <input type="text" id="custom-name-input" placeholder="نام شما" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary mb-4">
-          <div class="flex gap-2">
-            <button onclick="saveCustomName()" class="flex-1 py-3 bg-primary text-white rounded-xl font-medium haptic shadow-md">
-              ${t('save')}
-            </button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium haptic">
-              ${t('cancel')}
-            </button>
+      openModal(`
+        <div style="text-align:center;">
+          <h3 class="modal-title">User نام خود را وارد کنید</h3>
+          <p style="color:var(--text-secondary);margin-bottom:16px;">${t('selectNameDesc')}</p>
+          <input type="text" id="custom-name-input" placeholder="نام شما" style="width:100%;padding:14px 16px;background:var(--bubble);border:none;border-radius:16px;color:var(--text);margin-bottom:16px;">
+          <div style="display:flex;gap:8px;">
+            <button onclick="saveCustomName()" class="btn-primary" style="flex:1;">${t('save')}</button>
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
           </div>
         </div>
-      `;
-      lucide.createIcons();
+      `);
     }
 
     window.saveCustomName = () => {
@@ -555,7 +618,7 @@
       if (!name) return;
       localStorage.setItem('customName', name);
       document.getElementById('profile-name').textContent = name;
-      document.getElementById('profile-initial').textContent = name[0].toUpperCase();
+      document.getElementById('profile-avatar').textContent = name[0].toUpperCase();
       closeModal();
     };
 
@@ -567,30 +630,20 @@
     };
 
     // === THEME & LANGUAGE ===
-    const themeToggle = document.getElementById('theme-toggle');
-    const profileThemeToggle = document.getElementById('profile-theme-toggle');
-    const langToggle = document.getElementById('lang-toggle');
-    const profileLangToggle = document.getElementById('profile-lang-toggle');
-
     function updateTheme() {
       state.isDark = localStorage.getItem('theme') === 'dark';
-      if (state.isDark) {
-        document.documentElement.classList.add('dark');
-        themeToggle.querySelector('i').setAttribute('data-lucide', 'sun');
-        profileThemeToggle.querySelector('i').setAttribute('data-lucide', 'sun');
-      } else {
-        document.documentElement.classList.remove('dark');
-        themeToggle.querySelector('i').setAttribute('data-lucide', 'moon');
-        profileThemeToggle.querySelector('i').setAttribute('data-lucide', 'moon');
-      }
-      lucide.createIcons();
+      document.documentElement.classList.toggle('dark', state.isDark);
+      const icon = state.isDark ? 'Sun' : 'Moon';
+      document.getElementById('theme-toggle').textContent = icon;
+      document.getElementById('profile-theme-toggle').textContent = icon;
       localStorage.setItem('theme', state.isDark ? 'dark' : 'light');
     }
 
     function updateLanguage() {
       state.lang = localStorage.getItem('lang') || 'fa';
-      langToggle.textContent = state.lang === 'fa' ? 'EN' : 'FA';
-      profileLangToggle.textContent = state.lang === 'fa' ? 'EN' : 'FA';
+      const btnText = state.lang === 'fa' ? 'EN' : 'FA';
+      document.getElementById('lang-toggle').textContent = btnText;
+      document.getElementById('profile-lang-toggle').textContent = btnText;
       document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
       document.documentElement.lang = state.lang;
       updateUIText();
@@ -598,73 +651,58 @@
     }
 
     function updateUIText() {
-      // تب‌ها
       document.querySelector('[data-tab="markets"]').textContent = t('markets');
       document.querySelector('[data-tab="wallet"]').textContent = t('wallet');
       document.querySelector('[data-tab="profile"]').textContent = t('profile');
-
-      // جستجو
-      document.getElementById('search-input').placeholder = t('search');
-
-      // تب‌های بازار
-      document.querySelector('[data-market-tab="all"]').textContent = t('all');
-      document.querySelector('[data-market-tab="favorites"]').textContent = t('favorites');
-      document.querySelector('[data-market-tab="gainers"]').textContent = t('gainers');
-      document.querySelector('[data-market-tab="losers"]').textContent = t('losers');
-
-      // مرتب‌سازی
-      const sortSelect = document.getElementById('sort-select');
-      sortSelect.options[0].text = t('marketCap');
-      sortSelect.options[1].text = t('marketCapAsc');
-      sortSelect.options[2].text = t('growth24h');
-      sortSelect.options[3].text = t('loss24h');
-
-      // کیف پول
-      document.querySelector('#empty-wallet p').textContent = t('noWallet');
-      document.querySelector('#empty-wallet button').textContent = t('addWallet');
-
-      // پروفایل
-      document.querySelector('#profile-theme-toggle').previousElementSibling.querySelector('div p').textContent = t('theme');
-      document.querySelector('#profile-lang-toggle').previousElementSibling.querySelector('div p').textContent = t('language');
-      document.querySelector('#notifications-toggle').previousElementSibling.querySelector('div p').textContent = t('notifications');
-      document.querySelector('#haptic-toggle').previousElementSibling.querySelector('div p').textContent = t('haptic');
-
-      // آمار
-      document.querySelector('#stats-coins').nextElementSibling.textContent = t('coins');
-      document.querySelector('#stats-wallets').nextElementSibling.textContent = t('wallets');
-      document.querySelector('#stats-alerts').nextElementSibling.textContent = t('alerts');
-      document.querySelector('#stats-total').nextElementSibling.textContent = t('totalBalance');
-
-      // درباره ما
-      document.querySelector('#page-profile h3').textContent = t('about');
-      document.querySelector('#page-profile p:last-child').textContent = t('version');
+      document.getElementById('search').placeholder = t('search');
+      document.querySelector('#page-wallet .empty-title').textContent = t('noWallet');
+      document.querySelector('#page-wallet .empty-desc').textContent = 'برای شروع، یک کیف پول جدید اضافه کنید';
+      document.querySelector('#page-wallet .btn-primary').textContent = t('addWallet');
     }
 
-    // Event Listeners
-    themeToggle.onclick = () => {
+    // === TAB NAVIGATION ===
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.onclick = () => {
+        haptic('light');
+        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        const page = document.getElementById(`page-${btn.dataset.tab}`);
+        if (page) page.classList.remove('hidden');
+        state.currentTab = btn.dataset.tab;
+
+        if (state.currentTab === 'markets') loadMarkets();
+        else if (state.currentTab === 'wallet') renderWallets();
+        else if (state.currentTab === 'profile') updateProfileStats();
+      };
+    });
+
+    // Theme & Lang Buttons
+    document.getElementById('theme-toggle').onclick = () => {
       haptic('light');
       state.isDark = !state.isDark;
-      requestAnimationFrame(updateTheme);
+      updateTheme();
     };
 
-    profileThemeToggle.onclick = () => {
+    document.getElementById('profile-theme-toggle').onclick = () => {
       haptic('light');
       state.isDark = !state.isDark;
-      requestAnimationFrame(updateTheme);
+      updateTheme();
     };
 
-    langToggle.onclick = () => {
+    document.getElementById('lang-toggle').onclick = () => {
       haptic('light');
       state.lang = state.lang === 'fa' ? 'en' : 'fa';
-      requestAnimationFrame(updateLanguage);
+      updateLanguage();
     };
 
-    profileLangToggle.onclick = () => {
+    document.getElementById('profile-lang-toggle').onclick = () => {
       haptic('light');
       state.lang = state.lang === 'fa' ? 'en' : 'fa';
-      requestAnimationFrame(updateLanguage);
+      updateLanguage();
     };
 
+    // Toggles
     document.getElementById('notifications-toggle').checked = state.notificationsEnabled;
     document.getElementById('notifications-toggle').onchange = (e) => {
       state.notificationsEnabled = e.target.checked;
@@ -676,47 +714,19 @@
       state.hapticEnabled = e.target.checked;
       localStorage.setItem('haptic', state.hapticEnabled);
     };
-    // === NAVIGATION & TABS ===
-    document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.onclick = () => {
-        haptic('light');
-        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-        document.getElementById(`page-${btn.dataset.tab}`).classList.remove('hidden');
-        state.currentTab = btn.dataset.tab;
-
-        if (state.currentTab === 'markets') {
-          loadMarkets();
-        } else if (state.currentTab === 'wallet') {
-          renderWallets();
-        } else if (state.currentTab === 'profile') {
-          updateProfileStats();
-        }
-      };
-    });
-
-    // === SEARCH & FILTERS ===
-    const searchInput = document.getElementById('search-input');
-    const clearSearch = document.getElementById('clear-search');
-
+// === SEARCH & FILTERS ===
+    const searchInput = document.getElementById('search');
     let searchTimeout;
+
     searchInput.oninput = () => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
+        state.page = 1;
         renderMarkets();
-        clearSearch.classList.toggle('hidden', !searchInput.value.trim());
       }, 300);
     };
 
-    clearSearch.onclick = () => {
-      haptic('light');
-      searchInput.value = '';
-      renderMarkets();
-      clearSearch.classList.add('hidden');
-      searchInput.focus();
-    };
-
+    // === MARKET TABS & SORTING ===
     document.querySelectorAll('[data-market-tab]').forEach(btn => {
       btn.onclick = () => {
         haptic('light');
@@ -733,7 +743,7 @@
       state.currentSort = e.target.value;
       state.page = 1;
       state.hasMore = true;
-      renderMarkets();
+      loadMarkets();
     };
 
     document.getElementById('refresh-markets').onclick = () => {
@@ -743,34 +753,32 @@
       loadMarkets();
     };
 
-    // === MARKETS DATA & RENDERING ===
+    // === MARKETS DATA LOADING ===
     async function loadMarkets() {
       if (state.loading) return;
       state.loading = true;
 
       const list = document.getElementById('markets-list');
-      const skeleton = document.getElementById('skeleton-loading');
+      const skeleton = document.getElementById('skeleton');
       const loadMore = document.getElementById('load-more');
 
       if (state.page === 1) {
         skeleton.classList.remove('hidden');
         list.innerHTML = '';
-        loadMore.classList.add('hidden');
+        loadMore?.classList.add('hidden');
 
-        // Show 12 skeleton items
+        // Show skeleton
         skeleton.innerHTML = Array(12).fill().map(() => `
-          <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm animate-pulse">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                <div class="space-y-2">
-                  <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  <div class="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                </div>
+          <div class="skeleton">
+            <div style="display:flex;gap:12px;align-items:center;">
+              <div style="width:44px;height:44px;background:#333;border-radius:50%;"></div>
+              <div style="flex:1;">
+                <div style="height:16px;background:#333;border-radius:8px;width:60%;margin-bottom:8px;"></div>
+                <div style="height:12px;background:#333;border-radius:8px;width:40%;"></div>
               </div>
-              <div class="text-right space-y-2">
-                <div class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div style="text-align:right;">
+                <div style="height:18px;background:#333;border-radius:8px;width:70px;margin-bottom:8px;"></div>
+                <div style="height:12px;background:#333;border-radius:8px;width:50px;"></div>
               </div>
             </div>
           </div>
@@ -784,44 +792,47 @@
           url += `&ids=${state.favorites.join(',')}`;
         }
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(url, {
-          headers: { 'accept': 'application/json' },
-          signal: AbortController.timeout(10000)
+          signal: controller.signal,
+          headers: { 'accept': 'application/json' }
         });
+
+        clearTimeout(timeout);
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
 
-        // Special sorting
+        // Special sorting for gainers/losers
         if (state.currentMarketTab === 'gainers') {
           data.sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
         } else if (state.currentMarketTab === 'losers') {
           data.sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
         }
 
-        if (state.page === 1) {
-          state.markets = [];
-        }
-
+        if (state.page === 1) state.markets = [];
         state.markets = state.markets.concat(data);
         state.hasMore = data.length === 50;
 
         renderMarkets();
-        loadMore.classList.toggle('hidden', !state.hasMore);
+        if (loadMore) loadMore.classList.toggle('hidden', !state.hasMore);
       } catch (err) {
         console.error('Market load error:', err);
         if (state.page === 1) {
           list.innerHTML = `
-            <div class="text-center py-12">
-              <i data-lucide="wifi-off" class="w-16 h-16 mx-auto text-gray-400 mb-4"></i>
-              <p class="text-red-500 font-medium">${t('error')}</p>
-              <button onclick="loadMarkets()" class="mt-4 px-6 py-2 bg-primary text-white rounded-xl haptic">
+            <div style="text-align:center;padding:60px 20px;">
+              <div style="width:80px;height:80px;background:var(--bubble);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;">
+                Wifi Off
+              </div>
+              <p style="color:#EF4444;font-weight:600;margin-bottom:16px;">${t('error')}</p>
+              <button onclick="loadMarkets()" style="padding:12px 32px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;">
                 ${t('refresh')}
               </button>
             </div>
           `;
-          lucide.createIcons();
         }
       } finally {
         skeleton.classList.add('hidden');
@@ -829,6 +840,7 @@
       }
     }
 
+    // === RENDER MARKETS ===
     function renderMarkets() {
       const list = document.getElementById('markets-list');
       const search = searchInput.value.toLowerCase().trim();
@@ -844,48 +856,45 @@
 
       if (filtered.length === 0 && state.page === 1) {
         list.innerHTML = `
-          <div class="text-center py-12">
-            <i data-lucide="search" class="w-16 h-16 mx-auto text-gray-400 mb-4"></i>
-            <p class="text-gray-500">${t('noResults')}</p>
+          <div style="text-align:center;padding:60px 20px;">
+            <div style="width:80px;height:80px;background:var(--bubble);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;">
+              Search
+            </div>
+            <p style="color:var(--text-secondary);">${t('noResults')}</p>
           </div>
         `;
-        lucide.createIcons();
         return;
       }
 
       const html = filtered.map(coin => {
         const isFav = state.favorites.includes(coin.id);
         const change = coin.price_change_percentage_24h || 0;
-        const priceClass = change > 0 ? 'price-up' : change < 0 ? 'price-down' : 'price-flat';
+        const priceClass = change > 0 ? 'up' : change < 0 ? 'down' : '';
         const changeSign = change > 0 ? '+' : '';
 
         return `
-          <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm haptic transition-all hover:shadow-md" data-coin-id="${coin.id}">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <img src="${coin.image}" alt="${coin.name}" class="w-12 h-12 rounded-full object-contain bg-white p-1 shadow-sm">
+          <div class="market-card" data-coin-id="${coin.id}">
+            <div class="row">
+              <div class="coin">
+                <img src="${coin.image}" alt="${coin.name}">
                 <div>
-                  <div class="font-bold text-lg">${coin.name}</div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400">${coin.symbol.toUpperCase()}</div>
+                  <div class="coin-name">${coin.name}</div>
+                  <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
                 </div>
               </div>
-              <div class="text-right">
-                <div class="font-bold text-lg">$${coin.current_price?.toLocaleString() || '—'}</div>
-                <div class="${priceClass} text-sm font-medium">
+              <div class="price">
+                <div class="price-main">$${coin.current_price?.toLocaleString() || '—'}</div>
+                <div class="price-change ${priceClass}">
                   ${changeSign}${change.toFixed(2)}%
                 </div>
               </div>
             </div>
-            <div class="flex justify-end gap-1 mt-3">
-              <button onclick="toggleFavorite('${coin.id}')" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic">
-                <i data-lucide="${isFav ? 'star' : 'star-off'}" class="w-5 h-5 ${isFav ? 'text-yellow-500 fill-current' : ''}"></i>
+            <div class="actions">
+              <button onclick="toggleFavorite('${coin.id}')" style="color:${isFav ? '#FBBF24' : 'inherit'};">
+                ${isFav ? 'Star Filled' : 'Star'}
               </button>
-              <button onclick="openChart('${coin.id}', '${coin.name}')" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic">
-                <i data-lucide="trending-up" class="w-5 h-5"></i>
-              </button>
-              <button onclick="openPriceAlertModal('${coin.id}', '${coin.name}', ${coin.current_price})" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic">
-                <i data-lucide="bell" class="w-5 h-5"></i>
-              </button>
+              <button onclick="openChart('${coin.id}', '${coin.name}')">Trending Up</button>
+              <button onclick="openPriceAlertModal('${coin.id}', '${coin.name}', ${coin.current_price})">Bell</button>
             </div>
           </div>
         `;
@@ -896,8 +905,6 @@
       } else {
         list.innerHTML += html;
       }
-
-      lucide.createIcons();
     }
 
     window.toggleFavorite = (id) => {
@@ -916,158 +923,104 @@
       }
     };
 
-    document.getElementById('load-more').onclick = () => {
+    document.getElementById('load-more')?.addEventListener('click', () => {
       haptic('medium');
       state.page++;
       loadMarkets();
-    };
+    });
+ // === CHART MODAL ===
+    let priceChart = null;
 
-    // === CHART MODAL ===
-    window.openChart = (id, name) => {
+    window.openChart = async (id, name) => {
       haptic('medium');
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold flex items-center gap-2">
-              <i data-lucide="trending-up" class="w-5 h-5 text-primary"></i>
-              نمودار ${name}
-            </h3>
-            <button onclick="closeModal()" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic">
-              <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+      openModal(`
+        <div style="text-align:center;">
+          <h3 class="modal-title">Trending Up نمودار ${name}</h3>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
+            <button id="chart-7d" class="btn-primary" style="padding:8px 16px;font-size:14px;">${t('days7')}</button>
+            <button id="chart-30d" class="btn-primary" style="padding:8px 16px;font-size:14px;opacity:0.6;">${t('days30')}</button>
           </div>
-          <div class="flex gap-2 mb-4">
-            <button data-chart-days="7" class="chart-days-btn flex-1 py-2 rounded-xl bg-primary text-white text-sm font-medium active">۷ روز</button>
-            <button data-chart-days="30" class="chart-days-btn flex-1 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-sm">۳۰ روز</button>
-          </div>
-          <div class="chart-container">
-            <canvas id="price-chart"></canvas>
-          </div>
-          <div class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-            آخرین به‌روزرسانی: <span id="chart-updated">—</span>
-          </div>
+          <canvas id="price-canvas" style="height:240px;margin:16px 0;"></canvas>
+          <p style="color:var(--text-secondary);font-size:13px;">${t('loading')}...</p>
         </div>
-      `;
-      lucide.createIcons();
-      fetchChartData(id, 7);
+      `);
+
+      const ctx = document.getElementById('price-canvas').getContext('2d');
+      if (priceChart) priceChart.destroy();
+
+      priceChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#1DA1F2', tension: 0.4, fill: false }] },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { display: true, ticks: { color: 'rgba(255,255,255,0.6)' } }
+          }
+        }
+      });
+
+      loadChartData(id, 7);
+
+      document.getElementById('chart-7d').onclick = () => {
+        document.getElementById('chart-7d').style.opacity = '1';
+        document.getElementById('chart-30d').style.opacity = '0.6';
+        loadChartData(id, 7);
+      };
+
+      document.getElementById('chart-30d').onclick = () => {
+        document.getElementById('chart-30d').style.opacity = '1';
+        document.getElementById('chart-7d').style.opacity = '0.6';
+        loadChartData(id, 30);
+      };
     };
 
-    async function fetchChartData(id, days) {
-      const btn7 = document.querySelector('[data-chart-days="7"]');
-      const btn30 = document.querySelector('[data-chart-days="30"]');
-      const updatedEl = document.getElementById('chart-updated');
-      const ctx = document.getElementById('price-chart').getContext('2d');
-
-      btn7.classList.toggle('active', days === 7);
-      btn30.classList.toggle('active', days === 30);
-
+    async function loadChartData(id, days) {
       try {
-        const res = await fetch(`${CONFIG.COINGECKO_API}/coins/${id}/market_chart?vs_currency=usd&days=${days}&precision=2`);
-        if (!res.ok) throw new Error();
+        const res = await fetch(`${CONFIG.COINGECKO_API}/coins/${id}/market_chart?vs_currency=usd&days=${days}`);
         const data = await res.json();
+        const prices = data.prices;
 
-        const labels = data.prices.map(p => {
-          const date = new Date(p[0]);
-          return state.lang === 'fa' 
-            ? date.toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' })
-            : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
-        const prices = data.prices.map(p => p[1]);
+        const labels = prices.map(p => new Date(p[0]).toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US', { month: 'short', day: 'numeric' }));
+        const values = prices.map(p => p[1]);
 
-        updatedEl.textContent = new Date().toLocaleTimeString(state.lang === 'fa' ? 'fa-IR' : 'en-US');
+        priceChart.data.labels = labels;
+        priceChart.data.datasets[0].data = values;
+        priceChart.update();
 
-        if (window.priceChart) window.priceChart.destroy();
-
-        window.priceChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              label: 'قیمت (USD)',
-              data: prices,
-              borderColor: '#1DA1F2',
-              backgroundColor: 'rgba(29, 161, 242, 0.1)',
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.3,
-              fill: true,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                mode: 'index',
-                intersect: false,
-                callbacks: {
-                  label: ctx => `$${ctx.parsed.y.toFixed(2)}`
-                }
-              }
-            },
-            scales: {
-              x: { display: false },
-              y: { display: true, ticks: { callback: v => `$${v}` } }
-            },
-            interaction: { mode: 'nearest', axis: 'x', intersect: false }
-          }
-        });
+        document.querySelector('#modal-body p').textContent = '';
       } catch (err) {
-        console.error('Chart error:', err);
-        document.querySelector('.chart-container').innerHTML = `
-          <div class="text-center py-8">
-            <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500 mb-2"></i>
-            <p class="text-sm text-red-500">${t('error')}</p>
-          </div>
-        `;
-        lucide.createIcons();
+        document.querySelector('#modal-body p').textContent = t('error');
       }
-
-      document.querySelectorAll('[data-chart-days]').forEach(btn => {
-        btn.onclick = () => {
-          haptic('light');
-          fetchChartData(id, parseInt(btn.dataset.chartDays));
-        };
-      });
     }
+
     // === PRICE ALERT MODAL ===
     window.openPriceAlertModal = (id, name, currentPrice) => {
       haptic('medium');
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-          <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-            <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
-            ${t('alert')} برای ${name}
-          </h3>
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
-            <p class="text-sm text-gray-600 dark:text-gray-400">${t('currentPrice')}: <span class="font-bold">$${currentPrice?.toLocaleString() || '—'}</span></p>
+      openModal(`
+        <div>
+          <h3 class="modal-title">Bell ${t('alert')} برای ${name}</h3>
+          <div style="background:var(--bubble);border-radius:16px;padding:16px;margin-bottom:16px;">
+            <p style="font-size:14px;color:var(--text-secondary);">${t('currentPrice')}: <span style="font-weight:700;color:var(--text);">$${currentPrice?.toLocaleString() || '—'}</span></p>
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2">${t('priceTarget')}</label>
-            <input type="number" id="alert-price" placeholder="مثلاً ۶۵۰۰۰" step="0.01" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('priceTarget')}</label>
+            <input type="number" id="alert-price" placeholder="مثلاً ۶۵۰۰۰" step="0.01" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
           </div>
-          <div class="flex gap-2">
-            <button onclick="setPriceAlert('${id}', '${name}')" class="flex-1 py-3 bg-primary text-white rounded-xl font-medium haptic shadow-md">
-              ${t('add')}
-            </button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium haptic">
-              ${t('cancel')}
-            </button>
+          <div style="display:flex;gap:8px;">
+            <button onclick="setPriceAlert('${id}', '${name}')" class="btn-primary" style="flex:1;">${t('add')}</button>
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
           </div>
         </div>
-      `;
+      `);
     };
 
     window.setPriceAlert = (id, name) => {
       const input = document.getElementById('alert-price');
       const price = parseFloat(input.value);
       if (!price || price <= 0) {
-        input.classList.add('border-red-500');
+        input.style.borderColor = '#EF4444';
         return;
       }
       const alert = {
@@ -1081,7 +1034,7 @@
       state.alerts.push(alert);
       localStorage.setItem('alerts', JSON.stringify(state.alerts));
       closeModal();
-      showToast(t('alert'), `${name} در $${price.toLocaleString()} ${t('alertSet')}`);
+      showToast(`${t('alert')}`, `${name} در $${price.toLocaleString()} ${t('alertSet')}`);
       updateProfileStats();
     };
 
@@ -1106,44 +1059,35 @@
     }
 
     // === WALLET MANAGEMENT ===
-    window.openAddWalletModal = () => {
+    window.openAddWallet = () => {
       haptic('medium');
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-          <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
-            <i data-lucide="plus-circle" class="w-5 h-5 text-primary"></i>
-            ${t('addWallet')}
-          </h3>
-          <div class="space-y-4">
+      openModal(`
+        <div>
+          <h3 class="modal-title">Plus Circle ${t('addWallet')}</h3>
+          <div style="space-y:16px;">
             <div>
-              <label class="block text-sm font-medium mb-2">${t('name')}</label>
-              <input type="text" id="wallet-name" placeholder="مثلاً: کیف اصلی" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('name')}</label>
+              <input type="text" id="wallet-name" placeholder="مثلاً: کیف اصلی" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">${t('network')}</label>
-              <select id="wallet-network" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('network')}</label>
+              <select id="wallet-network" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
                 <option value="eth">${t('eth')}</option>
                 <option value="ton">${t('ton')}</option>
                 <option value="tron">${t('tron')} (${t('usdt')})</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">${t('address')}</label>
-              <input type="text" id="wallet-address" placeholder="0x..." class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('address')}</label>
+              <input type="text" id="wallet-address" placeholder="0x..." style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
             </div>
           </div>
-          <div class="flex gap-2 mt-6">
-            <button onclick="addWallet()" class="flex-1 py-3 bg-primary text-white rounded-xl font-medium haptic shadow-md">
-              ${t('add')}
-            </button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium haptic">
-              ${t('cancel')}
-            </button>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button onclick="addWallet()" class="btn-primary" style="flex:1;">${t('add')}</button>
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
           </div>
         </div>
-      `;
+      `);
     };
 
     window.addWallet = () => {
@@ -1152,7 +1096,7 @@
       const address = document.getElementById('wallet-address').value.trim();
 
       if (!address) {
-        document.getElementById('wallet-address').classList.add('border-red-500');
+        document.getElementById('wallet-address').style.borderColor = '#EF4444';
         return;
       }
 
@@ -1173,34 +1117,25 @@
     window.editWallet = (i) => {
       haptic('medium');
       const w = state.wallets[i];
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-          <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
-            <i data-lucide="edit" class="w-5 h-5 text-primary"></i>
-            ${t('editWallet')}
-          </h3>
-          <div class="space-y-4">
+      openModal(`
+        <div>
+          <h3 class="modal-title">Edit ${t('editWallet')}</h3>
+          <div style="space-y:16px;">
             <div>
-              <label class="block text-sm font-medium mb-2">${t('name')}</label>
-              <input type="text" id="edit-name" value="${w.name}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('name')}</label>
+              <input type="text" id="edit-name" value="${w.name}" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">${t('address')}</label>
-              <input type="text" id="edit-address" value="${w.address}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('address')}</label>
+              <input type="text" id="edit-address" value="${w.address}" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
             </div>
           </div>
-          <div class="flex gap-2 mt-6">
-            <button onclick="saveEditedWallet(${i})" class="flex-1 py-3 bg-primary text-white rounded-xl font-medium haptic shadow-md">
-              ${t('save')}
-            </button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium haptic">
-              ${t('cancel')}
-            </button>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button onclick="saveEditedWallet(${i})" class="btn-primary" style="flex:1;">${t('save')}</button>
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
           </div>
         </div>
-      `;
+      `);
     };
 
     window.saveEditedWallet = (i) => {
@@ -1218,30 +1153,24 @@
       closeModal();
       renderWallets();
     };
-
-    window.removeWallet = (i) => {
+ window.removeWallet = (i) => {
       haptic('heavy');
       const w = state.wallets[i];
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-center">
-          <i data-lucide="alert-triangle" class="w-16 h-16 mx-auto text-red-500 mb-4"></i>
-          <h3 class="text-lg font-bold mb-3">${t('deleteConfirm')}</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+      openModal(`
+        <div style="text-align:center;">
+          <div style="width:80px;height:80px;background:#EF4444;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;color:white;">
+            Trash
+          </div>
+          <h3 class="modal-title">${t('deleteConfirm')}</h3>
+          <p style="color:var(--text-secondary);margin-bottom:24px;">
             ${w.name} حذف شود؟
           </p>
-          <div class="flex gap-2">
-            <button onclick="confirmRemoveWallet(${i})" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium haptic">
-              ${t('yes')}
-            </button>
-            <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium haptic">
-              ${t('no')}
-            </button>
+          <div style="display:flex;gap:8px;">
+            <button onclick="confirmRemoveWallet(${i})" class="btn-primary" style="flex:1;background:#EF4444;">${t('yes')}</button>
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('no')}</button>
           </div>
         </div>
-      `;
-      lucide.createIcons();
+      `);
     };
 
     window.confirmRemoveWallet = (i) => {
@@ -1259,9 +1188,17 @@
       return false;
     }
 
+    // === RENDER WALLETS ===
     function renderWallets() {
-      const list = document.getElementById('wallet-list');
-      const empty = document.getElementById('empty-wallet');
+      const container = document.getElementById('page-wallet');
+      const empty = container.querySelector('.empty');
+      let list = container.querySelector('#wallet-list');
+
+      if (!list) {
+        list = document.createElement('div');
+        list.id = 'wallet-list';
+        container.insertBefore(list, empty);
+      }
 
       if (state.wallets.length === 0) {
         empty.classList.remove('hidden');
@@ -1271,41 +1208,41 @@
 
       empty.classList.add('hidden');
       list.innerHTML = state.wallets.map((w, i) => `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg haptic" data-wallet-index="${i}">
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-1">
-                <h4 class="font-bold text-lg">${w.name}</h4>
-                <span class="badge badge-${w.network}">${getNetworkLabel(w.network)}</span>
+        <div class="market-card" style="position:relative;" data-wallet-index="${i}">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <h4 style="font-weight:700;font-size:16px;">${w.name}</h4>
+                <span style="background:var(--bubble);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;">
+                  ${getNetworkLabel(w.network)}
+                </span>
               </div>
-              <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <span class="truncate max-w-48">${w.address}</span>
-                <button class="copy-btn" onclick="copyToClipboard('${w.address}')">
-                  <i data-lucide="copy" class="w-4 h-4"></i>
+              <div style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:13px;">
+                <span class="truncate" style="max-width:180px;">${w.address}</span>
+                <button onclick="copyToClipboard('${w.address}')" style="background:none;border:none;color:var(--primary);">
+                  Copy
                 </button>
               </div>
             </div>
-            <div class="flex gap-1">
-              <button onclick="editWallet(${i})" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 haptic">
-                <i data-lucide="edit" class="w-4 h-4"></i>
+            <div style="display:flex;gap:4px;">
+              <button onclick="editWallet(${i})" style="width:36px;height:36px;background:var(--bubble);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                Edit
               </button>
-              <button onclick="removeWallet(${i})" class="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 haptic">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <button onclick="removeWallet(${i})" style="width:36px;height:36px;background:#EF4444;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                Trash
               </button>
             </div>
           </div>
-          <div id="balance-${i}" class="flex items-center justify-between">
-            <span class="text-sm text-gray-500">${t('balanceLoading')}</span>
-            <div class="loading-spinner"></div>
+          <div id="balance-${i}" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="color:var(--text-secondary);font-size:13px;">${t('balanceLoading')}</span>
+            <div style="width:16px;height:16px;border:2px solid #333;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
           </div>
-          <button onclick="showQR('${w.address}', '${w.name}')" class="mt-3 w-full py-2 bg-primary text-white rounded-xl text-sm font-medium haptic flex items-center justify-center gap-2">
-            <i data-lucide="qr-code" class="w-4 h-4"></i>
-            ${t('qr')}
+          <button onclick="showQR('${w.address}', '${w.name}')" style="margin-top:12px;width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;">
+            Qr Code نمایش QR
           </button>
         </div>
       `).join('');
 
-      lucide.createIcons();
       state.wallets.forEach((w, i) => fetchWalletBalance(w, i));
       calculateTotalBalance();
     }
@@ -1314,6 +1251,7 @@
       return { eth: 'ETH', ton: 'TON', tron: 'USDT' }[network] || network.toUpperCase();
     }
 
+    // === BALANCE FETCH ===
     async function fetchWalletBalance(wallet, index) {
       const el = document.getElementById(`balance-${index}`);
       if (!el) return;
@@ -1347,13 +1285,13 @@
 
         el.innerHTML = `
           <div>
-            <p class="font-bold">${balance.toFixed(4)} ${symbol}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">≈ $${usd.toFixed(2)}</p>
+            <p style="font-weight:700;font-size:16px;">${balance.toFixed(4)} ${symbol}</p>
+            <p style="color:var(--text-secondary);font-size:13px;">≈ $${usd.toFixed(2)}</p>
           </div>
         `;
         calculateTotalBalance();
       } catch (e) {
-        el.innerHTML = `<span class="text-red-500 text-sm">${t('balanceError')}</span>`;
+        el.innerHTML = `<span style="color:#EF4444;font-size:13px;">${t('balanceError')}</span>`;
       }
     }
 
@@ -1371,28 +1309,23 @@
     // === QR CODE MODAL ===
     window.showQR = (address, title) => {
       haptic('medium');
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-center">
-          <h3 class="text-lg font-bold mb-4 flex items-center justify-center gap-2">
-            <i data-lucide="qr-code" class="w-5 h-5 text-primary"></i>
-            QR کد ${title}
-          </h3>
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 mb-4">
-            <div id="qrcode" class="mx-auto"></div>
+      openModal(`
+        <div style="text-align:center;">
+          <h3 class="modal-title">Qr Code QR کد ${title}</h3>
+          <div style="background:var(--bubble);border-radius:20px;padding:24px;margin:16px 0;">
+            <div id="qrcode" style="width:200px;height:200px;margin:0 auto;"></div>
           </div>
-          <div class="flex items-center justify-center gap-2 mb-4">
-            <p class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-64">${address}</p>
-            <button class="p-1 haptic" onclick="copyToClipboard('${address}')">
-              <i data-lucide="copy" class="w-4 h-4 text-primary"></i>
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
+            <p style="color:var(--text-secondary);font-size:13px;max-width:200px;word-break:break-all;">${address}</p>
+            <button onclick="copyToClipboard('${address}')" style="background:none;border:none;color:var(--primary);">
+              Copy
             </button>
           </div>
-          <button onclick="closeModal()" class="w-full py-3 bg-primary text-white rounded-xl font-medium haptic shadow-md">
+          <button onclick="closeModal()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;">
             بستن
           </button>
         </div>
-      `;
+      `);
 
       document.getElementById('qrcode').innerHTML = '';
       new QRCode(document.getElementById('qrcode'), {
@@ -1482,31 +1415,23 @@
       };
       input.click();
     };
-    // === MODAL & TOAST CONTROL ===
-    window.closeModal = () => {
-      haptic('light');
-      const modal = document.getElementById('modal');
-      modal.classList.add('hidden');
-      modal.innerHTML = '';
-      if (window.priceChart) {
-        window.priceChart.destroy();
-        window.priceChart = null;
-      }
-    };
+    // === AUTO UPDATE & ALERT CHECK ===
+    let updateInterval, alertInterval;
 
-    function showToast(title, message) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toast-title').textContent = title;
-      document.getElementById('toast-message').textContent = message;
-      toast.classList.remove('hidden');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 3000);
+    function startAutoUpdate() {
+      clearInterval(updateInterval);
+      clearInterval(alertInterval);
+
+      updateInterval = setInterval(() => {
+        if (state.currentTab === 'markets' && state.currentMarketTab !== 'favorites') {
+          state.page = 1;
+          state.hasMore = true;
+          loadMarkets();
+        }
+      }, CONFIG.UPDATE_INTERVAL);
+
+      alertInterval = setInterval(checkPriceAlerts, CONFIG.ALERT_CHECK_INTERVAL);
     }
-
-    window.closeToast = () => {
-      document.getElementById('toast').classList.add('hidden');
-    };
 
     // === PROFILE STATS UPDATE ===
     function updateProfileStats() {
@@ -1519,31 +1444,26 @@
     // === TELEGRAM LINK @ondbest ===
     window.openTelegram = () => {
       haptic('medium');
-      tg.openTelegramLink('tg://msg?text=سلام%20Shelby%20Bet&to=ondbest');
+      tg.openTelegramLink('tg://msg?text=سلام%20Shelby%20Bet%20v3.0&to=ondbest');
+      showToast('در حال باز شدن...', 'چت با @ondbest');
     };
-
-    // === AUTO UPDATE & ALERT CHECK ===
-    let updateInterval, alertInterval;
-
-    function startAutoUpdate() {
-      clearInterval(updateInterval);
-      clearInterval(alertInterval);
-      updateInterval = setInterval(() => {
-        if (state.currentTab === 'markets' && state.currentMarketTab !== 'favorites') {
-          state.page = 1;
-          loadMarkets();
-        }
-      }, CONFIG.UPDATE_INTERVAL);
-
-      alertInterval = setInterval(checkPriceAlerts, CONFIG.ALERT_CHECK_INTERVAL);
-    }
 
     // === PWA SERVICE WORKER ===
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('SW registered', reg))
-          .catch(err => console.log('SW error', err));
+          .then(reg => {
+            console.log('SW registered:', reg);
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showToast('به‌روزرسانی', 'نسخه جدید آماده است!');
+                }
+              });
+            });
+          })
+          .catch(err => console.log('SW error:', err));
       });
     }
 
@@ -1558,112 +1478,606 @@
       showToast(t('error'), 'درخواست ناموفق');
     });
 
-    // === INIT ON LOAD ===
-    window.addEventListener('load', () => {
-      tg.ready();
-      tg.expand();
-
-      initUser();
-      updateTheme();
-      updateLanguage();
-      lucide.createIcons();
-
-      document.querySelector('[data-tab="markets"]').click();
-      loadMarkets();
-      renderWallets();
-      updateProfileStats();
-      startAutoUpdate();
-
-      if (state.wallets.length === 0) {
-        document.getElementById('empty-wallet').classList.remove('hidden');
-      }
-
-      const joined = new Date().toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US', { year: 'numeric', month: 'long' });
-      document.getElementById('profile-joined').textContent = joined;
-
-      // Resize chart
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          if (window.priceChart) window.priceChart.resize();
-        }, 250);
-      });
-
-      // Haptic on all buttons
-      document.querySelectorAll('.haptic').forEach(el => {
-        el.addEventListener('touchstart', () => haptic('light'));
-      });
-
-      // Close modal on backdrop
-      document.getElementById('modal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('modal')) closeModal();
-      });
-
-      console.log('Shelby Bet v2.0 loaded successfully');
-    });
-
-    // === DEBOUNCE & OPTIMIZATION ===
-    let searchTimeout;
-    document.getElementById('search-input').addEventListener('input', () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        state.page = 1;
-        renderMarkets();
-      }, 300);
-    });
-
-    let renderTimeout;
-    const debouncedRender = () => {
-      clearTimeout(renderTimeout);
-      renderTimeout = setTimeout(renderMarkets, 100);
-    };
-
-    // Intersection Observer for load more
-    let observer;
-    function initLoadMoreObserver() {
-      const loadMore = document.getElementById('load-more');
-      if (!loadMore) return;
-
-      observer = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && state.hasMore && !state.loading) {
-          state.page++;
-          loadMarkets();
-        }
-      }, { threshold: 0.1 });
-
-      observer.observe(loadMore);
-    }
-
-    setTimeout(initLoadMoreObserver, 1000);
-
-    document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (observer) observer.disconnect();
-        if (state.currentTab === 'markets') {
-          setTimeout(initLoadMoreObserver, 500);
-        }
-      });
-    });
-
-    // Cache busting
-    const originalFetch = window.fetch;
-    window.fetch = function(...args) {
-      const url = args[0];
-      if (typeof url === 'string' && url.includes('coingecko.com')) {
-        args[0] = url + (url.includes('?') ? '&' : '?') + '_=' + Date.now();
-      }
-      return originalFetch.apply(this, args);
-    };
-
-    // Memory management
+    // === MEMORY & PERFORMANCE OPTIMIZATION ===
     setInterval(() => {
       if (state.markets.length > 500) {
         state.markets = state.markets.slice(0, 200);
       }
     }, 60000);
 
+    // === RESIZE CHART ON ORIENTATION CHANGE ===
+    window.addEventListener('resize', () => {
+      if (priceChart) {
+        setTimeout(() => priceChart.resize(), 100);
+      }
+    });
+
+    // === HAPTIC ON ALL BUTTONS ===
+    document.querySelectorAll('.haptic, .btn, button').forEach(el => {
+      el.addEventListener('touchstart', () => haptic('light'));
+    });
+
+    // === CLOSE MODAL ON BACKDROP ===
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modal')) {
+        closeModal();
+      }
+    });
+
+    // === INTERSECTION OBSERVER FOR LOAD MORE ===
+    let loadMoreObserver;
+
+    function initLoadMoreObserver() {
+      const loadMore = document.getElementById('load-more');
+      if (!loadMore || loadMoreObserver) return;
+
+      loadMoreObserver = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && state.hasMore && !state.loading) {
+          haptic('light');
+          state.page++;
+          loadMarkets();
+        }
+      }, { threshold: 0.1 });
+
+      loadMoreObserver.observe(loadMore);
+    }
+
+    // === DEBOUNCE RENDER MARKETS ===
+    let renderTimeout;
+    const debouncedRenderMarkets = () => {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(renderMarkets, 100);
+    };
+
+    // === CACHE BUSTING FOR API CALLS ===
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      let url = args[0];
+      if (typeof url === 'string' && url.includes('coingecko.com')) {
+        const separator = url.includes('?') ? '&' : '?';
+        url = `${url}${separator}_=${Date.now()}`;
+        args[0] = url;
+      }
+      return originalFetch.apply(this, args);
+    };
+
+    // === CHART.JS GLOBAL CONFIG ===
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text') || '#f5f5f5';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+
+    // === QR CODE LIBRARY LOAD (Fallback) ===
+    if (!window.QRCode) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+      script.onload = () => console.log('QRCode loaded');
+      script.onerror = () => console.log('QRCode failed');
+      document.head.appendChild(script);
+    }
+
+    // === TON & TRON API ENDPOINTS ===
+    Object.assign(CONFIG, {
+      TON_API: 'https://toncenter.com/api/v2',
+      TRON_API: 'https://api.trongrid.io'
+    });
+
+    // === INIT ON DOM READY ===
+    document.addEventListener('DOMContentLoaded', () => {
+      tg.ready();
+      tg.expand();
+
+      // Load saved settings
+      updateTheme();
+      updateLanguage();
+
+      // Init user
+      initUser();
+
+      // Start with markets
+      document.querySelector('[data-tab="markets"]').click();
+
+      // Load initial data
+      loadMarkets();
+      renderWallets();
+      updateProfileStats();
+
+      // Start auto updates
+      startAutoUpdate();
+
+      // Init load more
+      setTimeout(initLoadMoreObserver, 1000);
+
+      // Show empty wallet if needed
+      if (state.wallets.length === 0) {
+        document.querySelector('#page-wallet .empty').classList.remove('hidden');
+      }
+
+      // Resize handler
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (priceChart) priceChart.resize();
+        }, 250);
+      });
+
+      console.log('Shelby Bet v3.0 loaded successfully');
+    });
+
+    // === CLEANUP ON UNLOAD ===
+    window.addEventListener('beforeunload', () => {
+      if (priceChart) priceChart.destroy();
+      if (loadMoreObserver) loadMoreObserver.disconnect();
+      clearInterval(updateInterval);
+      clearInterval(alertInterval);
+    });
+    <!-- Market Tabs & Sort -->
+    <div style="margin:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
+      <button data-market-tab="all" class="tab active" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('all')}</button>
+      <button data-market-tab="favorites" class="tab" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('favorites')}</button>
+      <button data-market-tab="gainers" class="tab" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('gainers')}</button>
+      <button data-market-tab="losers" class="tab" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('losers')}</button>
+    </div>
+
+    <div style="margin:0 16px 16px;display:flex;justify-content:space-between;align-items:center;">
+      <select id="sort-select" style="padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);font-size:14px;">
+        <option value="market_cap_desc">${t('marketCap')}</option>
+        <option value="market_cap_asc">${t('marketCapAsc')}</option>
+        <option value="volume_desc">${t('volume24h')}</option>
+        <option value="price_change_percentage_24h_desc">${t('growth24h')}</option>
+        <option value="price_change_percentage_24h_asc">${t('loss24h')}</option>
+        <option value="name">${t('nameAsc')}</option>
+      </select>
+      <button id="refresh-markets" style="padding:10px 14px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;display:flex;align-items:center;gap:8px;">
+        Refresh تازه‌سازی
+      </button>
+    </div>
+
+    <!-- Load More Button -->
+    <div id="load-more" class="hidden" style="text-align:center;padding:16px;">
+      <button style="padding:12px 32px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;font-weight:600;">
+        ${t('loadMore')}
+      </button>
+    </div>
+
+    <!-- Wallet List Container -->
+    <div id="wallet-list" style="margin:16px;"></div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- QRCode.js CDN (Fallback in JS) -->
+    <script>
+      if (!window.QRCode) {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+        s.onload = () => console.log('QRCode loaded');
+        document.head.appendChild(s);
+      }
+    </script>
+
+    <!-- Animation CSS -->
+    <style>
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tab {
+        background: var(--bubble);
+        border-radius: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+      .tab.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(29,161,242,0.4);
+      }
+
+      /* Smooth scroll */
+      html { scroll-behavior: smooth; }
+
+      /* Modal close animation */
+      .modal-content {
+        animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes modalIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      /* Toast animation */
+      .toast {
+        animation: toastIn 0.3s ease;
+      }
+      @keyframes toastIn {
+        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+
+      /* Button press effect */
+      button, .btn {
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      button:active, .btn:active {
+        transform: scale(0.95);
+      }
+
+      /* Input focus */
+      input:focus, select:focus {
+        outline: none;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 2px rgba(29,161,242,0.3);
+      }
+
+      /* Scrollbar (Webkit) */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.2);
+        border-radius: 3px;
+      }
+    </style>
+  </div>
+
+  <!-- Close Modal Helper -->
+  <script>
+    window.closeModal = () => {
+      haptic('light');
+      const modal = document.getElementById('modal');
+      modal.classList.add('hidden');
+      modal.querySelector('#modal-body').innerHTML = '';
+      if (priceChart) {
+        priceChart.destroy();
+        priceChart = null;
+      }
+    };
+
+    // Toast
+    function showToast(title, message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-icon').textContent = title;
+      document.getElementById('toast-msg').textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    window.closeToast = () => {
+      document.getElementById('toast').classList.add('hidden');
+    };
+  </script>
+  <!-- Final Pages Structure -->
+  <div id="page-markets" class="page">
+    <div id="markets-list"></div>
+    <div id="load-more" class="hidden" style="text-align:center;padding:16px;">
+      <button style="padding:12px 32px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;font-weight:600;">
+        ${t('loadMore')}
+      </button>
+    </div>
+  </div>
+
+  <div id="page-wallet" class="page hidden">
+    <div class="empty">
+      <div class="empty-icon">Wallet</div>
+      <p class="empty-title">${t('noWallet')}</p>
+      <p class="empty-desc">برای شروع، یک کیف پول جدید اضافه کنید</p>
+      <button class="btn-primary" onclick="openAddWallet()">${t('addWallet')}</button>
+    </div>
+    <div id="wallet-list"></div>
+  </div>
+
+  <div id="page-profile" class="page hidden">
+    <!-- Profile Card -->
+    <div class="profile-card" style="background:linear-gradient(135deg, var(--primary), #0d8bd9);border-radius:24px;margin:16px;padding:24px;color:white;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent 50%);opacity:0.5;"></div>
+      <div style="position:relative;z-index:1;display:flex;gap:16px;align-items:center;">
+        <div id="profile-avatar" style="width:72px;height:72px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;backdrop-filter:blur(8px);">
+          S
+        </div>
+        <div>
+          <h2 id="profile-name" style="font-size:20px;font-weight:700;">Shelby User</h2>
+          <p id="profile-id" style="font-size:13px;opacity:0.9;">ID: ...</p>
+          <p id="profile-username" style="font-size:12px;opacity:0.8;margin-top:4px;">@username</p>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:12px;">
+        <div>
+          <p style="opacity:0.8;">${t('memberSince')}</p>
+          <p id="profile-joined" style="font-weight:600;">۱۴۰۴</p>
+        </div>
+        <div>
+          <p style="opacity:0.8;">${t('versionLabel')}</p>
+          <p style="font-weight:600;">v3.0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="settings-card" style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
+      <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        Settings تنظیمات
+      </h3>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          Moon تم
+          <p style="color:var(--text-secondary);font-size:13px;">تیره / روشن</p>
+        </div>
+        <button id="profile-theme-toggle" class="btn">Moon</button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          Globe زبان
+          <p style="color:var(--text-secondary);font-size:13px;">فارسی / English</p>
+        </div>
+        <button id="profile-lang-toggle" class="btn">EN</button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          Bell اعلان‌ها
+          <p style="color:var(--text-secondary);font-size:13px;">هشدار قیمت</p>
+        </div>
+        <label style="position:relative;display:inline-block;width:56px;height:32px;">
+          <input type="checkbox" id="notifications-toggle" style="opacity:0;width:0;height:0;">
+          <span class="switch"></span>
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          Zap لرزش دکمه‌ها
+          <p style="color:var(--text-secondary);font-size:13px;">بازخورد لمسی</p>
+        </div>
+        <label style="position:relative;display:inline-block;width:56px;height:32px;">
+          <input type="checkbox" id="haptic-toggle" checked style="opacity:0;width:0;height:0;">
+          <span class="switch active"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="stats-card" style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
+      <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        Bar Chart ${t('stats')}
+      </h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+          <p id="stats-coins" style="font-size:24px;font-weight:700;color:var(--primary);">0</p>
+          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('coins')}</p>
+        </div>
+        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+          <p id="stats-wallets" style="font-size:24px;font-weight:700;color:var(--success);">0</p>
+          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('wallets')}</p>
+        </div>
+        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+          <p id="stats-alerts" style="font-size:24px;font-weight:700;color:var(--danger);">0</p>
+          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('alerts')}</p>
+        </div>
+        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
+          <p id="stats-total" style="font-size:24px;font-weight:700;color:#10B981;">$0</p>
+          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('totalBalance')}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Card -->
+    <div class="about-card" style="background:linear-gradient(135deg, #1a1a1a, #2a2a2a);border-radius:20px;margin:16px;padding:24px;text-align:center;box-shadow:var(--shadow);">
+      <h3 style="font-weight:600;margin-bottom:12px;">درباره Shelby Bet</h3>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">
+        بهترین ابزار مدیریت کریپتو در تلگرام<br>
+        با پشتیبانی از ETH، TON، TRON و USDT
+      </p>
+      <div style="display:flex;justify-content:center;gap:12px;margin:20px 0;">
+        <a href="https://github.com/ehsansaberizadeh2012-cmd/Tg_app" target="_blank" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
+          Github
+        </a>
+        <a href="https://x.com" target="_blank" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
+          Twitter
+        </a>
+        <button onclick="openTelegram()" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
+          Send
+        </button>
+      </div>
+      <p style="color:var(--text-secondary);font-size:12px;">${t('version')} - ۱۴۰۴</p>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">Close</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden toast">
+    <div id="toast-icon" class="toast-icon">Check</div>
+    <div id="toast-msg">موفقیت!</div>
+  </div>
+
+  <!-- Service Worker File (Create Separately) -->
+  <!-- File: sw.js -->
+  <script>
+    // Create sw.js content in memory if not exists
+    if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
+      const swContent = `
+        const CACHE = 'shelby-v3';
+        const ASSETS = [
+          '/', '/index.html',
+          'https://telegram.org/js/telegram-web-app.js',
+          'https://cdn.jsdelivr.net/npm/chart.js',
+          'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
+        ];
+
+        self.addEventListener('install', e => {
+          e.waitUntil(
+            caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+          );
+        });
+
+        self.addEventListener('fetch', e => {
+          if (e.request.url.includes('coingecko.com') || e.request.url.includes('etherscan.io')) {
+            e.respondWith(
+              caches.open(CACHE).then(cache => {
+                return fetch(e.request).then(response => {
+                  cache.put(e.request, response.clone());
+                  return response;
+                }).catch(() => cache.match(e.request))
+              })
+            );
+          } else {
+            e.respondWith(
+              caches.match(e.request).then(response => response || fetch(e.request))
+            );
+          }
+        });
+
+        self.addEventListener('activate', e => {
+          e.waitUntil(
+            caches.keys().then(keys => {
+              return Promise.all(
+                keys.filter(key => key !== CACHE).map(key => caches.delete(key))
+              );
+            })
+          );
+        });
+      `;
+
+      const blob = new Blob([swContent], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(url).catch(() => {});
+    }
+  </script>
+  <!-- Final CSS -->
+  <style>
+    /* Switch Styles */
+    .switch {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #333;
+      border-radius: 34px;
+      transition: .3s;
+    }
+    .switch::before {
+      position: absolute;
+      content: '';
+      height: 26px; width: 26px;
+      left: 3px; bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: .3s;
+    }
+    input:checked + .switch {
+      background: var(--primary);
+    }
+    input:checked + .switch::before {
+      transform: translateX(24px);
+    }
+
+    /* Page Container */
+    .page { display: none; }
+    .page:not(.hidden) { display: block; }
+
+    /* Skeleton Pulse */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* Card Hover */
+    .market-card, .profile-card, .settings-card, .stats-card, .about-card {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .market-card:active, .profile-card:active, .settings-card:active, .stats-card:active, .about-card:active {
+      transform: scale(0.98);
+    }
+
+    /* Input & Select */
+    input, select, textarea {
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    /* Focus Glow */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(29,161,242,0.3);
+      border-color: var(--primary);
+    }
+
+    /* Toast Close */
+    .toast::after {
+      content: 'Close';
+      position: absolute;
+      top: 50%; right: 12px;
+      transform: translateY(-50%);
+      font-size: 18px;
+      opacity: 0.6;
+      cursor: pointer;
+    }
+    .toast:active::after {
+      opacity: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container { padding: 0 12px; }
+      .header { padding: 12px; }
+      .tabs { margin: 12px; }
+      .search { margin: 12px; }
+      .market-card { margin: 8px 12px; }
+    }
+
+    /* RTL Fixes */
+    [dir="rtl"] .switch::before { left: auto; right: 3px; }
+    [dir="rtl"] input:checked + .switch::before { transform: translateX(-24px); }
+  </style>
+
+  <!-- Closing Tags -->
+  </div> <!-- .container -->
+
+  <!-- Final Scripts -->
+  <script>
+    // === FINAL INIT CHECK ===
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+        document.body.style.transition = 'opacity 0.3s ease';
+      }, 100);
+
+      // Force refresh if stuck
+      if (!state.user && !localStorage.getItem('customName')) {
+        setTimeout(() => {
+          if (document.getElementById('profile-name').textContent === 'Shelby User') {
+            openNameSelectionModal();
+          }
+        }, 1000);
+      }
+
+      // Final haptic test
+      haptic('light');
+    });
+
+    // === DEBUG CONSOLE ===
+    console.log('%c Shelby Bet v3.0 ', 'background:#1DA1F2;color:white;padding:8px 16px;border-radius:8px;font-weight:bold;');
+    console.log('%c توسط: @ondbest ', 'color:#10B981;font-weight:bold;');
+    console.log('%c GitHub: https://github.com/ehsansaberizadeh2012-cmd/Tg_app ', 'color:#FBBF24;');
   </script>
 
 </body>
-    </html>
+  </html>
