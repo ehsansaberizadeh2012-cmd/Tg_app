@@ -721,7 +721,7 @@
     // === MARKET DATA ===
     const fetchMarkets = async () => {
       try {
-        const ids = 'bitcoin,ethereum,solana,ripple,binancecoin,cardano,dogecoin,avalanche,shiba-inu,polkadot,chainlink,tron,litecoin,uniswap,bitcoin-cash,cosmos,stellar,vechain,tezos,filecoin,monero,decentraland,the-sandbox,axie-infinity,hedera-hashgraph,algorand,neo,eos,maker,gala';
+        const ids = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,shiba-inu,polkadot,chainlink,tron,litecoin,uniswap,bitcoin-cash,cosmos,stellar,vechain,tezos,filecoin,monero,decentraland,the-sandbox,axie-infinity,hedera,algorand,neo,eos,maker,gala,klaytn,iota,elrond,theta-network,aave,compound,dash,zcash,bitcoin-sv,polygon,okb,near,leo-token,injective,apecoin,arweave,flow,chiliz,conflux-network';
         const vs = CONFIG.CURRENCY;
         const url = `${CONFIG.API.COINGECKO}/coins/markets?vs_currency=${vs}&ids=${ids}&order=market_cap_desc&per_page=${CONFIG.LIMIT}&page=1&sparkline=true&price_change_percentage=1h,24h,7d`;
 
