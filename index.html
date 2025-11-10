@@ -3321,6 +3321,16 @@ performance.mark('shelby-exchange-complete');
   <!-- لود کتابخونه‌ها -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<!-- نمایش خطا روی صفحه -->
+<div id="debug" style="position:fixed;bottom:10px;left:10px;right:10px;background:#111;color:#0f0;padding:10px;font-size:12px;border-radius:8px;max-height:30vh;overflow:auto;z-index:9999;"></div>
 
+<script>
+window.addEventListener("error", function(e){
+  document.getElementById("debug").innerHTML += "⚠️ خطا: " + e.message + "<br>";
+});
+window.addEventListener("unhandledrejection", function(e){
+  document.getElementById("debug").innerHTML += "❌ خطای promise: " + e.reason + "<br>";
+});
+                        </script>
 </body>
             </html>
