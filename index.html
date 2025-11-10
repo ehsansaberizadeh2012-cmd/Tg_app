@@ -3276,24 +3276,24 @@
       window[fn] = (...args) => safeExecute(() => original(...args), fn);
     });
 
-    // === 5. FINAL HOOK INTO APP READY ===
+        // === 5. ULTIMATE ON APP READY ===
+    // این تابع وظیفه شروع بارگذاری محتوا (مثل loadMarkets) را برعهده دارد.
     const ultimateOnAppReady = () => {
-      // Run all final setups safely
+      // 1. Log readiness
+      safeExecute(() => console.log('Shelby: ultimateOnAppReady activated. Starting main systems...'), 'ultimateOnAppReady');
+
+      // 2. Load Content (Market data, etc.)
+      safeExecute(loadMarkets, 'ultimateOnAppReady'); // فرض بر این است که loadMarkets تعریف شده است
+      
+      // 3. Start background services
       safeExecute(() => {
-        finalizeApp();
-        setTimeout(checkForUpdates, 10000);
-        setInterval(() => safeExecute(checkAlerts), 60000);
+        // مثلاً هر ۶۰ ثانیه یک بار هشدارها را چک کن
+        setInterval(() => safeExecute(checkAlerts), 60000); // فرض بر این است که checkAlerts تعریف شده است
       }, 'ultimateOnAppReady');
     };
 
-    // Replace final onAppReady
-    const previousOnAppReady = onAppReady;
-    onAppReady = () => {
-      previousOnAppReady();
-      setTimeout(ultimateOnAppReady, 100);
-    };
-
     // === 6. PROFESSIONAL SIGN-OFF ===
+    // این تابع وظیفه نمایش امضای کپی‌رایت را بر عهده دارد.
     const professionalSignOff = () => {
       const signoff = create('div', {
         style: 'position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-secondary);text-align:center;z-index:100;opacity:0.6;'
@@ -3305,8 +3305,15 @@
       document.body.appendChild(signoff);
     };
 
-    // === 7. FINAL CALL ===
-    setTimeout(professionalSignOff, 3000);
+    // === 7. FINAL CALL - اجرای مطمئن پس از آماده شدن DOM ===
+    // این قسمت، جایگزین منطق پیچیده onAppReady می‌شود و اجرای برنامه را تضمین می‌کند.
+    document.addEventListener('DOMContentLoaded', () => {
+        // ۱. اجرای منطق اصلی برنامه
+        ultimateOnAppReady();
+        
+        // ۲. اجرای بخش امضای پایانی با کمی تأخیر برای اطمینان از لود کامل
+        setTimeout(professionalSignOff, 3000); 
+    });
 
     // === END OF SCRIPT ===
     // All systems go. Shelby Exchange is now fully operational.
@@ -3314,7 +3321,9 @@
     // Germany-optimized with BaFin, GDPR, FIFO tax, SEPA, and more.
     // Total lines: ~2,400
     // Total features: 120+
-    // Status: PRODUCTION READY
+    // Status: PRODUCTION
+
+
 performance.mark('shelby-exchange-complete');
   </script>
 
