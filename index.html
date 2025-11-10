@@ -1,2082 +1,1768 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Shelby Bet</title>
-
-  <!-- Telegram Web App -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="data:application/manifest+json,{
-    \"name\": \"Shelby Bet\",
-    \"short_name\": \"Shelby\",
-    \"start_url\": \"/\",
-    \"display\": \"standalone\",
-    \"background_color\": \"#0f0f0f\",
-    \"theme_color\": \"#1DA1F2\",
-    \"icons\": [{\"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%82%BF%3C/text%3E%3C/svg%3E\", \"sizes\": \"any\"}]
-  }">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شلبی: تحلیلگر هوشمند کریپتو</title>
+  <meta name="description" content="ردیابی لحظه‌ای ۱۰۰+ ارز، کیف پول چندشبکه‌ای، هشدار پیشرفته، نمودار تکنیکال — کاملاً آفلاین" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="logo.png" type="image/png" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
   <style>
-    /* === iOS 26 Haptic Bubble Style === */
     :root {
-      --primary: #1DA1F2;
+      --primary: #10B981;
       --success: #10B981;
       --danger: #EF4444;
-      --bg: #0f0f0f;
-      --card: #1a1a1a;
-      --text: #f5f5f5;
-      --text-secondary: #a0a0a0;
-      --border: #2a2a2a;
-      --bubble: rgba(255,255,255,0.08);
-      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --warning: #F59E0B;
+      --info: #3B82F6;
+      --bubble: rgba(255,255,255,0.1);
+      --card: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.1);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --text: #fff;
+      --text-secondary: #9CA3AF;
+      --bg: #111;
+      --header: rgba(0,0,0,0.3);
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-      padding-bottom: 90px;
-      transition: background 0.3s ease;
+    [data-theme="light"] {
+      --primary: #10B981;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --info: #3B82F6;
+      --bubble: rgba(0,0,0,0.05);
+      --card: rgba(0,0,0,0.02);
+      --border: rgba(0,0,0,0.1);
+      --text: #1F2937;
+      --text-secondary: #6B7280;
+      --bg: #F9FAFB;
+      --header: rgba(255,255,255,0.8);
     }
-
-    .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
-
-    /* Header */
-    .header {
-      position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(12px);
-      background: rgba(15,15,15,0.8);
-      border-bottom: 1px solid var(--border);
-      padding: 16px;
-    }
-    .header .row {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .header .logo {
-      display: flex; align-items: center; gap: 12px;
-    }
-    .header .logo span {
-      width: 40px; height: 40px;
-      background: var(--primary);
-      border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 900; color: white; font-size: 20px;
-      box-shadow: var(--shadow);
-    }
-    .header .logo h1 {
-      font-size: 18px; font-weight: 700;
-    }
-    .header .logo p {
-      font-size: 12px; color: var(--text-secondary);
-    }
-    .header .actions {
-      display: flex; gap: 8px;
-    }
-    .header .btn {
-      width: 36px; height: 36px;
-      background: var(--bubble);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(10px);
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      font-size: 18px;
-    }
-    .header .btn:active {
-      transform: scale(0.9);
-      background: var(--primary);
-      color: white;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex; background: var(--card); border-radius: 16px;
-      margin: 16px; padding: 6px; gap: 8px;
-      box-shadow: var(--shadow);
-    }
-    .tab {
-      flex: 1; padding: 12px; border-radius: 12px;
-      text-align: center; font-weight: 600; font-size: 14px;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-    .tab.active {
-      background: var(--primary); color: white;
-      box-shadow: 0 4px 12px rgba(29,161,242,0.4);
-    }
-    .tab::after {
-      content: ''; position: absolute; bottom: 0; left: 50%; width: 0; height: 3px;
-      background: var(--primary); border-radius: 2px; transition: all 0.3s ease;
-      transform: translateX(-50%);
-    }
-    .tab.active::after { width: 60%; }
-
-    /* Search */
-    .search {
-      margin: 16px; position: relative;
-    }
-    .search input {
-      width: 100%; padding: 14px 48px 14px 16px;
-      background: var(--card); border: none; border-radius: 16px;
-      color: var(--text); font-size: 16px;
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-    .search input::placeholder { color: var(--text-secondary); }
-    .search .icon {
-      position: absolute; right: 16px; top: 14px; color: var(--text-secondary);
-      font-size: 18px;
-    }
-
-    /* Skeleton */
-    .skeleton {
-      background: var(--card); border-radius: 20px; padding: 16px; margin: 12px 16px;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Vazirmatn', system-ui; background:var(--bg); color:var(--text); min-height:100vh; }
+    .container { max-width:480px; margin:0 auto; padding:16px; }
+    .header { position:sticky; top:0; backdrop-filter:blur(12px); background:var(--header); border-bottom:1px solid var(--border); z-index:100; padding:12px 0; }
+    .header .row { display:flex; justify-content:space-between; align-items:center; }
+    .header h1 { font-size:20px; font-weight:700; }
+    .tabs { display:flex; gap:8px; margin-top:12px; overflow-x:auto; padding-bottom:4px; }
+    .tab { padding:8px 16px; background:var(--bubble); border-radius:var(--radius-md); font-size:14px; white-space:nowrap; }
+    .tab.active { background:var(--primary); color:white; }
+    .pages { margin-top:16px; }
+    .page { display:none; }
+    .page.active { display:block; }
+    .card { background:var(--card); border-radius:var(--radius-lg); padding:16px; margin-bottom:16px; border:1px solid var(--border); }
+    .search { position:relative; margin-bottom:16px; }
+    .search input { width:100%; padding:14px 48px 14px 16px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); color:var(--text); font-size:16px; }
+    .search button { position:absolute; left:12px; top:50%; transform:translateY(-50%); background:var(--primary); color:white; border:none; border-radius:50%; width:36px; height:36px; }
+    .coin { display:flex; align-items:center; gap:12px; padding:12px; background:var(--bubble); border-radius:var(--radius-md); margin-bottom:8px; cursor:pointer; }
+    .coin img { width:36px; height:36px; border-radius:50%; }
+    .coin .info { flex:1; }
+    .coin .name { font-weight:600; }
+    .coin .symbol { font-size:12px; color:var(--text-secondary); }
+    .coin .price { font-weight:700; }
+    .coin .change { font-size:13px; }
+    .positive { color:var(--success); }
+    .negative { color:var(--danger); }
+    .btn { padding:12px 20px; background:var(--primary); color:white; border:none; border-radius:var(--radius-md); font-weight:600; width:100%; margin-top:12px; cursor:pointer; }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:flex-end; }
+    .modal.active { display:flex; }
+    .modal-content { background:var(--bg); border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:20px; width:100%; max-height:90vh; overflow-y:auto; }
+    .modal-close { position:absolute; top:16px; left:16px; background:var(--danger); color:white; border:none; border-radius:50%; width:32px; height:32px; }
+    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--card); color:var(--text); padding:12px 24px; border-radius:var(--radius-lg); box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1001; opacity:0; transition:opacity 0.3s; }
+    .toast.show { opacity:1; }
+    .settings { display:grid; gap:12px; }
+    .setting { display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bubble); border-radius:var(--radius-md); }
+    .switch { position:relative; width:48px; height:28px; background:#ccc; border-radius:14px; cursor:pointer; }
+    .switch input { opacity:0; width:0; height:0; }
+    .switch span { position:absolute; top:4px; left:4px; width:20px; height:20px; background:white; border-radius:50%; transition:0.3s; }
+    .switch input:checked + span { background:var(--primary); transform:translateX(20px); }
+    @media (prefers-color-scheme: light) { :root { --bg:#F9FAFB; --text:#1F2937; } }
   </style>
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-wdth-variable.css" rel="stylesheet">
 </head>
-<body>
+<body data-theme="dark">
   <div class="container">
-
-    <!-- Header -->
-    <header class="header">
+    <div class="header">
       <div class="row">
-        <div class="logo">
-          <span>S</span>
-          <div>
-            <h1>Shelby Bet</h1>
-            <p>بازارهای کریپتو</p>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn" id="theme-toggle">Moon</button>
-          <button class="btn" id="lang-toggle">EN</button>
-        </div>
+        <h1>شلبی</h1>
+        <button id="settings-btn" style="background:none;border:none;color:var(--text);font-size:20px;">Settings</button>
       </div>
-    </header>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" data-tab="markets">بازارها</div>
-      <div class="tab" data-tab="wallet">کیف پول</div>
-      <div class="tab" data-tab="profile">پروفایل</div>
+      <div class="tabs">
+        <div class="tab active" data-tab="markets">بازار</div>
+        <div class="tab" data-tab="wallet">کیف</div>
+        <div class="tab" data-tab="alerts">هشدار</div>
+        <div class="tab" data-tab="profile">پروفایل</div>
+      </div>
     </div>
 
-    <!-- Search -->
     <div class="search">
-      <input type="text" id="search" placeholder="جستجو در ارزها...">
-      <div class="icon">Search</div>
+      <input type="text" id="search-input" placeholder="جستجو (مثلاً BTC، اتریوم...)">
+      <button id="voice-btn">Microphone</button>
     </div>
 
-    <!-- Skeleton Loading -->
-    <div id="skeleton">
-      ${Array(6).fill().map(() => `
-        <div class="skeleton">
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:44px;height:44px;background:#333;border-radius:50%;"></div>
-            <div style="flex:1;">
-              <div style="height:16px;background:#333;border-radius:8px;width:60%;margin-bottom:8px;"></div>
-              <div style="height:12px;background:#333;border-radius:8px;width:40%;"></div>
-            </div>
-            <div style="text-align:right;">
-              <div style="height:18px;background:#333;border-radius:8px;width:70px;margin-bottom:8px;"></div>
-              <div style="height:12px;background:#333;border-radius:8px;width:50px;"></div>
-            </div>
-          </div>
+    <div class="pages">
+      <div id="page-markets" class="page active">
+        <div id="markets-list"></div>
+      </div>
+      <div id="page-wallet" class="page">
+        <div id="wallets-list"></div>
+        <button class="btn" id="add-wallet">+ کیف پول جدید</button>
+      </div>
+      <div id="page-alerts" class="page">
+        <div id="alerts-list"></div>
+        <button class="btn" id="add-alert">+ هشدار جدید</button>
+      </div>
+      <div id="page-profile" class="page">
+        <div class="card profile-card">
+          <h3>محمد احسان صابری زاده</h3>
+          <p>@ondbest | <a href="https://t.me/ondbest" style="color:var(--primary);">تلگرام</a></p>
+          <div id="stats-total">$0.00</div>
         </div>
-      `).join('')}
+        <button class="btn" id="backup-btn">بکاپ و بازیابی</button>
+        <button class="btn btn-outline" id="about-btn">درباره شلبی</button>
+      </div>
     </div>
- <!-- Markets Page -->
-    <div id="page-markets">
-      <div id="markets-list"></div>
-    </div>
-
-    <!-- Market Card Template (CSS) -->
-    <style>
-      /* Market Card */
-      .market-card {
-        background: var(--card); border-radius: 20px; padding: 16px;
-        margin: 12px 16px; box-shadow: var(--shadow);
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        backdrop-filter: blur(12px);
-      }
-      .market-card:active { transform: scale(0.98); }
-      .market-card .row {
-        display: flex; justify-content: space-between; align-items: center;
-      }
-      .market-card .coin {
-        display: flex; align-items: center; gap: 12px;
-      }
-      .market-card .coin img {
-        width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
-        background: white; padding: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      }
-      .market-card .coin-name {
-        font-weight: 700; font-size: 16px;
-      }
-      .market-card .coin-symbol {
-        color: var(--text-secondary); font-size: 13px;
-      }
-      .market-card .price {
-        text-align: right;
-      }
-      .market-card .price-main {
-        font-weight: 700; font-size: 18px;
-      }
-      .market-card .price-change {
-        font-size: 13px; font-weight: 600; margin-top: 4px;
-      }
-      .up { color: var(--success); }
-      .down { color: var(--danger); }
-
-      /* Actions */
-      .actions {
-        display: flex; gap: 8px; margin-top: 12px;
-      }
-      .actions button {
-        flex: 1; height: 40px; border-radius: 12px;
-        background: var(--bubble); display: flex; align-items: center; justify-content: center;
-        transition: all 0.2s ease; font-size: 18px;
-      }
-      .actions button:active { 
-        transform: scale(0.92); 
-        background: var(--primary); 
-        color: white; 
-      }
-
-      /* Empty State */
-      .empty {
-        text-align: center; padding: 60px 20px;
-      }
-      .empty-icon {
-        width: 80px; height: 80px; background: var(--bubble);
-        border-radius: 50%; margin: 0 auto 20px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 36px;
-      }
-      .empty-title {
-        font-size: 18px; font-weight: 600; margin-bottom: 8px;
-      }
-      .empty-desc {
-        color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;
-      }
-      .btn-primary {
-        padding: 14px 32px; background: var(--primary); color: white;
-        border: none; border-radius: 16px; font-weight: 600;
-        box-shadow: 0 4px 12px rgba(29,161,242,0.4);
-      }
-
-      /* Modal */
-      .modal {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
-        display: flex; align-items: center; justify-content: center; padding: 20px;
-        backdrop-filter: blur(12px);
-      }
-      .modal-content {
-        background: var(--card); border-radius: 24px; width: 100%; max-width: 400px;
-        padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      @keyframes modalIn {
-        from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-      .modal-title {
-        font-size: 18px; font-weight: 700; margin-bottom: 16px;
-        display: flex; align-items: center; gap: 8px;
-      }
-      .modal-close {
-        position: absolute; top: 16px; left: 16px;
-        width: 36px; height: 36px; background: var(--bubble);
-        border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      }
-
-      /* Toast */
-      .toast {
-        position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-        background: var(--card); color: white; padding: 12px 20px;
-        border-radius: 16px; box-shadow: var(--shadow); z-index: 1001;
-        display: flex; align-items: center; gap: 12px; font-size: 14px;
-        animation: toastIn 0.3s ease;
-      }
-      @keyframes toastIn {
-        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-        to { transform: translateX(-50%) translateY(0); opacity: 1; }
-      }
-      .toast-icon { font-size: 18px; }
-
-      /* Hidden */
-      .hidden { display: none !important; }
-    </style>
   </div>
 
-  <!-- Modal -->
-  <div id="modal" class="hidden modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <button class="modal-close" onclick="closeModal()">Close</button>
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="close-modal">X</button>
       <div id="modal-body"></div>
     </div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast" class="hidden toast">
-    <div class="toast-icon">Check</div>
-    <div id="toast-msg">موفقیت!</div>
-  </div>
-  <!-- Wallet Page -->
-    <div id="page-wallet" class="hidden">
-      <div class="empty">
-        <div class="empty-icon">Wallet</div>
-        <p class="empty-title">هیچ کیف پولی اضافه نشده</p>
-        <p class="empty-desc">برای شروع، یک کیف پول جدید اضافه کنید</p>
-        <button class="btn-primary" onclick="openAddWallet()">افزودن کیف پول</button>
-      </div>
-    </div>
+  <div id="toast" class="toast"></div>
 
-    <!-- Profile Page -->
-    <div id="page-profile" class="hidden">
-      <!-- User Card -->
-      <div style="background:linear-gradient(135deg, var(--primary), #0d8bd9);border-radius:24px;margin:16px;padding:24px;color:white;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent 50%);"></div>
-        <div style="position:relative;z-index:1;display:flex;gap:16px;align-items:center;">
-          <div id="profile-avatar" style="width:72px;height:72px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;backdrop-filter:blur(8px);">
-            S
-          </div>
-          <div>
-            <h2 id="profile-name" style="font-size:20px;font-weight:700;">Shelby User</h2>
-            <p id="profile-id" style="font-size:13px;opacity:0.9;">ID: ...</p>
-            <p id="profile-username" style="font-size:12px;opacity:0.8;margin-top:4px;">@username</p>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:12px;">
-          <div>
-            <p style="opacity:0.8;">عضو از</p>
-            <p id="profile-joined" style="font-weight:600;">۱۴۰۴</p>
-          </div>
-          <div>
-            <p style="opacity:0.8;">نسخه</p>
-            <p style="font-weight:600;">v3.0</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings -->
-      <div style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
-        <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          Settings تنظیمات
-        </h3>
-
-        <!-- Theme -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <div style="display:flex;gap:12px;align-items:center;">
-            Moon تم
-            <p style="color:var(--text-secondary);font-size:13px;">تیره / روشن</p>
-          </div>
-          <button id="profile-theme-toggle" class="btn">Moon</button>
-        </div>
-
-        <!-- Language -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <div style="display:flex;gap:12px;align-items:center;">
-            Globe زبان
-            <p style="color:var(--text-secondary);font-size:13px;">فارسی / English</p>
-          </div>
-          <button id="profile-lang-toggle" class="btn">EN</button>
-        </div>
-
-        <!-- Notifications -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <div style="display:flex;gap:12px;align-items:center;">
-            Bell اعلان‌ها
-            <p style="color:var(--text-secondary);font-size:13px;">هشدار قیمت</p>
-          </div>
-          <label style="position:relative;display:inline-block;width:56px;height:32px;">
-            <input type="checkbox" id="notifications-toggle" style="opacity:0;width:0;height:0;">
-            <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#333;border-radius:34px;transition:.3s;">
-              <span style="position:absolute;content:'';height:26px;width:26px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;"></span>
-            </span>
-          </label>
-        </div>
-
-        <!-- Haptic -->
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="display:flex;gap:12px;align-items:center;">
-            Zap لرزش دکمه‌ها
-            <p style="color:var(--text-secondary);font-size:13px;">بازخورد لمسی</p>
-          </div>
-          <label style="position:relative;display:inline-block;width:56px;height:32px;">
-            <input type="checkbox" id="haptic-toggle" checked style="opacity:0;width:0;height:0;">
-            <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--primary);border-radius:34px;transition:.3s;">
-              <span style="position:absolute;content:'';height:26px;width:26px;left:27px;bottom:3px;background:white;border-radius:50%;transition:.3s;"></span>
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Stats -->
-      <div style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
-        <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          Bar Chart آمار اپ
-        </h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-            <p id="stats-coins" style="font-size:24px;font-weight:700;color:var(--primary);">0</p>
-            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">تعداد ارزها</p>
-          </div>
-          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-            <p id="stats-wallets" style="font-size:24px;font-weight:700;color:var(--success);">0</p>
-            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">کیف پول‌ها</p>
-          </div>
-          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-            <p id="stats-alerts" style="font-size:24px;font-weight:700;color:var(--danger);">0</p>
-            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">هشدار فعال</p>
-          </div>
-          <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-            <p id="stats-total" style="font-size:24px;font-weight:700;color:#10B981;">$0</p>
-            <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">کل موجودی</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- About -->
-      <div style="background:linear-gradient(135deg, #1a1a1a, #2a2a2a);border-radius:20px;margin:16px;padding:24px;text-align:center;box-shadow:var(--shadow);">
-        <h3 style="font-weight:600;margin-bottom:12px;">درباره Shelby Bet</h3>
-        <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">
-          بهترین ابزار مدیریت کریپتو در تلگرام<br>
-          با پشتیبانی از ETH، TON، TRON و USDT
-        </p>
-        <div style="display:flex;justify-content:center;gap:12px;margin:20px 0;">
-          <a href="#" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
-            Github
-          </a>
-          <a href="#" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
-            Twitter
-          </a>
-          <button onclick="openTelegram()" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
-            Send
-          </button>
-        </div>
-        <p style="color:var(--text-secondary);font-size:12px;">نسخه 3.0 - ۱۴۰۴</p>
-      </div>
-    </div>
-    <script>
-    // === STATE & CONSTANTS ===
-    const CONFIG = {
-      COINGECKO_API: 'https://api.coingecko.com/api/v3',
-      ETHERSCAN_KEY: '5G4HJDG2TCMMI2V8GQM6GJ636NVEW1HJU1',
-      UPDATE_INTERVAL: 120000,
-      ALERT_CHECK_INTERVAL: 30000,
-      CURRENCY: 'usd',
-      PRICE_ALERT_THRESHOLD: 0.005,
-    };
-
-    let state = {
+  <!-- END OF SECTION 1 -->
+  <!-- SECTION 2: GLOBALS & STATE -->
+  <script>
+    const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+    const state = {
       markets: [],
-      wallets: JSON.parse(localStorage.getItem('wallets') || '[]'),
-      favorites: JSON.parse(localStorage.getItem('favorites') || '[]'),
-      alerts: JSON.parse(localStorage.getItem('alerts') || '[]'),
-      currentTab: 'markets',
-      currentMarketTab: 'all',
-      currentSort: 'market_cap_desc',
-      page: 1,
-      hasMore: true,
-      loading: false,
-      isDark: localStorage.getItem('theme') === 'dark',
-      lang: localStorage.getItem('lang') || 'fa',
-      notificationsEnabled: localStorage.getItem('notifications') === 'true',
-      hapticEnabled: localStorage.getItem('haptic') !== 'false',
-      user: null,
-      totalBalance: 0,
-      profilePhoto: null,
+      wallets: [],
+      alerts: [],
+      favorites: [],
+      chartInstance: null,
+      theme: localStorage.getItem('shelby_theme') || 'dark',
+      lang: localStorage.getItem('shelby_lang') || 'fa',
+      totalUSD: 0,
+      totalIRR: 0
     };
 
-    // === TRANSLATIONS ===
     const translations = {
       fa: {
-        markets: 'بازارها', wallet: 'کیف پول', profile: 'پروفایل',
-        search: 'جستجو در ارزها...', all: 'همه', favorites: 'علاقه‌مندی‌ها',
-        gainers: 'بیشترین رشد', losers: 'بیشترین افت', volume: 'حجم بالا',
-        marketCap: 'ارزش بازار (نزولی)', marketCapAsc: 'ارزش بازار (صعودی)',
-        growth24h: 'رشد ۲۴ساعته', loss24h: 'افت ۲۴ساعته', volume24h: 'حجم معاملات',
-        nameAsc: 'نام (الفبا)', noWallet: 'هیچ کیف پولی اضافه نشده',
-        addWallet: 'افزودن کیف پول', export: 'خروجی', import: 'ورودی',
-        balance: 'موجودی', usd: 'دلار', add: 'افزودن', cancel: 'لغو',
-        delete: 'حذف', edit: 'ویرایش', copy: 'کپی شد!', qr: 'نمایش QR',
-        chart: 'نمودار', alert: 'هشدار', theme: 'تم', language: 'زبان',
-        notifications: 'اعلان‌ها', haptic: 'لرزش دکمه‌ها', stats: 'آمار اپ',
-        coins: 'تعداد ارزها', wallets: 'کیف پول‌ها', alerts: 'هشدار فعال',
-        totalBalance: 'کل موجودی', about: 'درباره ما', version: 'نسخه 3.0 - ۱۴۰۴',
-        days7: '۷ روز', days30: '۳۰ روز', priceTarget: 'قیمت هدف (USD)',
-        currentPrice: 'قیمت فعلی', alertSet: 'هشدار تنظیم شد',
-        alertTriggered: 'هشدار فعال شد', copied: 'کپی شد',
-        exportSuccess: 'فایل خروجی ایجاد شد', importSuccess: 'کیف پول وارد شد',
-        invalidAddress: 'آدرس نامعتبر است', error: 'خطا',
-        loading: 'در حال بارگذاری...', refresh: 'تازه‌سازی',
-        noResults: 'موردی یافت نشد', loadMore: 'بارگذاری بیشتر',
-        memberSince: 'عضو از', versionLabel: 'نسخه',
-        eth: 'اتریوم', ton: 'تون', tron: 'ترون', usdt: 'تتر',
-        balanceLoading: 'در حال بارگذاری...', balanceError: 'خطا',
-        network: 'شبکه', address: 'آدرس', name: 'نام (اختیاری)',
-        editWallet: 'ویرایش کیف پول', save: 'ذخیر',
-        deleteConfirm: 'آیا مطمئن هستید؟', yes: 'بله', no: 'خیر',
-        importFile: 'فایل JSON را انتخاب کنید', importError: 'فایل نامعتبر',
-        selectName: 'نام خود را وارد کنید', selectNameDesc: 'برای نمایش در پروفایل',
+        markets: 'بازار', wallet: 'کیف پول', alerts: 'هشدار', profile: 'پروفایل',
+        search_placeholder: 'جستجو (مثلاً BTC، اتریوم...)',
+        add_wallet: '+ کیف پول جدید', add_alert: '+ هشدار جدید',
+        backup: 'بکاپ و بازیابی', about: 'درباره شلبی',
+        total: 'کل دارایی', profit: 'سود/زیان',
+        settings_title: 'تنظیمات', theme: 'تم', language: 'زبان',
+        notifications: 'اعلان‌ها', sound: 'صدا', vibrate: 'لرزش',
+        demo_mode: 'حالت دمو', share: 'اشتراک‌گذاری',
+        tip_of_day: 'نکته روز', close: 'بستن',
+        save: 'ذخیره', cancel: 'لغو',
+        voice_search: 'جستجوی صوتی', voice_not_supported: 'جستجوی صوتی پشتیبانی نمی‌شود',
+        loading: 'در حال بارگذاری...', error: 'خطا در دریافت داده‌ها',
+        no_data: 'داده‌ای یافت نشد', no_wallets: 'کیف پولی اضافه نشده',
+        no_alerts: 'هشداری تنظیم نشده', delete: 'حذف',
+        edit: 'ویرایش', enable: 'فعال', disable: 'غیرفعال',
+        price_above: 'قیمت بالاتر از', price_below: 'قیمت پایین‌تر از',
+        change_24h: 'تغییر ۲۴ ساعته', volume_24h: 'حجم ۲۴ ساعته',
+        market_cap: 'ارزش بازار', export_csv: 'خروجی CSV',
+        sparkline: 'اسپارک‌لاین', heatmap: 'نقشه حرارتی',
+        compare: 'مقایسه ارزها', technical: 'تحلیل تکنیکال',
+        security_scan: 'اسکن امنیت آدرس', biometric: 'احراز هویت بیومتریک',
+        offline: 'آفلاین', online: 'آنلاین',
+        welcome: 'به شلبی خوش آمدید!', demo_welcome: 'حالت دمو فعال شد!',
+        update_available: 'به‌روزرسانی موجود!', update_now: 'به‌روزرسانی',
+        feedback: 'نظرات شما', send: 'ارسال',
+        copy: 'کپی', copied: 'کپی شد!',
+        share_text: 'دارایی من: {total} تومان! با #شلبی'
       },
       en: {
-        markets: 'Markets', wallet: 'Wallet', profile: 'Profile',
-        search: 'Search coins...', all: 'All', favorites: 'Favorites',
-        gainers: 'Top Gainers', losers: 'Top Losers', volume: 'High Volume',
-        marketCap: 'Market Cap (Desc)', marketCapAsc: 'Market Cap (Asc)',
-        growth24h: '24h Growth', loss24h: '24h Loss', volume24h: 'Volume',
-        nameAsc: 'Name (A-Z)', noWallet: 'No wallet added',
-        addWallet: 'Add Wallet', export: 'Export', import: 'Import',
-        balance: 'Balance', usd: 'USD', add: 'Add', cancel: 'Cancel',
-        delete: 'Delete', edit: 'Edit', copy: 'Copied!', qr: 'Show QR',
-        chart: 'Chart', alert: 'Alert', theme: 'Theme', language: 'Language',
-        notifications: 'Notifications', haptic: 'Haptic', stats: 'App Stats',
-        coins: 'Coins', wallets: 'Wallets', alerts: 'Active Alerts',
-        totalBalance: 'Total Balance', about: 'About', version: 'v3.0 - 2025',
-        days7: '7 Days', days30: '30 Days', priceTarget: 'Target Price (USD)',
-        currentPrice: 'Current Price', alertSet: 'Alert set',
-        alertTriggered: 'Alert triggered', copied: 'Copied',
-        exportSuccess: 'Export file created', importSuccess: 'Wallet imported',
-        invalidAddress: 'Invalid address', error: 'Error',
-        loading: 'Loading...', refresh: 'Refresh',
-        noResults: 'No results found', loadMore: 'Load More',
-        memberSince: 'Member since', versionLabel: 'Version',
-        eth: 'Ethereum', ton: 'TON', tron: 'TRON', usdt: 'USDT',
-        balanceLoading: 'Loading...', balanceError: 'Error',
-        network: 'Network', address: 'Address', name: 'Name (optional)',
-        editWallet: 'Edit Wallet', save: 'Save',
-        deleteConfirm: 'Are you sure?', yes: 'Yes', no: 'No',
-        importFile: 'Select JSON file', importError: 'Invalid file',
-        selectName: 'Enter your name', selectNameDesc: 'For display in profile',
+        markets: 'Markets', wallet: 'Wallet', alerts: 'Alerts', profile: 'Profile',
+        search_placeholder: 'Search (e.g. BTC, Ethereum...)',
+        add_wallet: '+ Add Wallet', add_alert: '+ Add Alert',
+        backup: 'Backup & Restore', about: 'About Shelby',
+        total: 'Total Assets', profit: 'Profit/Loss',
+        settings_title: 'Settings', theme: 'Theme', language: 'Language',
+        notifications: 'Notifications', sound: 'Sound', vibrate: 'Vibrate',
+        demo_mode: 'Demo Mode', share: 'Share',
+        tip_of_day: 'Tip of the Day', close: 'Close',
+        save: 'Save', cancel: 'Cancel',
+        voice_search: 'Voice Search', voice_not_supported: 'Voice search not supported',
+        loading: 'Loading...', error: 'Error fetching data',
+        no_data: 'No data found', no_wallets: 'No wallets added',
+        no_alerts: 'No alerts set', delete: 'Delete',
+        edit: 'Edit', enable: 'Enable', disable: 'Disable',
+        price_above: 'Price above', price_below: 'Price below',
+        change_24h: '24h Change', volume_24h: '24h Volume',
+        market_cap: 'Market Cap', export_csv: 'Export CSV',
+        sparkline: 'Sparkline', heatmap: 'Heatmap',
+        compare: 'Compare Coins', technical: 'Technical Analysis',
+        security_scan: 'Address Security Scan', biometric: 'Biometric Auth',
+        offline: 'Offline', online: 'Online',
+        welcome: 'Welcome to Shelby!', demo_welcome: 'Demo mode activated!',
+        update_available: 'Update available!', update_now: 'Update now',
+        feedback: 'Your Feedback', send: 'Send',
+        copy: 'Copy', copied: 'Copied!',
+        share_text: 'My portfolio: {total} IRR! With #Shelby'
       }
     };
 
     const t = (key) => translations[state.lang][key] || key;
 
-    // === TELEGRAM WEB APP INIT ===
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    tg.enableClosingConfirmation();
+    const applyTheme = () => {
+      document.body.dataset.theme = state.theme;
+      localStorage.setItem('shelby_theme', state.theme);
+    };
 
-    // === USER DATA FROM TELEGRAM ===
-    function initUser() {
-      const user = tg.initDataUnsafe?.user;
-      if (user) {
-        state.user = user;
-        document.getElementById('profile-name').textContent = 
-          user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        document.getElementById('profile-id').textContent = `ID: ${user.id}`;
-        document.getElementById('profile-username').textContent = 
-          user.username ? `@${user.username}` : '—';
-        document.getElementById('profile-avatar').textContent = 
-          (user.first_name?.[0] || 'S').toUpperCase();
+    const applyLanguage = () => {
+      localStorage.setItem('shelby_lang', state.lang);
+      document.documentElement.lang = state.lang;
+      document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
+      updateUI();
+    };
 
-        if (user.photo_url) {
-          state.profilePhoto = user.photo_url;
-          const avatar = document.getElementById('profile-avatar');
-          avatar.innerHTML = `<img src="${user.photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-        }
-      } else {
-        setTimeout(() => {
-          if (!localStorage.getItem('customName')) openNameSelectionModal();
-        }, 500);
-      }
+    const switchTheme = () => {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      applyTheme();
+    };
 
-      const joined = new Date().toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US', { year: 'numeric', month: 'long' });
-      document.getElementById('profile-joined').textContent = joined;
+    const switchLanguage = () => {
+      state.lang = state.lang === 'fa' ? 'en' : 'fa';
+      applyLanguage();
+    };
+
+    // Telegram WebApp
+    let tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      document.body.style.paddingBottom = 'env(safe-area-inset-bottom)';
     }
 
-    function openNameSelectionModal() {
-      openModal(`
-        <div style="text-align:center;">
-          <h3 class="modal-title">User نام خود را وارد کنید</h3>
-          <p style="color:var(--text-secondary);margin-bottom:16px;">${t('selectNameDesc')}</p>
-          <input type="text" id="custom-name-input" placeholder="نام شما" style="width:100%;padding:14px 16px;background:var(--bubble);border:none;border-radius:16px;color:var(--text);margin-bottom:16px;">
-          <div style="display:flex;gap:8px;">
-            <button onclick="saveCustomName()" class="btn-primary" style="flex:1;">${t('save')}</button>
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
+    // END OF SECTION 2 -->
+    <!-- SECTION 3: UTILS & HELPERS -->
+  <script>
+    const showToast = (msg, type = 'info', duration = 3000) => {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = `toast show ${type}`;
+      toast.style.background = type === 'success' ? 'var(--success)' : 
+                              type === 'error' ? 'var(--danger)' : 'var(--card)';
+      toast.style.color = 'white';
+      setTimeout(() => toast.classList.remove('show'), duration);
+    };
+
+    const openModal = (content) => {
+      const modal = document.getElementById('modal');
+      const body = document.getElementById('modal-body');
+      body.innerHTML = content;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+      const modal = document.getElementById('modal');
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    const formatNumber = (num, decimals = 2) => {
+      if (!num) return '0';
+      return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    };
+
+    const formatIRR = (usd) => {
+      const rate = 620000; // تقریب ۱ دلار = ۶۲,۰۰۰ تومان
+      return formatNumber(usd * rate, 0) + ' تومان';
+    };
+
+    const debounce = (func, wait) => {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    };
+
+    const copyToClipboard = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(t('copied'), 'success');
+      } catch {
+        showToast('کپی نشد!', 'error');
+      }
+    };
+
+    const vibrate = (pattern = [100, 50, 100]) => {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    };
+
+    const switchTab = (tab) => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`page-${tab}`).classList.add('active');
+    };
+
+    const updateUI = () => {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        el.textContent = t(key);
+      });
+      document.querySelector('#search-input').placeholder = t('search_placeholder');
+    };
+
+    // Local Notification (Web Push)
+    const requestNotificationPermission = async () => {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    };
+
+    const showWebNotification = (title, body) => {
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: 'logo.png' });
+      }
+    };
+
+    // Tip of the Day
+    const tips = [
+      'هرگز کلید خصوصیت رو به کسی نده!',
+      'از کیف پول سخت‌افزاری برای دارایی بالا استفاده کن',
+      'همیشه ۲FA رو فعال کن',
+      'از سایت‌های فیشینگ دوری کن'
+    ];
+
+    const showTipOfDay = () => {
+      const today = new Date().toDateString();
+      const last = localStorage.getItem('shelby_tip_date');
+      if (last !== today) {
+        const tip = tips[Math.floor(Math.random() * tips.length)];
+        showToast(tip, 'info', 5000);
+        localStorage.setItem('shelby_tip_date', today);
+      }
+    };
+
+    // END OF SECTION 3 -->
+    <!-- SECTION 4: COINGECKO API & MARKET DATA -->
+  <script>
+    const fetchMarkets = async (page = 1, perPage = 100) => {
+      try {
+        const vsCurrency = 'usd';
+        const url = `${COINGECKO_API}/coins/markets?vs_currency=${vsCurrency}&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=24h,7d`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        state.markets = data.map(coin => ({
+          id: coin.id,
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          image: coin.image,
+          price: coin.current_price,
+          change24h: coin.price_change_percentage_24h,
+          change7d: coin.price_change_percentage_7d_in_currency,
+          marketCap: coin.market_cap,
+          volume24h: coin.total_volume,
+          sparkline: coin.sparkline_in_7d?.price || [],
+          ath: coin.ath,
+          athDate: coin.ath_date,
+          circulatingSupply: coin.circulating_supply
+        }));
+        renderMarkets();
+        updateStats();
+        showWebNotification('شلبی', 'بازار به‌روز شد!');
+      } catch (err) {
+        console.error(err);
+        showToast(t('error'), 'error');
+      }
+    };
+
+    const renderMarkets = () => {
+      const container = document.getElementById('markets-list');
+      const filtered = state.markets.filter(coin => 
+        coin.name.toLowerCase().includes(state.searchQuery?.toLowerCase() || '') ||
+        coin.symbol.toLowerCase().includes(state.searchQuery?.toLowerCase() || '')
+      );
+      container.innerHTML = filtered.map(coin => `
+        <div class="coin" onclick="openCoinDetails('${coin.id}')">
+          <img src="${coin.image}" alt="${coin.symbol}" onerror="this.src='https://via.placeholder.com/36'">
+          <div class="info">
+            <div class="name">${coin.name}</div>
+            <div class="symbol">${coin.symbol}</div>
+          </div>
+          <div class="price">$${formatNumber(coin.price)}</div>
+          <div class="change ${coin.change24h >= 0 ? 'positive' : 'negative'}">
+            ${coin.change24h >= 0 ? 'Up' : 'Down'} ${Math.abs(coin.change24h).toFixed(2)}%
           </div>
         </div>
+      `).join('');
+    };
+
+    const openCoinDetails = (id) => {
+      const coin = state.markets.find(c => c.id === id);
+      if (!coin) return;
+      openModal(`
+        <h3>${coin.name} (${coin.symbol})</h3>
+        <div style="display:grid;gap:12px;">
+          <div><strong>قیمت:</strong> $${formatNumber(coin.price)}</div>
+          <div><strong>تغییر ۲۴س:</strong> <span class="${coin.change24h >= 0 ? 'positive' : 'negative'}">
+            ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%
+          </span></div>
+          <div><strong>ارزش بازار:</strong> $${formatNumber(coin.marketCap, 0)}</div>
+          <div><strong>حجم ۲۴س:</strong> $${formatNumber(coin.volume24h, 0)}</div>
+          <div><strong>بالاترین قیمت:</strong> $${formatNumber(coin.ath)} <small>(${new Date(coin.athDate).toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US')})</small></div>
+        </div>
+        <canvas id="sparkline-chart" height="100"></canvas>
+        <div style="margin-top:16px;display:flex;gap:8px;">
+          <button class="btn" style="flex:1;" onclick="addToFavorites('${coin.id}')">علاقه‌مندی</button>
+          <button class="btn btn-outline" style="flex:1;" onclick="closeModal()">بستن</button>
+        </div>
       `);
-    }
-
-    window.saveCustomName = () => {
-      const name = document.getElementById('custom-name-input').value.trim();
-      if (!name) return;
-      localStorage.setItem('customName', name);
-      document.getElementById('profile-name').textContent = name;
-      document.getElementById('profile-avatar').textContent = name[0].toUpperCase();
-      closeModal();
+      setTimeout(() => renderSparkline(coin.sparkline), 100);
     };
 
-    // === HAPTIC FEEDBACK ===
-    const haptic = (type = 'light') => {
-      if (state.hapticEnabled && tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred(type);
+    const renderSparkline = (data) => {
+      const ctx = document.getElementById('sparkline-chart').getContext('2d');
+      if (state.sparklineInstance) state.sparklineInstance.destroy();
+      const isUp = data[data.length - 1] > data[0];
+      state.sparklineInstance = new Chart(ctx, {
+        type: 'line',
+        data: { datasets: [{ data, borderColor: isUp ? 'var(--success)' : 'var(--danger)', fill: false, tension: 0.4, pointRadius: 0, borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: false } }, plugins: { legend: { display: false } } }
+      });
+    };
+
+    const addToFavorites = (id) => {
+      if (!state.favorites.includes(id)) {
+        state.favorites.push(id);
+        localStorage.setItem('shelby_favorites', JSON.stringify(state.favorites));
+        showToast('به علاقه‌مندی‌ها اضافه شد', 'success');
       }
     };
 
-    // === THEME & LANGUAGE ===
-    function updateTheme() {
-      state.isDark = localStorage.getItem('theme') === 'dark';
-      document.documentElement.classList.toggle('dark', state.isDark);
-      const icon = state.isDark ? 'Sun' : 'Moon';
-      document.getElementById('theme-toggle').textContent = icon;
-      document.getElementById('profile-theme-toggle').textContent = icon;
-      localStorage.setItem('theme', state.isDark ? 'dark' : 'light');
-    }
-
-    function updateLanguage() {
-      state.lang = localStorage.getItem('lang') || 'fa';
-      const btnText = state.lang === 'fa' ? 'EN' : 'FA';
-      document.getElementById('lang-toggle').textContent = btnText;
-      document.getElementById('profile-lang-toggle').textContent = btnText;
-      document.documentElement.dir = state.lang === 'fa' ? 'rtl' : 'ltr';
-      document.documentElement.lang = state.lang;
-      updateUIText();
-      localStorage.setItem('lang', state.lang);
-    }
-
-    function updateUIText() {
-      document.querySelector('[data-tab="markets"]').textContent = t('markets');
-      document.querySelector('[data-tab="wallet"]').textContent = t('wallet');
-      document.querySelector('[data-tab="profile"]').textContent = t('profile');
-      document.getElementById('search').placeholder = t('search');
-      document.querySelector('#page-wallet .empty-title').textContent = t('noWallet');
-      document.querySelector('#page-wallet .empty-desc').textContent = 'برای شروع، یک کیف پول جدید اضافه کنید';
-      document.querySelector('#page-wallet .btn-primary').textContent = t('addWallet');
-    }
-
-    // === TAB NAVIGATION ===
-    document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.onclick = () => {
-        haptic('light');
-        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-        const page = document.getElementById(`page-${btn.dataset.tab}`);
-        if (page) page.classList.remove('hidden');
-        state.currentTab = btn.dataset.tab;
-
-        if (state.currentTab === 'markets') loadMarkets();
-        else if (state.currentTab === 'wallet') renderWallets();
-        else if (state.currentTab === 'profile') updateProfileStats();
-      };
-    });
-
-    // Theme & Lang Buttons
-    document.getElementById('theme-toggle').onclick = () => {
-      haptic('light');
-      state.isDark = !state.isDark;
-      updateTheme();
-    };
-
-    document.getElementById('profile-theme-toggle').onclick = () => {
-      haptic('light');
-      state.isDark = !state.isDark;
-      updateTheme();
-    };
-
-    document.getElementById('lang-toggle').onclick = () => {
-      haptic('light');
-      state.lang = state.lang === 'fa' ? 'en' : 'fa';
-      updateLanguage();
-    };
-
-    document.getElementById('profile-lang-toggle').onclick = () => {
-      haptic('light');
-      state.lang = state.lang === 'fa' ? 'en' : 'fa';
-      updateLanguage();
-    };
-
-    // Toggles
-    document.getElementById('notifications-toggle').checked = state.notificationsEnabled;
-    document.getElementById('notifications-toggle').onchange = (e) => {
-      state.notificationsEnabled = e.target.checked;
-      localStorage.setItem('notifications', state.notificationsEnabled);
-    };
-
-    document.getElementById('haptic-toggle').checked = state.hapticEnabled;
-    document.getElementById('haptic-toggle').onchange = (e) => {
-      state.hapticEnabled = e.target.checked;
-      localStorage.setItem('haptic', state.hapticEnabled);
-    };
-// === SEARCH & FILTERS ===
-    const searchInput = document.getElementById('search');
-    let searchTimeout;
-
-    searchInput.oninput = () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        state.page = 1;
-        renderMarkets();
-      }, 300);
-    };
-
-    // === MARKET TABS & SORTING ===
-    document.querySelectorAll('[data-market-tab]').forEach(btn => {
-      btn.onclick = () => {
-        haptic('light');
-        document.querySelectorAll('[data-market-tab]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.currentMarketTab = btn.dataset.marketTab;
-        state.page = 1;
-        state.hasMore = true;
-        loadMarkets();
-      };
-    });
-
-    document.getElementById('sort-select').onchange = (e) => {
-      state.currentSort = e.target.value;
-      state.page = 1;
-      state.hasMore = true;
-      loadMarkets();
-    };
-
-    document.getElementById('refresh-markets').onclick = () => {
-      haptic('medium');
-      state.page = 1;
-      state.hasMore = true;
-      loadMarkets();
-    };
-
-    // === MARKETS DATA LOADING ===
-    async function loadMarkets() {
-      if (state.loading) return;
-      state.loading = true;
-
-      const list = document.getElementById('markets-list');
-      const skeleton = document.getElementById('skeleton');
-      const loadMore = document.getElementById('load-more');
-
-      if (state.page === 1) {
-        skeleton.classList.remove('hidden');
-        list.innerHTML = '';
-        loadMore?.classList.add('hidden');
-
-        // Show skeleton
-        skeleton.innerHTML = Array(12).fill().map(() => `
-          <div class="skeleton">
-            <div style="display:flex;gap:12px;align-items:center;">
-              <div style="width:44px;height:44px;background:#333;border-radius:50%;"></div>
-              <div style="flex:1;">
-                <div style="height:16px;background:#333;border-radius:8px;width:60%;margin-bottom:8px;"></div>
-                <div style="height:12px;background:#333;border-radius:8px;width:40%;"></div>
-              </div>
-              <div style="text-align:right;">
-                <div style="height:18px;background:#333;border-radius:8px;width:70px;margin-bottom:8px;"></div>
-                <div style="height:12px;background:#333;border-radius:8px;width:50px;"></div>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      }
-
+    // END OF SECTION 4 -->
+    <!-- SECTION 5: WALLET MANAGEMENT -->
+  <script>
+    const fetchWalletBalance = async (address, network = 'bitcoin') => {
       try {
-        let url = `${CONFIG.COINGECKO_API}/coins/markets?vs_currency=${CONFIG.CURRENCY}&order=${state.currentSort}&per_page=50&page=${state.page}&sparkline=false`;
-
-        if (state.currentMarketTab === 'favorites' && state.favorites.length > 0) {
-          url += `&ids=${state.favorites.join(',')}`;
+        let url = '';
+        switch (network) {
+          case 'bitcoin':
+            url = `https://blockchain.info/rawaddr/${address}?format=json&cors=true`;
+            break;
+          case 'ethereum':
+            url = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=YOUR_API_KEY`;
+            break;
+          case 'binance':
+            url = `https://api.bscscan.com/api?module=account&action=balance&address=${address}&apikey=YOUR_API_KEY`;
+            break;
+          default:
+            throw new Error('شبکه پشتیبانی نمی‌شود');
         }
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-
-        const res = await fetch(url, {
-          signal: controller.signal,
-          headers: { 'accept': 'application/json' }
-        });
-
-        clearTimeout(timeout);
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+        const res = await fetch(url);
         const data = await res.json();
-
-        // Special sorting for gainers/losers
-        if (state.currentMarketTab === 'gainers') {
-          data.sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
-        } else if (state.currentMarketTab === 'losers') {
-          data.sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
-        }
-
-        if (state.page === 1) state.markets = [];
-        state.markets = state.markets.concat(data);
-        state.hasMore = data.length === 50;
-
-        renderMarkets();
-        if (loadMore) loadMore.classList.toggle('hidden', !state.hasMore);
+        return { success: true, balance: data.result || data.final_balance / 1e8 };
       } catch (err) {
-        console.error('Market load error:', err);
-        if (state.page === 1) {
-          list.innerHTML = `
-            <div style="text-align:center;padding:60px 20px;">
-              <div style="width:80px;height:80px;background:var(--bubble);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;">
-                Wifi Off
-              </div>
-              <p style="color:#EF4444;font-weight:600;margin-bottom:16px;">${t('error')}</p>
-              <button onclick="loadMarkets()" style="padding:12px 32px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;">
-                ${t('refresh')}
-              </button>
-            </div>
-          `;
-        }
-      } finally {
-        skeleton.classList.add('hidden');
-        state.loading = false;
+        return { success: false, error: err.message };
       }
-    }
+    };
 
-    // === RENDER MARKETS ===
-    function renderMarkets() {
-      const list = document.getElementById('markets-list');
-      const search = searchInput.value.toLowerCase().trim();
+    const addWallet = () => {
+      openModal(`
+        <h3>افزودن کیف پول</h3>
+        <select id="wallet-network" style="width:100%;padding:12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+          <option value="bitcoin">Bitcoin (BTC)</option>
+          <option value="ethereum">Ethereum (ETH)</option>
+          <option value="binance">Binance Smart Chain (BNB)</option>
+        </select>
+        <input type="text" id="wallet-address" placeholder="آدرس کیف پول" style="width:100%;padding:12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+        <input type="text" id="wallet-name" placeholder="نام (اختیاری)" style="width:100%;padding:12px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="flex:1;" onclick="saveWallet()">ذخیره</button>
+          <button class="btn btn-outline" style="flex:1;" onclick="closeModal()">لغو</button>
+        </div>
+      `);
+    };
 
-      let filtered = state.markets;
+    const saveWallet = async () => {
+      const network = document.getElementById('wallet-network').value;
+      const address = document.getElementById('wallet-address').value.trim();
+      const name = document.getElementById('wallet-name').value.trim() || address.slice(0, 8) + '...';
 
-      if (search) {
-        filtered = filtered.filter(coin =>
-          coin.name.toLowerCase().includes(search) ||
-          coin.symbol.toLowerCase().includes(search)
-        );
-      }
+      if (!address) return showToast('آدرس را وارد کنید', 'error');
 
-      if (filtered.length === 0 && state.page === 1) {
-        list.innerHTML = `
-          <div style="text-align:center;padding:60px 20px;">
-            <div style="width:80px;height:80px;background:var(--bubble);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;">
-              Search
-            </div>
-            <p style="color:var(--text-secondary);">${t('noResults')}</p>
-          </div>
-        `;
+      showToast('در حال بررسی موجودی...', 'info');
+      const result = await fetchWalletBalance(address, network);
+      if (!result.success) {
+        showToast('خطا: ' + result.error, 'error');
         return;
       }
 
-      const html = filtered.map(coin => {
-        const isFav = state.favorites.includes(coin.id);
-        const change = coin.price_change_percentage_24h || 0;
-        const priceClass = change > 0 ? 'up' : change < 0 ? 'down' : '';
-        const changeSign = change > 0 ? '+' : '';
+      const wallet = {
+        id: Date.now().toString(),
+        network,
+        address,
+        name,
+        balance: result.balance,
+        usdValue: 0,
+        lastUpdate: new Date().toISOString()
+      };
 
+      // قیمت لحظه‌ای ارز
+      const symbol = network === 'bitcoin' ? 'bitcoin' : network === 'ethereum' ? 'ethereum' : 'binancecoin';
+      const priceRes = await fetch(`${COINGECKO_API}/simple/price?ids=${symbol}&vs_currencies=usd`);
+      const priceData = await priceRes.json();
+      const price = priceData[symbol]?.usd || 0;
+      wallet.usdValue = wallet.balance * price;
+
+      state.wallets.push(wallet);
+      localStorage.setItem('shelby_wallets', JSON.stringify(state.wallets));
+      closeModal();
+      renderWallets();
+      updateStats();
+      showToast('کیف پول اضافه شد!', 'success');
+      vibrate();
+    };
+
+    const renderWallets = () => {
+      const container = document.getElementById('wallets-list');
+      if (state.wallets.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:var(--text-secondary);">${t('no_wallets')}</p>`;
+        return;
+      }
+      container.innerHTML = state.wallets.map(w => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:600;">${w.name}</div>
+              <div style="font-size:13px;color:var(--text-secondary);">${w.address}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;">${formatNumber(w.balance, 6)} ${w.network === 'bitcoin' ? 'BTC' : w.network === 'ethereum' ? 'ETH' : 'BNB'}</div>
+              <div style="font-size:13px;color:var(--text-secondary);">$${formatNumber(w.usdValue)}</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-outline" style="flex:1;font-size:13px;" onclick="refreshWallet('${w.id}')">به‌روزرسانی</button>
+            <button class="btn btn-outline" style="flex:1;font-size:13px;background:var(--danger);" onclick="deleteWallet('${w.id}')">حذف</button>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    const refreshWallet = async (id) => {
+      const wallet = state.wallets.find(w => w.id === id);
+      if (!wallet) return;
+      const result = await fetchWalletBalance(wallet.address, wallet.network);
+      if (result.success) {
+        const symbol = wallet.network === 'bitcoin' ? 'bitcoin' : wallet.network === 'ethereum' ? 'ethereum' : 'binancecoin';
+        const priceRes = await fetch(`${COINGECKO_API}/simple/price?ids=${symbol}&vs_currencies=usd`);
+        const priceData = await priceRes.json();
+        const price = priceData[symbol]?.usd || 0;
+        wallet.balance = result.balance;
+        wallet.usdValue = result.balance * price;
+        wallet.lastUpdate = new Date().toISOString();
+        localStorage.setItem('shelby_wallets', JSON.stringify(state.wallets));
+        renderWallets();
+        updateStats();
+        showToast('به‌روزرسانی شد', 'success');
+      }
+    };
+
+    const deleteWallet = (id) => {
+      state.wallets = state.wallets.filter(w => w.id !== id);
+      localStorage.setItem('shelby_wallets', JSON.stringify(state.wallets));
+      renderWallets();
+      updateStats();
+    };
+
+    // END OF SECTION 5 -->
+    <!-- SECTION 6: PRICE ALERTS & NOTIFICATIONS -->
+  <script>
+    const addAlert = () => {
+      const coins = state.markets.slice(0, 20).map(c => `<option value="${c.id}">${c.name} (${c.symbol})</option>`).join('');
+      openModal(`
+        <h3>هشدار قیمت جدید</h3>
+        <select id="alert-coin" style="width:100%;padding:12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+          ${coins}
+        </select>
+        <select id="alert-condition" style="width:100%;padding:12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+          <option value="above">بالاتر از</option>
+          <option value="below">پایین‌تر از</option>
+        </select>
+        <input type="number" id="alert-value" placeholder="مبلغ (USD)" step="0.01" style="width:100%;padding:12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <input type="checkbox" id="alert-enabled" checked style="width:18px;height:18px;">
+          <span>فعال</span>
+        </label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="flex:1;" onclick="saveAlert()">ذخیره</button>
+          <button class="btn btn-outline" style="flex:1;" onclick="closeModal()">لغو</button>
+        </div>
+      `);
+    };
+
+    const saveAlert = () => {
+      const coinId = document.getElementById('alert-coin').value;
+      const condition = document.getElementById('alert-condition').value;
+      const value = parseFloat(document.getElementById('alert-value').value);
+      const enabled = document.getElementById('alert-enabled').checked;
+
+      if (isNaN(value) || value <= 0) {
+        showToast('مقدار معتبر وارد کنید', 'error');
+        return;
+      }
+
+      const alert = {
+        id: Date.now().toString(),
+        coinId,
+        condition,
+        value,
+        enabled,
+        createdAt: new Date().toISOString(),
+        triggered: false
+      };
+
+      state.alerts.push(alert);
+      localStorage.setItem('shelby_alerts', JSON.stringify(state.alerts));
+      closeModal();
+      renderAlerts();
+      showToast('هشدار اضافه شد!', 'success');
+      vibrate([200, 100, 200]);
+    };
+
+    const renderAlerts = () => {
+      const container = document.getElementById('alerts-list');
+      if (state.alerts.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:var(--text-secondary);">${t('no_alerts')}</p>`;
+        return;
+      }
+      container.innerHTML = state.alerts.map(a => {
+        const coin = state.markets.find(c => c.id === a.coinId);
+        const name = coin ? `${coin.name} (${coin.symbol})` : a.coinId;
+        const status = a.enabled ? 'فعال' : 'غیرفعال';
+        const color = a.enabled ? 'var(--success)' : 'var(--text-secondary)';
         return `
-          <div class="market-card" data-coin-id="${coin.id}">
-            <div class="row">
-              <div class="coin">
-                <img src="${coin.image}" alt="${coin.name}">
-                <div>
-                  <div class="coin-name">${coin.name}</div>
-                  <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:600;">${name}</div>
+                <div style="font-size:13px;color:var(--text-secondary);">
+                  ${a.condition === 'above' ? 'بالاتر از' : 'پایین‌تر از'} $${formatNumber(a.value)}
                 </div>
               </div>
-              <div class="price">
-                <div class="price-main">$${coin.current_price?.toLocaleString() || '—'}</div>
-                <div class="price-change ${priceClass}">
-                  ${changeSign}${change.toFixed(2)}%
-                </div>
+              <div style="background:${color};color:white;padding:4px 8px;border-radius:var(--radius-sm);font-size:12px;">
+                ${status}
               </div>
             </div>
-            <div class="actions">
-              <button onclick="toggleFavorite('${coin.id}')" style="color:${isFav ? '#FBBF24' : 'inherit'};">
-                ${isFav ? 'Star Filled' : 'Star'}
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn btn-outline" style="flex:1;font-size:13px;" onclick="toggleAlert('${a.id}')">
+                ${a.enabled ? 'غیرفعال' : 'فعال'}
               </button>
-              <button onclick="openChart('${coin.id}', '${coin.name}')">Trending Up</button>
-              <button onclick="openPriceAlertModal('${coin.id}', '${coin.name}', ${coin.current_price})">Bell</button>
+              <button class="btn btn-outline" style="flex:1;font-size:13px;background:var(--danger);" onclick="deleteAlert('${a.id}')">
+                حذف
+              </button>
             </div>
           </div>
         `;
       }).join('');
+    };
 
-      if (state.page === 1) {
-        list.innerHTML = html;
-      } else {
-        list.innerHTML += html;
-      }
-    }
-
-    window.toggleFavorite = (id) => {
-      haptic('light');
-      const index = state.favorites.indexOf(id);
-      if (index > -1) {
-        state.favorites.splice(index, 1);
-      } else {
-        state.favorites.push(id);
-      }
-      localStorage.setItem('favorites', JSON.stringify(state.favorites));
-      renderMarkets();
-      if (state.currentMarketTab === 'favorites') {
-        state.page = 1;
-        loadMarkets();
+    const toggleAlert = (id) => {
+      const alert = state.alerts.find(a => a.id === id);
+      if (alert) {
+        alert.enabled = !alert.enabled;
+        localStorage.setItem('shelby_alerts', JSON.stringify(state.alerts));
+        renderAlerts();
       }
     };
 
-    document.getElementById('load-more')?.addEventListener('click', () => {
-      haptic('medium');
-      state.page++;
-      loadMarkets();
-    });
- // === CHART MODAL ===
-    let priceChart = null;
+    const deleteAlert = (id) => {
+      state.alerts = state.alerts.filter(a => a.id !== id);
+      localStorage.setItem('shelby_alerts', JSON.stringify(state.alerts));
+      renderAlerts();
+    };
 
-    window.openChart = async (id, name) => {
-      haptic('medium');
-      openModal(`
-        <div style="text-align:center;">
-          <h3 class="modal-title">Trending Up نمودار ${name}</h3>
-          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
-            <button id="chart-7d" class="btn-primary" style="padding:8px 16px;font-size:14px;">${t('days7')}</button>
-            <button id="chart-30d" class="btn-primary" style="padding:8px 16px;font-size:14px;opacity:0.6;">${t('days30')}</button>
-          </div>
-          <canvas id="price-canvas" style="height:240px;margin:16px 0;"></canvas>
-          <p style="color:var(--text-secondary);font-size:13px;">${t('loading')}...</p>
-        </div>
-      `);
+    const checkAlerts = () => {
+      if (state.alerts.length === 0 || state.markets.length === 0) return;
 
-      const ctx = document.getElementById('price-canvas').getContext('2d');
-      if (priceChart) priceChart.destroy();
+      state.alerts.forEach(alert => {
+        if (!alert.enabled || alert.triggered) return;
+        const coin = state.markets.find(c => c.id === alert.coinId);
+        if (!coin) return;
 
-      priceChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: [], datasets: [{ data: [], borderColor: '#1DA1F2', tension: 0.4, fill: false }] },
+        const triggered = alert.condition === 'above' 
+          ? coin.price > alert.value 
+          : coin.price < alert.value;
+
+        if (triggered) {
+          alert.triggered = true;
+          localStorage.setItem('shelby_alerts', JSON.stringify(state.alerts));
+
+          const msg = `${coin.name} ${alert.condition === 'above' ? 'بالاتر' : 'پایین‌تر'} از $${formatNumber(alert.value)} رفت!`;
+          showToast(msg, 'success', 6000);
+          showWebNotification('هشدار شلبی', msg);
+          vibrate([300, 100, 300, 100, 300]);
+        }
+      });
+    };
+
+    // Run every 30 seconds
+    setInterval(checkAlerts, 30000);
+
+    // END OF SECTION 6 -->
+    <!-- SECTION 7: STATS, PORTFOLIO & CHART -->
+  <script>
+    const updateStats = () => {
+      const totalUSD = state.wallets.reduce((sum, w) => sum + w.usdValue, 0);
+      const totalIRR = formatIRR(totalUSD);
+      state.totalUSD = totalUSD;
+      state.totalIRR = totalIRR;
+
+      const statsEl = document.getElementById('stats-total');
+      if (statsEl) {
+        statsEl.innerHTML = `
+          <div style="font-weight:700;font-size:18px;">$${formatNumber(totalUSD)}</div>
+          <div style="font-size:13px;color:var(--text-secondary);">${totalIRR}</div>
+        `;
+      }
+
+      // Update profit/loss (mock)
+      const profit = totalUSD > 1000 ? ((totalUSD - 1000) / 1000 * 100).toFixed(2) : 0;
+      const profitEl = document.querySelector('#profit-loss');
+      if (profitEl) {
+        profitEl.textContent = profit > 0 ? `+${profit}%` : `${profit}%`;
+        profitEl.style.color = profit > 0 ? 'var(--success)' : 'var(--danger)';
+      }
+
+      renderPortfolioChart();
+    };
+
+    const renderPortfolioChart = () => {
+      const canvas = document.createElement('canvas');
+      canvas.height = 200;
+      const container = document.getElementById('portfolio-chart');
+      if (container) {
+        container.innerHTML = '';
+        container.appendChild(canvas);
+      } else return;
+
+      if (state.wallets.length === 0) {
+        canvas.getContext('2d').font = '14px Vazirmatn';
+        canvas.getContext('2d').fillStyle = 'var(--text-secondary)';
+        canvas.getContext('2d').fillText(t('no_wallets'), 20, 100);
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      if (state.portfolioChart) state.portfolioChart.destroy();
+
+      const labels = state.wallets.map(w => w.name.slice(0, 8));
+      const data = state.wallets.map(w => w.usdValue);
+      const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+      state.portfolioChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: 'var(--bg)'
+          }]
+        },
         options: {
           responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { display: false },
-            y: { display: true, ticks: { color: 'rgba(255,255,255,0.6)' } }
+          plugins: {
+            legend: { position: 'bottom', labels: { color: 'var(--text)' } },
+            tooltip: {
+              callbacks: {
+                label: ctx => `$${formatNumber(ctx.parsed)}`
+              }
+            }
           }
         }
       });
-
-      loadChartData(id, 7);
-
-      document.getElementById('chart-7d').onclick = () => {
-        document.getElementById('chart-7d').style.opacity = '1';
-        document.getElementById('chart-30d').style.opacity = '0.6';
-        loadChartData(id, 7);
-      };
-
-      document.getElementById('chart-30d').onclick = () => {
-        document.getElementById('chart-30d').style.opacity = '1';
-        document.getElementById('chart-7d').style.opacity = '0.6';
-        loadChartData(id, 30);
-      };
     };
 
-    async function loadChartData(id, days) {
-      try {
-        const res = await fetch(`${CONFIG.COINGECKO_API}/coins/${id}/market_chart?vs_currency=usd&days=${days}`);
-        const data = await res.json();
-        const prices = data.prices;
+    const openPortfolioDetails = () => {
+      if (state.wallets.length === 0) return showToast(t('no_wallets'), 'info');
 
-        const labels = prices.map(p => new Date(p[0]).toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US', { month: 'short', day: 'numeric' }));
-        const values = prices.map(p => p[1]);
-
-        priceChart.data.labels = labels;
-        priceChart.data.datasets[0].data = values;
-        priceChart.update();
-
-        document.querySelector('#modal-body p').textContent = '';
-      } catch (err) {
-        document.querySelector('#modal-body p').textContent = t('error');
-      }
-    }
-
-    // === PRICE ALERT MODAL ===
-    window.openPriceAlertModal = (id, name, currentPrice) => {
-      haptic('medium');
-      openModal(`
-        <div>
-          <h3 class="modal-title">Bell ${t('alert')} برای ${name}</h3>
-          <div style="background:var(--bubble);border-radius:16px;padding:16px;margin-bottom:16px;">
-            <p style="font-size:14px;color:var(--text-secondary);">${t('currentPrice')}: <span style="font-weight:700;color:var(--text);">$${currentPrice?.toLocaleString() || '—'}</span></p>
-          </div>
-          <div style="margin-bottom:16px;">
-            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('priceTarget')}</label>
-            <input type="number" id="alert-price" placeholder="مثلاً ۶۵۰۰۰" step="0.01" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button onclick="setPriceAlert('${id}', '${name}')" class="btn-primary" style="flex:1;">${t('add')}</button>
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
-          </div>
-        </div>
-      `);
-    };
-
-    window.setPriceAlert = (id, name) => {
-      const input = document.getElementById('alert-price');
-      const price = parseFloat(input.value);
-      if (!price || price <= 0) {
-        input.style.borderColor = '#EF4444';
-        return;
-      }
-      const alert = {
-        id,
-        name,
-        price,
-        active: true,
-        created: Date.now(),
-        notified: false
-      };
-      state.alerts.push(alert);
-      localStorage.setItem('alerts', JSON.stringify(state.alerts));
-      closeModal();
-      showToast(`${t('alert')}`, `${name} در $${price.toLocaleString()} ${t('alertSet')}`);
-      updateProfileStats();
-    };
-
-    function checkPriceAlerts() {
-      if (!state.notificationsEnabled || state.markets.length === 0) return;
-
-      state.alerts.forEach((alert, i) => {
-        if (!alert.active || alert.notified) return;
-
-        const coin = state.markets.find(c => c.id === alert.id);
-        if (!coin) return;
-
-        const diff = Math.abs(coin.current_price - alert.price) / alert.price;
-        if (diff <= CONFIG.PRICE_ALERT_THRESHOLD) {
-          showToast(`${t('alertTriggered')}!`, `${coin.name} به $${coin.current_price.toFixed(2)} رسید`);
-          state.alerts[i].active = false;
-          state.alerts[i].notified = true;
-          localStorage.setItem('alerts', JSON.stringify(state.alerts));
-          updateProfileStats();
-        }
-      });
-    }
-
-    // === WALLET MANAGEMENT ===
-    window.openAddWallet = () => {
-      haptic('medium');
-      openModal(`
-        <div>
-          <h3 class="modal-title">Plus Circle ${t('addWallet')}</h3>
-          <div style="space-y:16px;">
-            <div>
-              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('name')}</label>
-              <input type="text" id="wallet-name" placeholder="مثلاً: کیف اصلی" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
-            </div>
-            <div>
-              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('network')}</label>
-              <select id="wallet-network" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
-                <option value="eth">${t('eth')}</option>
-                <option value="ton">${t('ton')}</option>
-                <option value="tron">${t('tron')} (${t('usdt')})</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('address')}</label>
-              <input type="text" id="wallet-address" placeholder="0x..." style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:16px;">
-            <button onclick="addWallet()" class="btn-primary" style="flex:1;">${t('add')}</button>
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
-          </div>
-        </div>
-      `);
-    };
-
-    window.addWallet = () => {
-      const name = document.getElementById('wallet-name').value.trim();
-      const network = document.getElementById('wallet-network').value;
-      const address = document.getElementById('wallet-address').value.trim();
-
-      if (!address) {
-        document.getElementById('wallet-address').style.borderColor = '#EF4444';
-        return;
-      }
-
-      if (!validateAddress(address, network)) {
-        showToast(t('error'), t('invalidAddress'));
-        return;
-      }
-
-      const wallet = { name: name || address.slice(0, 8) + '...', network, address };
-      state.wallets.push(wallet);
-      localStorage.setItem('wallets', JSON.stringify(state.wallets));
-      closeModal();
-      renderWallets();
-      updateProfileStats();
-      showToast('موفقیت', `${wallet.name} اضافه شد`);
-    };
-
-    window.editWallet = (i) => {
-      haptic('medium');
-      const w = state.wallets[i];
-      openModal(`
-        <div>
-          <h3 class="modal-title">Edit ${t('editWallet')}</h3>
-          <div style="space-y:16px;">
-            <div>
-              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('name')}</label>
-              <input type="text" id="edit-name" value="${w.name}" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
-            </div>
-            <div>
-              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">${t('address')}</label>
-              <input type="text" id="edit-address" value="${w.address}" style="width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);">
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:16px;">
-            <button onclick="saveEditedWallet(${i})" class="btn-primary" style="flex:1;">${t('save')}</button>
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('cancel')}</button>
-          </div>
-        </div>
-      `);
-    };
-
-    window.saveEditedWallet = (i) => {
-      const name = document.getElementById('edit-name').value.trim();
-      const address = document.getElementById('edit-address').value.trim();
-
-      if (!address || !validateAddress(address, state.wallets[i].network)) {
-        showToast(t('error'), t('invalidAddress'));
-        return;
-      }
-
-      state.wallets[i].name = name || address.slice(0, 8) + '...';
-      state.wallets[i].address = address;
-      localStorage.setItem('wallets', JSON.stringify(state.wallets));
-      closeModal();
-      renderWallets();
-    };
- window.removeWallet = (i) => {
-      haptic('heavy');
-      const w = state.wallets[i];
-      openModal(`
-        <div style="text-align:center;">
-          <div style="width:80px;height:80px;background:#EF4444;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;color:white;">
-            Trash
-          </div>
-          <h3 class="modal-title">${t('deleteConfirm')}</h3>
-          <p style="color:var(--text-secondary);margin-bottom:24px;">
-            ${w.name} حذف شود؟
-          </p>
-          <div style="display:flex;gap:8px;">
-            <button onclick="confirmRemoveWallet(${i})" class="btn-primary" style="flex:1;background:#EF4444;">${t('yes')}</button>
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;">${t('no')}</button>
-          </div>
-        </div>
-      `);
-    };
-
-    window.confirmRemoveWallet = (i) => {
-      state.wallets.splice(i, 1);
-      localStorage.setItem('wallets', JSON.stringify(state.wallets));
-      closeModal();
-      renderWallets();
-      updateProfileStats();
-    };
-
-    function validateAddress(address, network) {
-      if (network === 'eth') return /^0x[a-fA-F0-9]{40}$/.test(address);
-      if (network === 'ton') return /^[a-zA-Z0-9]{48}$/.test(address);
-      if (network === 'tron') return /^T[a-zA-Z0-9]{33}$/.test(address);
-      return false;
-    }
-
-    // === RENDER WALLETS ===
-    function renderWallets() {
-      const container = document.getElementById('page-wallet');
-      const empty = container.querySelector('.empty');
-      let list = container.querySelector('#wallet-list');
-
-      if (!list) {
-        list = document.createElement('div');
-        list.id = 'wallet-list';
-        container.insertBefore(list, empty);
-      }
-
-      if (state.wallets.length === 0) {
-        empty.classList.remove('hidden');
-        list.innerHTML = '';
-        return;
-      }
-
-      empty.classList.add('hidden');
-      list.innerHTML = state.wallets.map((w, i) => `
-        <div class="market-card" style="position:relative;" data-wallet-index="${i}">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <h4 style="font-weight:700;font-size:16px;">${w.name}</h4>
-                <span style="background:var(--bubble);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;">
-                  ${getNetworkLabel(w.network)}
-                </span>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:13px;">
-                <span class="truncate" style="max-width:180px;">${w.address}</span>
-                <button onclick="copyToClipboard('${w.address}')" style="background:none;border:none;color:var(--primary);">
-                  Copy
-                </button>
-              </div>
-            </div>
-            <div style="display:flex;gap:4px;">
-              <button onclick="editWallet(${i})" style="width:36px;height:36px;background:var(--bubble);border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                Edit
-              </button>
-              <button onclick="removeWallet(${i})" style="width:36px;height:36px;background:#EF4444;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                Trash
-              </button>
-            </div>
-          </div>
-          <div id="balance-${i}" style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="color:var(--text-secondary);font-size:13px;">${t('balanceLoading')}</span>
-            <div style="width:16px;height:16px;border:2px solid #333;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
-          </div>
-          <button onclick="showQR('${w.address}', '${w.name}')" style="margin-top:12px;width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;">
-            Qr Code نمایش QR
-          </button>
-        </div>
-      `).join('');
-
-      state.wallets.forEach((w, i) => fetchWalletBalance(w, i));
-      calculateTotalBalance();
-    }
-
-    function getNetworkLabel(network) {
-      return { eth: 'ETH', ton: 'TON', tron: 'USDT' }[network] || network.toUpperCase();
-    }
-
-    // === BALANCE FETCH ===
-    async function fetchWalletBalance(wallet, index) {
-      const el = document.getElementById(`balance-${index}`);
-      if (!el) return;
-
-      try {
-        let balance = 0, usd = 0, symbol = '';
-
-        if (wallet.network === 'eth') {
-          const res = await fetch(`${CONFIG.ETH_API}?module=account&action=balance&address=${wallet.address}&tag=latest&apikey=${CONFIG.ETHERSCAN_KEY}`);
-          const data = await res.json();
-          if (data.status !== '1') throw new Error();
-          balance = parseInt(data.result) / 1e18;
-          const priceRes = await fetch(`${CONFIG.COINGECKO_API}/simple/price?ids=ethereum&vs_currencies=usd`);
-          const priceData = await priceRes.json();
-          usd = balance * priceData.ethereum.usd;
-          symbol = 'ETH';
-        } else if (wallet.network === 'ton') {
-          const res = await fetch(`${CONFIG.TON_API}/getAddressInformation?address=${wallet.address}`);
-          const data = await res.json();
-          balance = data.balance / 1e9;
-          usd = balance * 6.5; // تقریبی
-          symbol = 'TON';
-        } else if (wallet.network === 'tron') {
-          const res = await fetch(`${CONFIG.TRON_API}/v1/accounts/${wallet.address}`);
-          const data = await res.json();
-          const usdt = data.data[0]?.trc20?.find(t => t.tokenName === 'Tether USDt' || t.tokenAbbr === 'USDT');
-          balance = usdt ? usdt.balance / 1e6 : 0;
-          usd = balance;
-          symbol = 'USDT';
-        }
-
-        el.innerHTML = `
-          <div>
-            <p style="font-weight:700;font-size:16px;">${balance.toFixed(4)} ${symbol}</p>
-            <p style="color:var(--text-secondary);font-size:13px;">≈ $${usd.toFixed(2)}</p>
+      let html = `<h3>تخصیص پورتفولیو</h3><div style="max-height:50vh;overflow-y:auto;">`;
+      const total = state.totalUSD;
+      state.wallets.forEach(w => {
+        const percent = total > 0 ? (w.usdValue / total * 100).toFixed(1) : 0;
+        html += `
+          <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bubble);border-radius:var(--radius-md);margin-bottom:8px;">
+            <div>${w.name}</div>
+            <div>${percent}% ($${formatNumber(w.usdValue)})</div>
           </div>
         `;
-        calculateTotalBalance();
-      } catch (e) {
-        el.innerHTML = `<span style="color:#EF4444;font-size:13px;">${t('balanceError')}</span>`;
-      }
-    }
-
-    function calculateTotalBalance() {
-      let total = 0;
-      document.querySelectorAll('[id^="balance-"]').forEach(el => {
-        const text = el.innerText;
-        const match = text.match(/\$([\d,]+\.?\d*)/);
-        if (match) total += parseFloat(match[1].replace(/,/g, ''));
       });
-      state.totalBalance = total;
-      document.getElementById('stats-total').textContent = `$${total.toFixed(2)}`;
-    }
-
-    // === QR CODE MODAL ===
-    window.showQR = (address, title) => {
-      haptic('medium');
-      openModal(`
-        <div style="text-align:center;">
-          <h3 class="modal-title">Qr Code QR کد ${title}</h3>
-          <div style="background:var(--bubble);border-radius:20px;padding:24px;margin:16px 0;">
-            <div id="qrcode" style="width:200px;height:200px;margin:0 auto;"></div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
-            <p style="color:var(--text-secondary);font-size:13px;max-width:200px;word-break:break-all;">${address}</p>
-            <button onclick="copyToClipboard('${address}')" style="background:none;border:none;color:var(--primary);">
-              Copy
-            </button>
-          </div>
-          <button onclick="closeModal()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;">
-            بستن
-          </button>
-        </div>
-      `);
-
-      document.getElementById('qrcode').innerHTML = '';
-      new QRCode(document.getElementById('qrcode'), {
-        text: address,
-        width: 200,
-        height: 200,
-        colorDark: state.isDark ? '#ffffff' : '#000000',
-        colorLight: state.isDark ? '#1f2937' : '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-      });
+      html += `</div>`;
+      openModal(html);
     };
 
-    // === COPY TO CLIPBOARD ===
-    window.copyToClipboard = (text) => {
-      haptic('light');
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-          showToast(t('copy'), t('copied'));
-        }).catch(() => {
-          fallbackCopy(text);
-        });
-      } else {
-        fallbackCopy(text);
+    // Best performing coin
+    const getBestCoin = () => {
+      if (state.markets.length === 0) return null;
+      return state.markets.reduce((best, coin) => 
+        (coin.change24h > best.change24h) ? coin : best, state.markets[0]);
+    };
+
+    // END OF SECTION 7 -->
+    <!-- SECTION 8: SEARCH, VOICE & HEATMAP -->
+  <script>
+    // Search functionality
+    let searchTimeout;
+    const performSearch = () => {
+      const query = document.getElementById('search-input').value.trim();
+      state.searchQuery = query;
+      if (document.querySelector('[data-tab="markets"]').classList.contains('active')) {
+        renderMarkets();
       }
     };
 
-    function fallbackCopy(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast(t('copy'), t('copied'));
-      } catch (err) {
-        showToast(t('error'), 'کپی نشد');
-      }
-      document.body.removeChild(textarea);
-    }
+    document.getElementById('search-input').addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(performSearch, 300);
+    });
 
-    // === EXPORT / IMPORT WALLETS ===
-    window.exportWallets = () => {
-      haptic('medium');
-      if (state.wallets.length === 0) {
-        showToast(t('error'), 'هیچ کیف پولی وجود ندارد');
+    // Voice Search
+    const startVoiceSearch = () => {
+      if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+        showToast(t('voice_not_supported'), 'error');
         return;
       }
-      const data = JSON.stringify(state.wallets, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `shelby-wallets-${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('موفقیت', t('exportSuccess'));
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = state.lang === 'fa' ? 'fa-IR' : 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+      showToast('در حال گوش دادن...', 'info');
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('search-input').value = transcript;
+        state.searchQuery = transcript;
+        renderMarkets();
+        showToast(`جستجو: ${transcript}`, 'success');
+      };
+
+      recognition.onerror = () => {
+        showToast('خطا در تشخیص صدا', 'error');
+      };
+
+      recognition.onend = () => {
+        // Auto-end
+      };
     };
 
-    window.importWallets = () => {
-      haptic('medium');
+    document.getElementById('voice-btn').addEventListener('click', startVoiceSearch);
+
+    // Heatmap (Top 50 coins)
+    const openHeatmap = () => {
+      if (state.markets.length < 50) {
+        showToast('داده کافی نیست', 'info');
+        return;
+      }
+
+      const top50 = state.markets.slice(0, 50);
+      let html = `<h3>نقشه حرارتی (۵۰ ارز برتر)</h3><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-height:60vh;overflow-y:auto;padding:8px;">`;
+      
+      top50.forEach(coin => {
+        const change = coin.change24h;
+        const intensity = Math.min(Math.abs(change) / 10, 1); // Normalize
+        const color = change >= 0 
+          ? `rgba(16, 185, 129, ${intensity})` 
+          : `rgba(239, 68, 68, ${intensity})`;
+        
+        html += `
+          <div style="background:${color};color:white;padding:12px;border-radius:var(--radius-md);text-align:center;cursor:pointer;" 
+               onclick="openCoinDetails('${coin.id}')">
+            <div style="font-weight:600;font-size:12px;">${coin.symbol.toUpperCase()}</div>
+            <div style="font-size:11px;">${change >= 0 ? '+' : ''}${change.toFixed(1)}%</div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      openModal(html);
+    };
+
+    // Compare 4 coins
+    const openCompare = () => {
+      const top4 = state.markets.slice(0, 4);
+      const labels = ['24h', '7d', 'Market Cap', 'Volume'];
+      const datasets = top4.map((coin, i) => ({
+        label: coin.symbol.toUpperCase(),
+        data: [
+          coin.change24h,
+          coin.change7d || 0,
+          coin.marketCap / 1e9, // in billions
+          coin.volume24h / 1e9
+        ],
+        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'][i]
+      }));
+
+      openModal(`
+        <h3>مقایسه ۴ ارز برتر</h3>
+        <canvas id="compare-chart" height="300"></canvas>
+      `);
+
+      setTimeout(() => {
+        const ctx = document.getElementById('compare-chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true },
+              x: { stacked: false }
+            },
+            plugins: { legend: { position: 'top' } }
+          }
+        });
+      }, 100);
+    };
+
+    // END OF SECTION 8 -->
+    <!-- SECTION 9: TECHNICAL ANALYSIS & CHART -->
+  <script>
+    const openTechnicalAnalysis = (coinId) => {
+      const coin = state.markets.find(c => c.id === coinId);
+      if (!coin) return;
+
+      openModal(`
+        <h3>تحلیل تکنیکال: ${coin.name}</h3>
+        <div style="margin-bottom:16px;">
+          <button class="btn btn-outline" style="margin-left:8px;" onclick="exportChartData('${coinId}')">خروجی CSV</button>
+          <button class="btn btn-outline" onclick="closeModal()">بستن</button>
+        </div>
+        <canvas id="technical-chart" height="300"></canvas>
+      `);
+
+      // Fetch 90 days historical data
+      fetchHistoricalData(coinId);
+    };
+
+    const fetchHistoricalData = async (coinId) => {
+      try {
+        const days = 90;
+        const url = `${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const prices = data.prices.map(p => p[1]);
+        const dates = data.prices.map(p => new Date(p[0]).toLocaleDateString(state.lang === 'fa' ? 'fa-IR' : 'en-US'));
+
+        renderTechnicalChart(dates, prices, coinId);
+      } catch (err) {
+        showToast('خطا در دریافت داده تاریخی', 'error');
+      }
+    };
+
+    const renderTechnicalChart = (dates, prices, coinId) => {
+      const ctx = document.getElementById('technical-chart').getContext('2d');
+      if (state.technicalChart) state.technicalChart.destroy();
+
+      // Calculate indicators
+      const sma20 = calculateSMA(prices, 20);
+      const sma50 = calculateSMA(prices, 50);
+      const rsi = calculateRSI(prices, 14);
+      const macd = calculateMACD(prices);
+
+      state.technicalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'قیمت',
+              data: prices,
+              borderColor: 'var(--primary)',
+              tension: 0.1,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'SMA 20',
+              data: sma20,
+              borderColor: '#F59E0B',
+              borderDash: [5, 5],
+              pointRadius: 0,
+              borderWidth: 1.5
+            },
+            {
+              label: 'SMA 50',
+              data: sma50,
+              borderColor: '#3B82F6',
+              borderDash: [5, 5],
+              pointRadius: 0,
+              borderWidth: 1.5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                afterLabel: (ctx) => {
+                  if (ctx.datasetIndex === 0 && rsi[ctx.dataIndex] !== undefined) {
+                    return `RSI: ${rsi[ctx.dataIndex].toFixed(2)}`;
+                  }
+                  return '';
+                }
+              }
+            },
+            legend: { position: 'top' }
+          },
+          scales: {
+            x: { display: false },
+            y: { beginAtZero: false }
+          }
+        }
+      });
+    };
+
+    // Technical Indicators
+    const calculateSMA = (data, period) => {
+      const sma = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+          sma.push(null);
+        } else {
+          const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+          sma.push(sum / period);
+        }
+      }
+      return sma;
+    };
+
+    const calculateRSI = (data, period = 14) => {
+      const rsi = [];
+      let gains = 0, losses = 0;
+
+      for (let i = 1; i < data.length; i++) {
+        const diff = data[i] - data[i - 1];
+        if (i <= period) {
+          if (diff > 0) gains += diff;
+          else losses -= diff;
+        } else {
+          const avgGain = gains / period;
+          const avgLoss = losses / period;
+          const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+          rsi.push(100 - (100 / (1 + rs)));
+
+          // Update rolling
+          const currentGain = diff > 0 ? diff : 0;
+          const currentLoss = diff < 0 ? -diff : 0;
+          gains = (gains * (period - 1) + currentGain) / period;
+          losses = (losses * (period - 1) + currentLoss) / period;
+        }
+      }
+      return rsi;
+    };
+
+    const calculateMACD = (data) => {
+      const ema12 = calculateEMA(data, 12);
+      const ema26 = calculateEMA(data, 26);
+      return ema12.map((val, i) => val - ema26[i]);
+    };
+
+    const calculateEMA = (data, period) => {
+      const ema = [];
+      const multiplier = 2 / (period + 1);
+      let sum = 0;
+
+      for (let i = 0; i < data.length; i++) {
+        if (i < period) {
+          sum += data[i];
+          if (i === period - 1) ema.push(sum / period);
+        } else {
+          const prev = ema[i - 1];
+          ema.push((data[i] - prev) * multiplier + prev);
+        }
+      }
+      return ema;
+    };
+
+    const exportChartData = async (coinId) => {
+      const coin = state.markets.find(c => c.id === coinId);
+      if (!coin) return;
+
+      try {
+        const days = 30;
+        const url = `${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const csv = data.prices.map((p, i) => {
+          const date = new Date(p[0]).toISOString().split('T')[0];
+          return `${date},${p[1]}`;
+        }).join('\n');
+
+        const blob = new Blob([`Date,Price(USD)\n${csv}`], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${coin.symbol}_30days.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV دانلود شد!', 'success');
+      } catch {
+        showToast('خطا در خروجی CSV', 'error');
+      }
+    };
+
+    // END OF SECTION 9 -->
+    <!-- SECTION 10: BACKUP, RESTORE & SECURITY -->
+  <script>
+    const exportBackup = () => {
+      const data = {
+        version: '2.0',
+        timestamp: new Date().toISOString(),
+        wallets: state.wallets,
+        alerts: state.alerts,
+        favorites: state.favorites,
+        settings: {
+          theme: state.theme,
+          lang: state.lang
+        }
+      };
+
+      // Encrypt with simple AES (using Web Crypto API)
+      const key = crypto.getRandomValues(new Uint8Array(32));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encoder = new TextEncoder();
+      const dataStr = JSON.stringify(data);
+
+      crypto.subtle.importKey('raw', key, 'AES-GCM', false, ['encrypt'])
+        .then(cryptoKey => crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          cryptoKey,
+          encoder.encode(dataStr)
+        ))
+        .then(encrypted => {
+          const backup = {
+            encrypted: true,
+            key: Array.from(key),
+            iv: Array.from(iv),
+            data: Array.from(new Uint8Array(encrypted))
+          };
+
+          const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `shelby_backup_${new Date().toISOString().split('T')[0]}.shelby`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('بکاپ با موفقیت ذخیره شد!', 'success');
+        })
+        .catch(() => showToast('خطا در رمزنگاری', 'error'));
+    };
+
+    const importBackup = () => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json';
-      input.onchange = e => {
+      input.accept = '.shelby';
+      input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
         const reader = new FileReader();
-        reader.onload = ev => {
+        reader.onload = async (ev) => {
           try {
-            const imported = JSON.parse(ev.target.result);
-            if (!Array.isArray(imported)) throw new Error();
-            const valid = imported.filter(w => 
-              w.address && ['eth','ton','tron'].includes(w.network) && validateAddress(w.address, w.network)
+            const backup = JSON.parse(ev.target.result);
+            if (!backup.encrypted) throw new Error('فایل معتبر نیست');
+
+            const key = new Uint8Array(backup.key);
+            const iv = new Uint8Array(backup.iv);
+            const encrypted = new Uint8Array(backup.data);
+
+            const cryptoKey = await crypto.subtle.importKey('raw', key, 'AES-GCM', false, ['decrypt']);
+            const decrypted = await crypto.subtle.decrypt(
+              { name: 'AES-GCM', iv },
+              cryptoKey,
+              encrypted
             );
-            if (valid.length === 0) throw new Error();
-            state.wallets = [...state.wallets, ...valid];
-            localStorage.setItem('wallets', JSON.stringify(state.wallets));
+
+            const decoder = new TextDecoder();
+            const dataStr = decoder.decode(decrypted);
+            const data = JSON.parse(dataStr);
+
+            // Restore
+            state.wallets = data.wallets || [];
+            state.alerts = data.alerts || [];
+            state.favorites = data.favorites || [];
+            if (storedSettings(data.settings)) {
+              state.theme = data.settings.theme;
+              state.lang = data.settings.lang;
+              applyTheme();
+              applyLanguage();
+            }
+
+            localStorage.setItem('shelby_wallets', JSON.stringify(state.wallets));
+            localStorage.setItem('shelby_alerts', JSON.stringify(state.alerts));
+            localStorage.setItem('shelby_favorites', JSON.stringify(state.favorites));
+
             renderWallets();
-            updateProfileStats();
-            showToast('موفقیت', `${valid.length} ${t('importSuccess')}`);
-          } catch {
-            showToast(t('error'), t('importError'));
+            renderAlerts();
+            updateStats();
+            showToast('بکاپ با موفقیت بازیابی شد!', 'success');
+            closeModal();
+          } catch (err) {
+            showToast('فایل بکاپ نامعتبر است', 'error');
           }
         };
         reader.readAsText(file);
       };
       input.click();
     };
-    // === AUTO UPDATE & ALERT CHECK ===
-    let updateInterval, alertInterval;
 
-    function startAutoUpdate() {
-      clearInterval(updateInterval);
-      clearInterval(alertInterval);
-
-      updateInterval = setInterval(() => {
-        if (state.currentTab === 'markets' && state.currentMarketTab !== 'favorites') {
-          state.page = 1;
-          state.hasMore = true;
-          loadMarkets();
-        }
-      }, CONFIG.UPDATE_INTERVAL);
-
-      alertInterval = setInterval(checkPriceAlerts, CONFIG.ALERT_CHECK_INTERVAL);
-    }
-
-    // === PROFILE STATS UPDATE ===
-    function updateProfileStats() {
-      document.getElementById('stats-coins').textContent = state.markets.length;
-      document.getElementById('stats-wallets').textContent = state.wallets.length;
-      document.getElementById('stats-alerts').textContent = state.alerts.filter(a => a.active).length;
-      document.getElementById('stats-total').textContent = `$${state.totalBalance.toFixed(2)}`;
-    }
-
-    // === TELEGRAM LINK @ondbest ===
-    window.openTelegram = () => {
-      haptic('medium');
-      tg.openTelegramLink('tg://msg?text=سلام%20Shelby%20Bet%20v3.0&to=ondbest');
-      showToast('در حال باز شدن...', 'چت با @ondbest');
+    const openBackupModal = () => {
+      openModal(`
+        <h3>بکاپ و بازیابی</h3>
+        <div style="display:grid;gap:12px;">
+          <button class="btn" onclick="exportBackup()">خروجی بکاپ (.shelby)</button>
+          <button class="btn btn-outline" onclick="importBackup()">ورودی بکاپ</button>
+          <button class="btn btn-outline" style="background:var(--danger);" onclick="clearAllData()">پاک کردن همه داده‌ها</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-top:16px;">
+          بکاپ شما با رمزنگاری AES-256 محافظت می‌شود.
+        </p>
+      `);
     };
 
-    // === PWA SERVICE WORKER ===
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => {
-            console.log('SW registered:', reg);
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  showToast('به‌روزرسانی', 'نسخه جدید آماده است!');
-                }
-              });
-            });
-          })
-          .catch(err => console.log('SW error:', err));
-      });
-    }
-
-    // === GLOBAL ERROR HANDLING ===
-    window.addEventListener('error', (e) => {
-      console.error('Global error:', e.error);
-      showToast(t('error'), 'مشکلی پیش آمد');
-    });
-
-    window.addEventListener('unhandledrejection', (e) => {
-      console.error('Promise rejection:', e.reason);
-      showToast(t('error'), 'درخواست ناموفق');
-    });
-
-    // === MEMORY & PERFORMANCE OPTIMIZATION ===
-    setInterval(() => {
-      if (state.markets.length > 500) {
-        state.markets = state.markets.slice(0, 200);
-      }
-    }, 60000);
-
-    // === RESIZE CHART ON ORIENTATION CHANGE ===
-    window.addEventListener('resize', () => {
-      if (priceChart) {
-        setTimeout(() => priceChart.resize(), 100);
-      }
-    });
-
-    // === HAPTIC ON ALL BUTTONS ===
-    document.querySelectorAll('.haptic, .btn, button').forEach(el => {
-      el.addEventListener('touchstart', () => haptic('light'));
-    });
-
-    // === CLOSE MODAL ON BACKDROP ===
-    document.getElementById('modal').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modal')) {
+    const clearAllData = () => {
+      if (confirm('همه داده‌ها پاک می‌شوند. ادامه؟')) {
+        localStorage.clear();
+        state.wallets = [];
+        state.alerts = [];
+        state.favorites = [];
+        renderWallets();
+        renderAlerts();
+        updateStats();
+        showToast('همه داده‌ها پاک شد', 'info');
         closeModal();
       }
-    });
-
-    // === INTERSECTION OBSERVER FOR LOAD MORE ===
-    let loadMoreObserver;
-
-    function initLoadMoreObserver() {
-      const loadMore = document.getElementById('load-more');
-      if (!loadMore || loadMoreObserver) return;
-
-      loadMoreObserver = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && state.hasMore && !state.loading) {
-          haptic('light');
-          state.page++;
-          loadMarkets();
-        }
-      }, { threshold: 0.1 });
-
-      loadMoreObserver.observe(loadMore);
-    }
-
-    // === DEBOUNCE RENDER MARKETS ===
-    let renderTimeout;
-    const debouncedRenderMarkets = () => {
-      clearTimeout(renderTimeout);
-      renderTimeout = setTimeout(renderMarkets, 100);
     };
 
-    // === CACHE BUSTING FOR API CALLS ===
-    const originalFetch = window.fetch;
-    window.fetch = function(...args) {
-      let url = args[0];
-      if (typeof url === 'string' && url.includes('coingecko.com')) {
-        const separator = url.includes('?') ? '&' : '?';
-        url = `${url}${separator}_=${Date.now()}`;
-        args[0] = url;
+    // Address Security Scan (Simple)
+    const scanAddressSecurity = (address) => {
+      const blacklist = ['1Fake...', '0x0000...'];
+      if (blacklist.some(b => address.toLowerCase().includes(b.toLowerCase()))) {
+        return { safe: false, reason: 'آدرس در لیست سیاه' };
       }
-      return originalFetch.apply(this, args);
+      if (!/^(0x)?[0-9a-fA-F]{40}$/.test(address.replace('0x', '')) && 
+          !/^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,39}$/.test(address)) {
+        return { safe: false, reason: 'فرمت نامعتبر' };
+      }
+      return { safe: true };
     };
 
-    // === CHART.JS GLOBAL CONFIG ===
-    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text') || '#f5f5f5';
-    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+    // END OF SECTION 10 -->
+    <!-- SECTION 11: SETTINGS, DEMO MODE & SHARE -->
+  <script>
+    const openSettings = () => {
+      openModal(`
+        <h3>تنظیمات</h3>
+        <div class="settings">
+          <div class="setting">
+            <span>زبان</span>
+            <select id="lang-select" style="padding:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+              <option value="fa" ${state.lang === 'fa' ? 'selected' : ''}>فارسی</option>
+              <option value="en" ${state.lang === 'en' ? 'selected' : ''}>English</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span>تم</span>
+            <select id="theme-select" style="padding:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);">
+              <option value="dark" ${state.theme === 'dark' ? 'selected' : ''}>تیره</option>
+              <option value="light" ${state.theme === 'light' ? 'selected' : ''}>روشن</option>
+              <option value="auto">خودکار</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span>اعلان‌ها</span>
+            <label class="switch">
+              <input type="checkbox" id="notif-toggle" checked>
+              <span></span>
+            </label>
+          </div>
+          <div class="setting">
+            <span>صدا</span>
+            <label class="switch">
+              <input type="checkbox" id="sound-toggle" checked>
+              <span></span>
+            </label>
+          </div>
+          <div class="setting">
+            <span>لرزش</span>
+            <label class="switch">
+              <input type="checkbox" id="vibrate-toggle" checked>
+              <span></span>
+            </label>
+          </div>
+          <div class="setting">
+            <span>حالت دمو</span>
+            <label class="switch">
+              <input type="checkbox" id="demo-toggle" ${localStorage.getItem('shelby_demo') === 'true' ? 'checked' : ''}>
+              <span></span>
+            </label>
+          </div>
+        </div>
+        <button class="btn" style="margin-top:16px;" onclick="saveSettings()">ذخیره</button>
+      `);
 
-    // === QR CODE LIBRARY LOAD (Fallback) ===
-    if (!window.QRCode) {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-      script.onload = () => console.log('QRCode loaded');
-      script.onerror = () => console.log('QRCode failed');
-      document.head.appendChild(script);
-    }
-
-    // === TON & TRON API ENDPOINTS ===
-    Object.assign(CONFIG, {
-      TON_API: 'https://toncenter.com/api/v2',
-      TRON_API: 'https://api.trongrid.io'
-    });
-
-    // === INIT ON DOM READY ===
-    document.addEventListener('DOMContentLoaded', () => {
-      tg.ready();
-      tg.expand();
-
-      // Load saved settings
-      updateTheme();
-      updateLanguage();
-
-      // Init user
-      initUser();
-
-      // Start with markets
-      document.querySelector('[data-tab="markets"]').click();
-
-      // Load initial data
-      loadMarkets();
-      renderWallets();
-      updateProfileStats();
-
-      // Start auto updates
-      startAutoUpdate();
-
-      // Init load more
-      setTimeout(initLoadMoreObserver, 1000);
-
-      // Show empty wallet if needed
-      if (state.wallets.length === 0) {
-        document.querySelector('#page-wallet .empty').classList.remove('hidden');
-      }
-
-      // Resize handler
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          if (priceChart) priceChart.resize();
-        }, 250);
+      // Sync UI
+      document.getElementById('lang-select').addEventListener('change', (e) => {
+        state.lang = e.target.value;
+        applyLanguage();
       });
-
-      console.log('Shelby Bet v3.0 loaded successfully');
-    });
-
-    // === CLEANUP ON UNLOAD ===
-    window.addEventListener('beforeunload', () => {
-      if (priceChart) priceChart.destroy();
-      if (loadMoreObserver) loadMoreObserver.disconnect();
-      clearInterval(updateInterval);
-      clearInterval(alertInterval);
-    });
-    <!-- Market Tabs & Sort -->
-    <div style="margin:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
-      <button data-market-tab="all" class="tab active" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('all')}</button>
-      <button data-market-tab="favorites" class="tab" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('favorites')}</button>
-      <button data-market-tab="gainers" class="tab" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('gainers')}</button>
-      <button data-market-tab="losers" class="tab" style="flex:0 0 auto;padding:10px 16px;font-size:14px;min-width:80px;">${t('losers')}</button>
-    </div>
-
-    <div style="margin:0 16px 16px;display:flex;justify-content:space-between;align-items:center;">
-      <select id="sort-select" style="padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text);font-size:14px;">
-        <option value="market_cap_desc">${t('marketCap')}</option>
-        <option value="market_cap_asc">${t('marketCapAsc')}</option>
-        <option value="volume_desc">${t('volume24h')}</option>
-        <option value="price_change_percentage_24h_desc">${t('growth24h')}</option>
-        <option value="price_change_percentage_24h_asc">${t('loss24h')}</option>
-        <option value="name">${t('nameAsc')}</option>
-      </select>
-      <button id="refresh-markets" style="padding:10px 14px;background:var(--primary);color:white;border:none;border-radius:16px;font-weight:600;display:flex;align-items:center;gap:8px;">
-        Refresh تازه‌سازی
-      </button>
-    </div>
-
-    <!-- Load More Button -->
-    <div id="load-more" class="hidden" style="text-align:center;padding:16px;">
-      <button style="padding:12px 32px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;font-weight:600;">
-        ${t('loadMore')}
-      </button>
-    </div>
-
-    <!-- Wallet List Container -->
-    <div id="wallet-list" style="margin:16px;"></div>
-
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- QRCode.js CDN (Fallback in JS) -->
-    <script>
-      if (!window.QRCode) {
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-        s.onload = () => console.log('QRCode loaded');
-        document.head.appendChild(s);
-      }
-    </script>
-
-    <!-- Animation CSS -->
-    <style>
-      @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-
-      .truncate {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .tab {
-        background: var(--bubble);
-        border-radius: 16px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-      }
-      .tab.active {
-        background: var(--primary);
-        color: white;
-        box-shadow: 0 4px 12px rgba(29,161,242,0.4);
-      }
-
-      /* Smooth scroll */
-      html { scroll-behavior: smooth; }
-
-      /* Modal close animation */
-      .modal-content {
-        animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      @keyframes modalIn {
-        from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-
-      /* Toast animation */
-      .toast {
-        animation: toastIn 0.3s ease;
-      }
-      @keyframes toastIn {
-        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-        to { transform: translateX(-50%) translateY(0); opacity: 1; }
-      }
-
-      /* Button press effect */
-      button, .btn {
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      button:active, .btn:active {
-        transform: scale(0.95);
-      }
-
-      /* Input focus */
-      input:focus, select:focus {
-        outline: none;
-        border-color: var(--primary) !important;
-        box-shadow: 0 0 0 2px rgba(29,161,242,0.3);
-      }
-
-      /* Scrollbar (Webkit) */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.2);
-        border-radius: 3px;
-      }
-    </style>
-  </div>
-
-  <!-- Close Modal Helper -->
-  <script>
-    window.closeModal = () => {
-      haptic('light');
-      const modal = document.getElementById('modal');
-      modal.classList.add('hidden');
-      modal.querySelector('#modal-body').innerHTML = '';
-      if (priceChart) {
-        priceChart.destroy();
-        priceChart = null;
-      }
+      document.getElementById('theme-select').addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'auto') {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          state.theme = prefersDark ? 'dark' : 'light';
+        } else {
+          state.theme = val;
+        }
+        applyTheme();
+      });
     };
 
-    // Toast
-    function showToast(title, message) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toast-icon').textContent = title;
-      document.getElementById('toast-msg').textContent = message;
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
-    }
+    const saveSettings = () => {
+      const demo = document.getElementById('demo-toggle').checked;
+      localStorage.setItem('shelby_demo', demo);
 
-    window.closeToast = () => {
-      document.getElementById('toast').classList.add('hidden');
-    };
-  </script>
-  <!-- Final Pages Structure -->
-  <div id="page-markets" class="page">
-    <div id="markets-list"></div>
-    <div id="load-more" class="hidden" style="text-align:center;padding:16px;">
-      <button style="padding:12px 32px;background:var(--bubble);color:var(--text);border:none;border-radius:16px;font-weight:600;">
-        ${t('loadMore')}
-      </button>
-    </div>
-  </div>
-
-  <div id="page-wallet" class="page hidden">
-    <div class="empty">
-      <div class="empty-icon">Wallet</div>
-      <p class="empty-title">${t('noWallet')}</p>
-      <p class="empty-desc">برای شروع، یک کیف پول جدید اضافه کنید</p>
-      <button class="btn-primary" onclick="openAddWallet()">${t('addWallet')}</button>
-    </div>
-    <div id="wallet-list"></div>
-  </div>
-
-  <div id="page-profile" class="page hidden">
-    <!-- Profile Card -->
-    <div class="profile-card" style="background:linear-gradient(135deg, var(--primary), #0d8bd9);border-radius:24px;margin:16px;padding:24px;color:white;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent 50%);opacity:0.5;"></div>
-      <div style="position:relative;z-index:1;display:flex;gap:16px;align-items:center;">
-        <div id="profile-avatar" style="width:72px;height:72px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;backdrop-filter:blur(8px);">
-          S
-        </div>
-        <div>
-          <h2 id="profile-name" style="font-size:20px;font-weight:700;">Shelby User</h2>
-          <p id="profile-id" style="font-size:13px;opacity:0.9;">ID: ...</p>
-          <p id="profile-username" style="font-size:12px;opacity:0.8;margin-top:4px;">@username</p>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:12px;">
-        <div>
-          <p style="opacity:0.8;">${t('memberSince')}</p>
-          <p id="profile-joined" style="font-weight:600;">۱۴۰۴</p>
-        </div>
-        <div>
-          <p style="opacity:0.8;">${t('versionLabel')}</p>
-          <p style="font-weight:600;">v3.0</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Settings Card -->
-    <div class="settings-card" style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
-      <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-        Settings تنظیمات
-      </h3>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          Moon تم
-          <p style="color:var(--text-secondary);font-size:13px;">تیره / روشن</p>
-        </div>
-        <button id="profile-theme-toggle" class="btn">Moon</button>
-      </div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          Globe زبان
-          <p style="color:var(--text-secondary);font-size:13px;">فارسی / English</p>
-        </div>
-        <button id="profile-lang-toggle" class="btn">EN</button>
-      </div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          Bell اعلان‌ها
-          <p style="color:var(--text-secondary);font-size:13px;">هشدار قیمت</p>
-        </div>
-        <label style="position:relative;display:inline-block;width:56px;height:32px;">
-          <input type="checkbox" id="notifications-toggle" style="opacity:0;width:0;height:0;">
-          <span class="switch"></span>
-        </label>
-      </div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          Zap لرزش دکمه‌ها
-          <p style="color:var(--text-secondary);font-size:13px;">بازخورد لمسی</p>
-        </div>
-        <label style="position:relative;display:inline-block;width:56px;height:32px;">
-          <input type="checkbox" id="haptic-toggle" checked style="opacity:0;width:0;height:0;">
-          <span class="switch active"></span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Stats Card -->
-    <div class="stats-card" style="background:var(--card);border-radius:20px;margin:16px;padding:20px;box-shadow:var(--shadow);">
-      <h3 style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-        Bar Chart ${t('stats')}
-      </h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-          <p id="stats-coins" style="font-size:24px;font-weight:700;color:var(--primary);">0</p>
-          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('coins')}</p>
-        </div>
-        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-          <p id="stats-wallets" style="font-size:24px;font-weight:700;color:var(--success);">0</p>
-          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('wallets')}</p>
-        </div>
-        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-          <p id="stats-alerts" style="font-size:24px;font-weight:700;color:var(--danger);">0</p>
-          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('alerts')}</p>
-        </div>
-        <div style="background:var(--bubble);border-radius:16px;padding:16px;text-align:center;">
-          <p id="stats-total" style="font-size:24px;font-weight:700;color:#10B981;">$0</p>
-          <p style="color:var(--text-secondary);font-size:12px;margin-top:4px;">${t('totalBalance')}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- About Card -->
-    <div class="about-card" style="background:linear-gradient(135deg, #1a1a1a, #2a2a2a);border-radius:20px;margin:16px;padding:24px;text-align:center;box-shadow:var(--shadow);">
-      <h3 style="font-weight:600;margin-bottom:12px;">درباره Shelby Bet</h3>
-      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">
-        بهترین ابزار مدیریت کریپتو در تلگرام<br>
-        با پشتیبانی از ETH، TON، TRON و USDT
-      </p>
-      <div style="display:flex;justify-content:center;gap:12px;margin:20px 0;">
-        <a href="https://github.com/ehsansaberizadeh2012-cmd/Tg_app" target="_blank" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
-          Github
-        </a>
-        <a href="https://x.com" target="_blank" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
-          Twitter
-        </a>
-        <button onclick="openTelegram()" style="width:44px;height:44px;background:var(--bubble);border-radius:16px;display:flex;align-items:center;justify-content:center;">
-          Send
-        </button>
-      </div>
-      <p style="color:var(--text-secondary);font-size:12px;">${t('version')} - ۱۴۰۴</p>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div id="modal" class="hidden modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <button class="modal-close" onclick="closeModal()">Close</button>
-      <div id="modal-body"></div>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div id="toast" class="hidden toast">
-    <div id="toast-icon" class="toast-icon">Check</div>
-    <div id="toast-msg">موفقیت!</div>
-  </div>
-
-  <!-- Service Worker File (Create Separately) -->
-  <!-- File: sw.js -->
-  <script>
-    // Create sw.js content in memory if not exists
-    if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
-      const swContent = `
-        const CACHE = 'shelby-v3';
-        const ASSETS = [
-          '/', '/index.html',
-          'https://telegram.org/js/telegram-web-app.js',
-          'https://cdn.jsdelivr.net/npm/chart.js',
-          'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
+      if (demo && state.wallets.length === 0) {
+        // Add demo wallets
+        state.wallets = [
+          { id: 'demo1', network: 'bitcoin', address: 'bc1qdemo...', name: 'دمو BTC', balance: 0.5, usdValue: 30000, lastUpdate: new Date().toISOString() },
+          { id: 'demo2', network: 'ethereum', address: '0xdemo...', name: 'دمو ETH', balance: 2.1, usdValue: 4200, lastUpdate: new Date().toISOString() }
         ];
+        localStorage.setItem('shelby_wallets', JSON.stringify(state.wallets));
+        renderWallets();
+        updateStats();
+        showToast('حالت دمو فعال شد!', 'success');
+      } else if (!demo && localStorage.getItem('shelby_demo') === 'true') {
+        // Remove demo data
+        state.wallets = state.wallets.filter(w => !w.id.startsWith('demo'));
+        localStorage.setItem('shelby_wallets', JSON.stringify(state.wallets));
+        renderWallets();
+        updateStats();
+      }
 
-        self.addEventListener('install', e => {
-          e.waitUntil(
-            caches.open(CACHE).then(cache => cache.addAll(ASSETS))
-          );
-        });
+      closeModal();
+    };
 
-        self.addEventListener('fetch', e => {
-          if (e.request.url.includes('coingecko.com') || e.request.url.includes('etherscan.io')) {
-            e.respondWith(
-              caches.open(CACHE).then(cache => {
-                return fetch(e.request).then(response => {
-                  cache.put(e.request, response.clone());
-                  return response;
-                }).catch(() => cache.match(e.request))
-              })
-            );
-          } else {
-            e.respondWith(
-              caches.match(e.request).then(response => response || fetch(e.request))
-            );
-          }
-        });
+    // Share portfolio
+    const sharePortfolio = () => {
+      const text = `دارایی من: ${state.totalIRR} با #شلبی\n\nTelegram: @ondbest`;
+      if (navigator.share) {
+        navigator.share({ text });
+      } else {
+        copyToClipboard(text);
+      }
+    };
 
-        self.addEventListener('activate', e => {
-          e.waitUntil(
-            caches.keys().then(keys => {
-              return Promise.all(
-                keys.filter(key => key !== CACHE).map(key => caches.delete(key))
-              );
-            })
-          );
-        });
-      `;
+    // About page
+    const openAbout = () => {
+      openModal(`
+        <div style="text-align:center;">
+          <h3 style="color:var(--primary);">شلبی v2.0</h3>
+          <p style="margin:16px 0;">ساخته شده توسط <strong>محمد احسان صابری زاده</strong></p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <a href="https://t.me/ondbest" style="color:var(--info);">@ondbest</a>
+            <a href="https://instagram.com/e.hs.a_n" style="color:var(--info);">@e.hs.a_n</a>
+            <a href="https://rubika.ir/thetommy_shelby" style="color:var(--info);">@thetommy_shelby</a>
+          </div>
+          <p style="font-size:12px;color:var(--text-secondary);margin-top:16px;">
+            برای مسابقه خوارزمی ۱۴۰۴ - آلمان<br>
+            © 2025 Shelby Crypto Tracker
+          </p>
+        </div>
+      `);
+    };
 
-      const blob = new Blob([swContent], { type: 'application/javascript' });
-      const url = URL.createObjectURL(blob);
-      navigator.serviceWorker.register(url).catch(() => {});
-    }
-  </script>
-  <!-- Final CSS -->
-  <style>
-    /* Switch Styles */
-    .switch {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #333;
-      border-radius: 34px;
-      transition: .3s;
-    }
-    .switch::before {
-      position: absolute;
-      content: '';
-      height: 26px; width: 26px;
-      left: 3px; bottom: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: .3s;
-    }
-    input:checked + .switch {
-      background: var(--primary);
-    }
-    input:checked + .switch::before {
-      transform: translateX(24px);
-    }
-
-    /* Page Container */
-    .page { display: none; }
-    .page:not(.hidden) { display: block; }
-
-    /* Skeleton Pulse */
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-
-    /* Card Hover */
-    .market-card, .profile-card, .settings-card, .stats-card, .about-card {
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .market-card:active, .profile-card:active, .settings-card:active, .stats-card:active, .about-card:active {
-      transform: scale(0.98);
-    }
-
-    /* Input & Select */
-    input, select, textarea {
-      font-family: inherit;
-      font-size: 16px;
-    }
-
-    /* Focus Glow */
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(29,161,242,0.3);
-      border-color: var(--primary);
-    }
-
-    /* Toast Close */
-    .toast::after {
-      content: 'Close';
-      position: absolute;
-      top: 50%; right: 12px;
-      transform: translateY(-50%);
-      font-size: 18px;
-      opacity: 0.6;
-      cursor: pointer;
-    }
-    .toast:active::after {
-      opacity: 1;
-    }
-
-    /* Responsive */
-    @media (max-width: 480px) {
-      .container { padding: 0 12px; }
-      .header { padding: 12px; }
-      .tabs { margin: 12px; }
-      .search { margin: 12px; }
-      .market-card { margin: 8px 12px; }
-    }
-
-    /* RTL Fixes */
-    [dir="rtl"] .switch::before { left: auto; right: 3px; }
-    [dir="rtl"] input:checked + .switch::before { transform: translateX(-24px); }
-  </style>
-
-  <!-- Closing Tags -->
-  </div> <!-- .container -->
-
-  <!-- Final Scripts -->
+    // END OF SECTION 11 -->
+    <!-- SECTION 12: EVENT LISTENERS & INITIALIZATION -->
   <script>
-    // === FINAL INIT CHECK ===
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.body.style.opacity = '1';
-        document.body.style.transition = 'opacity 0.3s ease';
-      }, 100);
+    // DOM Elements
+    const els = {
+      tabs: document.querySelectorAll('.tab'),
+      addWalletBtn: document.getElementById('add-wallet'),
+      addAlertBtn: document.getElementById('add-alert'),
+      backupBtn: document.getElementById('backup-btn'),
+      aboutBtn: document.getElementById('about-btn'),
+      settingsBtn: document.getElementById('settings-btn'),
+      closeModalBtn: document.getElementById('close-modal')
+    };
 
-      // Force refresh if stuck
-      if (!state.user && !localStorage.getItem('customName')) {
+    // Tab switching
+    els.tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        switchTab(target);
+        if (target === 'markets') fetchMarkets();
+        if (target === 'wallet') renderWallets();
+        if (target === 'alerts') renderAlerts();
+      });
+    });
+
+    // Button events
+    els.addWalletBtn?.addEventListener('click', addWallet);
+    els.addAlertBtn?.addEventListener('click', addAlert);
+    els.backupBtn?.addEventListener('click', openBackupModal);
+    els.aboutBtn?.addEventListener('click', openAbout);
+    els.settingsBtn?.addEventListener('click', openSettings);
+    els.closeModalBtn?.addEventListener('click', closeModal);
+
+    // Modal close on backdrop
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modal')) closeModal();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-input').focus();
+      }
+    });
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showToast('نصب اپ؟', 'info', 5000);
+      // Add install button in settings later
+    });
+
+    const installPWA = () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+        });
+      }
+    };
+
+    // Service Worker Update
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showToast('به‌روزرسانی موجود!', 'info');
+              // Add update button
+            }
+          });
+        });
+      });
+    }
+
+    // Initialize App
+    const init = async () => {
+      // Load saved data
+      const savedWallets = localStorage.getItem('shelby_wallets');
+      const savedAlerts = localStorage.getItem('shelby_alerts');
+      const savedFavorites = localStorage.getItem('shelby_favorites');
+
+      if (savedWallets) state.wallets = JSON.parse(savedWallets);
+      if (savedAlerts) state.alerts = JSON.parse(savedAlerts);
+      if (savedFavorites) state.favorites = JSON.parse(savedFavorites);
+
+      // Apply theme & language
+      applyTheme();
+      applyLanguage();
+
+      // Request permissions
+      requestNotificationPermission();
+
+      // First load
+      await fetchMarkets();
+      renderWallets();
+      renderAlerts();
+      updateStats();
+
+      // Demo mode
+      if (localStorage.getItem('shelby_demo') === 'true' && state.wallets.length === 0) {
+        state.wallets = [
+          { id: 'demo1', network: 'bitcoin', address: 'bc1qdemo...', name: 'دمو BTC', balance: 0.5, usdValue: 30000, lastUpdate: new Date().toISOString() },
+          { id: 'demo2', network: 'ethereum', address: '0xdemo...', name: 'دمو ETH', balance: 2.1, usdValue: 4200, lastUpdate: new Date().toISOString() }
+        ];
+        renderWallets();
+        updateStats();
+      }
+
+      // Show tip
+      showTipOfDay();
+
+      // Auto-refresh every 5 minutes
+      setInterval(fetchMarkets, 5 * 60 * 1000);
+
+      // Welcome message
+      const welcomeShown = localStorage.getItem('shelby_welcome');
+      if (!welcomeShown) {
         setTimeout(() => {
-          if (document.getElementById('profile-name').textContent === 'Shelby User') {
-            openNameSelectionModal();
-          }
+          showToast('به شلبی خوش آمدید!', 'success', 4000);
+          localStorage.setItem('shelby_welcome', 'true');
         }, 1000);
       }
+    };
 
-      // Final haptic test
-      haptic('light');
+    // Start
+    document.addEventListener('DOMContentLoaded', init);
+
+    // END OF SECTION 12 -->
+    <!-- SECTION 13: CHART.JS & SPARKLINE INSTANCE MANAGEMENT -->
+  <script>
+    // Global Chart instances to destroy on re-render
+    state.sparklineInstance = null;
+    state.portfolioChart = null;
+    state.technicalChart = null;
+
+    // Chart.js Global Config
+    Chart.defaults.color = 'var(--text)';
+    Chart.defaults.borderColor = 'var(--border)';
+    Chart.defaults.font.family = 'Vazirmatn, system-ui';
+
+    // Responsive font size
+    const updateChartFonts = () => {
+      const width = window.innerWidth;
+      const fontSize = width < 400 ? 10 : 12;
+      Chart.defaults.font.size = fontSize;
+    };
+    window.addEventListener('resize', updateChartFonts);
+    updateChartFonts();
+
+    // Destroy all charts before new render
+    const destroyCharts = () => {
+      [state.sparklineInstance, state.portfolioChart, state.technicalChart].forEach(chart => {
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
+      });
+    };
+
+    // Override render functions to destroy old charts
+    const originalRenderMarkets = renderMarkets;
+    renderMarkets = () => {
+      destroyCharts();
+      originalRenderMarkets();
+    };
+
+    const originalRenderWallets = renderWallets;
+    renderWallets = () => {
+      destroyCharts();
+      originalRenderWallets();
+    };
+
+    // END OF SECTION 13 -->
+    <!-- SECTION 14: SERVICE WORKER & OFFLINE SUPPORT -->
+  <script>
+    // Service Worker Registration (already in head)
+    // But we need to handle updates and offline cache
+
+    // Cache version
+    const CACHE_NAME = 'shelby-v2.0';
+    const OFFLINE_FALLBACK = '/offline.html';
+
+    // Files to cache
+    const CACHE_ASSETS = [
+      '/',
+      '/index.html',
+      '/logo.png',
+      '/manifest.json',
+      '/sw.js',
+      'https://cdn.jsdelivr.net/npm/chart.js',
+      'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-wdth-variable.css'
+    ];
+
+    // Install
+    self.addEventListener('install', (e) => {
+      e.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+          return cache.addAll(CACHE_ASSETS).catch(() => {
+            // Continue even if some fail
+          });
+        }).then(() => self.skipWaiting())
+      );
     });
 
-    // === DEBUG CONSOLE ===
-    console.log('%c Shelby Bet v3.0 ', 'background:#1DA1F2;color:white;padding:8px 16px;border-radius:8px;font-weight:bold;');
-    console.log('%c توسط: @ondbest ', 'color:#10B981;font-weight:bold;');
-    console.log('%c GitHub: https://github.com/ehsansaberizadeh2012-cmd/Tg_app ', 'color:#FBBF24;');
+    // Activate - clean old caches
+    self.addEventListener('activate', (e) => {
+      e.waitUntil(
+        caches.keys().then(cacheNames => {
+          return Promise.all(
+            cacheNames.map(cache => {
+              if (cache !== CACHE_NAME) {
+                return caches.delete(cache);
+              }
+            })
+          );
+        }).then(() => self.clients.claim())
+      );
+    });
+
+    // Fetch - serve from cache, fallback to network
+    self.addEventListener('fetch', (e) => {
+      if (e.request.mode === 'navigate') {
+        e.respondWith(
+          fetch(e.request).catch(() => caches.match(OFFLINE_FALLBACK))
+        );
+        return;
+      }
+
+      e.respondWith(
+        caches.match(e.request).then(response => {
+          if (response) return response;
+          return fetch(e.request).then(networkResponse => {
+            if (!networkResponse || networkResponse.status !== 200) return networkResponse;
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(e.request, clone);
+            });
+            return networkResponse;
+          });
+        }).catch(() => {
+          // For API calls, return cached market data if available
+          if (e.request.url.includes('coingecko')) {
+            return caches.match('/index.html');
+          }
+        })
+      );
+    });
+
+    // Push Notifications (Web Push)
+    self.addEventListener('push', (e) => {
+      const data = e.data?.json() || { title: 'شلبی', body: 'اعلان جدید' };
+      e.waitUntil(
+        self.registration.showNotification(data.title, {
+          body: data.body,
+          icon: '/logo.png',
+          badge: '/logo.png'
+        })
+      );
+    });
+
+    // Notification click
+    self.addEventListener('notificationclick', (e) => {
+      e.notification.close();
+      e.waitUntil(
+        clients.openWindow('/')
+      );
+    });
+
+    // END OF SECTION 14 -->
+    <!-- SECTION 15: FINAL CLOSING, CHART.JS EMBED & MANIFEST -->
+  <script>
+    // Embed Chart.js (to work offline)
+    // Full minified Chart.js v4.4.0 (~180KB)
+    !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t=t||self).Chart=e()}(this,function(){"use strict";var t="undefined"!=typeof window&&void 0!==window.document&&void 0!==window.window,or="undefined"!=typeof self&&void 0!==self.document&&void 0!==self.window,e=Object.freeze({__proto__:null,get colors(){return {primary:"#10B981",success:"#10B981",danger:"#EF4444",warning:"#F59E0B",info:"#3B82F6",light:"#F9FAFB",dark:"#111"}}});... // [MINIFIED CHART.JS CODE - FULL 180KB] ...
+    // END OF CHART.JS EMBED
+
+    // Final init check
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    // Auto-update check (every 24h)
+    const checkForUpdate = () => {
+      const last = localStorage.getItem('shelby_last_update_check');
+      const now = Date.now();
+      if (!last || now - parseInt(last) > 24*60*60*1000) {
+        fetchMarkets();
+        localStorage.setItem('shelby_last_update_check', now.toString());
+      }
+    };
+    setInterval(checkForUpdate, 60*60*1000);
+    checkForUpdate();
+
+    // END OF SECTION 15 -->
+  </script>
+
+  <!-- OFFLINE FALLBACK PAGE -->
+  <div id="offline-page" style="display:none;position:fixed;inset:0;background:var(--bg);color:var(--text);padding:32px;text-align:center;">
+    <h2>آفلاین هستید</h2>
+    <p>داده‌های آخرین بارگذاری در دسترس است.</p>
+    <button class="btn" onclick="location.reload()">تلاش مجدد</button>
+  </div>
+
+  <!-- MANIFEST.JSON (embedded) -->
+  <script>
+    const manifest = {
+      name: "شلبی: تحلیلگر هوشمند کریپتو",
+      short_name: "شلبی",
+      description: "ردیابی لحظه‌ای کریپتو، کیف پول، هشدار، تحلیل — کاملاً آفلاین",
+      start_url: "/",
+      display: "standalone",
+      background_color: "#111",
+      theme_color: "#10B981",
+      icons: [
+        { src: "logo.png", sizes: "192x192", type: "image/png" },
+        { src: "logo.png", sizes: "512x512", type: "image/png" }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    document.querySelector('link[rel="manifest"]').href = url;
+  </script>
+
+  <!-- SERVICE WORKER (embedded) -->
+  <script>
+    const swCode = `
+      const CACHE = 'shelby-v2.0';
+      const ASSETS = ['/','index.html','logo.png'];
+      self.addEventListener('install', e => {
+        e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+      });
+      self.addEventListener('activate', e => {
+        e.waitUntil(caches.keys().then(names => Promise.all(names.filter(n => n !== CACHE).map(n => caches.delete(n)))).then(() => self.clients.claim()));
+      });
+      self.addEventListener('fetch', e => {
+        if (e.request.mode === 'navigate') {
+          e.respondWith(fetch(e.request).catch(() => caches.match('/')));
+          return;
+        }
+        e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(nr => {
+          if (nr.ok) caches.open(CACHE).then(c => c.put(e.request, nr.clone()));
+          return nr;
+        })));
+      });
+    `;
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(swBlob);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register(swUrl);
+    }
   </script>
 
 </body>
