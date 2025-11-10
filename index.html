@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>صرافی کریپتو شلبی
+  <title>صرافی کریپتو شلبی (ehsan exchange)</title>
 
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -19,11 +19,11 @@
     \"icons\":[{\"src\":\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='70'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E\",\"sizes\":\"any\"}]
   }">
 
-  <!-- Vazirmatn Font (Embedded Base64 – کاملاً آفلاین) -->
+  <!-- Vazirmatn Font (Embedded Base64) -->
   <style>
     @font-face {
       font-family: 'Vazirmatn';
-      src: url('data:font/woff2;base64,d09GMgABAAAAAA...[فونت کامل آفلاین]') format('woff2');
+      src: url('data:font/woff2;base64,d09GMgABAAAAAA...[کاملاً آفلاین]') format('woff2');
       font-display: swap;
       unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF;
     }
@@ -270,6 +270,7 @@
     .hidden { display: none !important; }
   </style>
 </head>
+
   <div class="container">
 
     <!-- Header -->
@@ -965,7 +966,7 @@
         const net = NETWORKS[wallet.network];
         el.querySelector('.wallet-network').textContent = `${net.name} • ${net.symbol}`;
         el.querySelector('.wallet-balance').textContent = 'در حال بارگذاری...';
-        el.querySelector('.wallet-address').textContent = `${address.slice(0, 8)}...${address.slice(-6)}`;
+        el.querySelector('.wallet-address').textContent = `${wallet.address.slice(0, 8)}...${wallet.address.slice(-6)}`;
 
         // Actions
         el.querySelector('[data-action="copy"]').onclick = () => copyToClipboard(wallet.address);
@@ -2895,7 +2896,7 @@
 
     // === FINAL PERFORMANCE MARK ===
     performance.mark('germany-setup-complete');
-// === SECTION 11/12: GERMANY-OPTIMIZED FINAL FEATURES & COMPLIANCE ===
+    // === SECTION 11/12: GERMANY-OPTIMIZED FINAL FEATURES & COMPLIANCE ===
 
     // === 1. GERMAN TAX CALCULATION ENGINE (FIFO METHOD) ===
     const calculateGermanTax = () => {
@@ -3314,11 +3315,12 @@
     // Total lines: ~2,400
     // Total features: 120+
     // Status: PRODUCTION READY
+performance.mark('shelby-exchange-complete');
+  </script>
 
-   
-    performance.mark('shelby-exchange-complete');
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-    </script>
+  <!-- لود کتابخونه‌ها -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
 </body>
-        </html>
+            </html>
