@@ -1,215 +1,1510 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>صرافی کریپتو شلبی (ehsan exchange)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelby Pro - Crypto Exchange</title>
+    
+    <!-- Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+    
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        
+        const firebaseConfig = {
+            apiKey: "your-api-key",
+            authDomain: "shelby-pro.firebaseapp.com",
+            projectId: "shelby-pro",
+            storageBucket: "shelby-pro.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+        
+        window.firebase = {
+            app: initializeApp(firebaseConfig),
+            db: getFirestore,
+            auth: getAuth
+        };
+    </script>
 
-  <!-- Telegram Web App -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary: #1DA1F2;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --bg: #0f0f0f;
+            --card: #1a1a1a;
+            --text: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --border: #2a2a2a;
+            --bubble: rgba(255,255,255,0.08);
+        }
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
+        .light-theme {
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --text: #0f0f0f;
+            --text-secondary: #666;
+            --border: #e0e0e0;
+            --bubble: rgba(0,0,0,0.08);
+        }
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css">
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  <!-- External Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: all 0.3s;
+            padding-bottom: 80px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Header & Navigation */
+        .header {
+            background: var(--bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .nav-button {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .nav-button.active {
+            color: var(--primary);
+        }
+
+        /* Cards & Components */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .market-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        /* FAB Button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(29, 161, 242, 0.5);
+            z-index: 99;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            z-index: 1001;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.open {
+            transform: translateY(0);
+        }
+
+        /* Loading States */
+        .skeleton {
+            background: var(--bubble);
+            border-radius: 8px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Sparklines */
+        .sparkline {
+            width: 100px;
+            height: 40px;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+
+        /* Network Badges */
+        .network-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .eth { background: #627EEA; color: white; }
+        .btc { background: #F7931A; color: white; }
+        .sol { background: #00FFA3; color: black; }
+        .ton { background: #0088CC; color: white; }
+        .tron { background: #FF060A; color: white; }
+    </style>
 </head>
-<body>
-  <div class="container">
+<body class="antialiased">
 
-    <!-- Header -->
-    <header class="header">
-      <div class="row">
-        <div class="logo">
-          <span>ش</span>
-          <div>
-            <h1>صرافی شلبی</h1>
-            <p>ehsan exchange</p>
-          </div>
-        </div>
-        <div class="actions">
-          <!-- دکمه نوتیفیکیشن -->
-          <button class="btn notification-btn" id="notification-btn" title="نوتیفیکیشن">
-            <div class="btn-inner">🔔</div>
-            <div class="notification-badge"></div>
-          </button>
-          
-          <!-- دکمه کیف پول -->
-          <button class="btn wallet-btn" id="wallet-btn" title="کیف پول">
-            <div class="btn-inner">👛</div>
-          </button>
-          
-          <!-- دکمه تغییر تم (ماه و خورشید) -->
-          <button class="btn theme-btn" id="theme-toggle" title="تغییر تم">
-            <div class="btn-inner">🌙</div>
-          </button>
-          
-          <button class="btn" id="lang-toggle" title="زبان">EN</button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" data-tab="markets">بازارها</div>
-      <div class="tab" data-tab="wallet">کیف پول</div>
-      <div class="tab" data-tab="alerts">هشدارها</div>
-      <div class="tab" data-tab="profile">پروفایل</div>
-    </div>
-
-    <!-- Search -->
-    <div class="search">
-      <input type="text" id="search-input" placeholder="جستجو در ارزها (مثلاً: بیتکوین، اتریوم)" autocomplete="off">
-      <div class="icon">🔍</div>
-    </div>
-
-    <!-- Pages Container -->
-    <div id="page-markets" class="page">
-      <div id="markets-loader" class="loader"></div>
-      <div id="markets-list"></div>
-    </div>
-
-    <div id="page-wallet" class="page hidden">
-      <div id="wallet-empty" style="text-align:center;padding:60px 20px;">
-        <div style="width:80px;height:80px;background:var(--bubble);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;">
-          👛
-        </div>
-        <p style="font-size:18px;font-weight:600;margin-bottom:8px;">هیچ کیف پولی اضافه نشده</p>
-        <p style="color:var(--text-secondary);margin-bottom:24px;">برای شروع، یک کیف پول جدید اضافه کنید</p>
-        <button class="btn-primary" id="add-wallet-btn">افزودن کیف پول</button>
-      </div>
-      <div id="wallet-content" class="hidden"></div>
-    </div>
-
-    <div id="page-alerts" class="page hidden">
-      <div id="alerts-empty" style="text-align:center;padding:60px 20px;">
-        <div style="width:80px;height:80px;background:var(--bubble);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;">
-          🔔
-        </div>
-        <p style="font-size:18px;font-weight:600;margin-bottom:8px;">هیچ هشداری تنظیم نشده</p>
-        <p style="color:var(--text-secondary);margin-bottom:24px;">برای قیمت‌های خاص هشدار ایجاد کنید</p>
-        <button class="btn-primary" id="create-alert-btn">ایجاد هشدار</button>
-      </div>
-      <div id="alerts-list" class="hidden"></div>
-    </div>
-
-    <div id="page-profile" class="page hidden">
-      <div class="profile-card" style="background:linear-gradient(135deg,var(--primary),#0d8bd9);border-radius:24px;margin:16px;padding:24px;color:white;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.1),transparent 50%);"></div>
-        <div style="position:relative;z-index:1;display:flex;gap:16px;align-items:center;">
-          <div style="width:72px;height:72px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;">ش</div>
-          <div>
-            <h2 style="font-size:20px;font-weight:700;">کاربر شلبی</h2>
-            <p style="font-size:13px;opacity:0.9;" id="profile-id">ID: در حال بارگذاری...</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="profile-menu">
-        <div class="menu-item" data-action="export">
-          <span>📤</span>
-          <span>خروجی داده‌ها</span>
-        </div>
-        <div class="menu-item" data-action="import">
-          <span>📥</span>
-          <span>ورودی داده‌ها</span>
-        </div>
-        <div class="menu-item" data-action="backup">
-          <span>💾</span>
-          <span>پشتیبان‌گیری</span>
-        </div>
-        <div class="menu-item" data-action="settings">
-          <span>⚙️</span>
-          <span>تنظیمات</span>
-        </div>
-        <div class="menu-item" data-action="about">
-          <span>ℹ️</span>
-          <span>درباره شلبی</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Templates -->
-    <template id="market-card-template">
-      <div class="market-card">
-        <div class="row">
-          <div class="coin">
-            <img src="" alt="" class="coin-icon">
-            <div>
-              <div class="coin-name"></div>
-              <div class="coin-symbol"></div>
+    <!-- Markets Page -->
+    <div id="markets-page" class="page active">
+        <div class="header p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-xl font-bold">Crypto Markets</h1>
+                <div class="flex gap-2">
+                    <button id="theme-toggle" class="w-8 h-8 rounded-full bg-var(--bubble) flex items-center justify-center">🌙</button>
+                    <button id="notification-btn" class="w-8 h-8 rounded-full bg-var(--bubble) flex items-center justify-center">🔔</button>
+                </div>
             </div>
-          </div>
-          <div class="price-info">
-            <div class="price-main"></div>
-            <div class="price-change"></div>
-          </div>
-        </div>
-        <div class="chart-container">
-          <canvas class="sparkline"></canvas>
-        </div>
-        <div class="actions">
-          <button class="action-btn" data-action="favorite">☆</button>
-          <button class="action-btn" data-action="alert">🔔</button>
-          <button class="action-btn" data-action="chart">📊</button>
-        </div>
-      </div>
-    </template>
+            
+            <div class="relative mb-4">
+                <input type="text" id="search-input" placeholder="Search coins..." class="w-full p-3 rounded-2xl bg-var(--card) border border-var(--border)">
+                <button id="search-clear" class="absolute right-3 top-3 text-var(--text-secondary) hidden">✕</button>
+            </div>
 
-    <template id="wallet-card-template">
-      <div class="wallet-card">
-        <div class="wallet-header">
-          <div class="wallet-network"></div>
-          <div class="wallet-balance"></div>
+            <div class="flex justify-between items-center">
+                <div class="flex bg-var(--bubble) rounded-xl p-1">
+                    <button class="tab-btn active px-3 py-2 rounded-lg text-sm font-semibold" data-tab="all">All</button>
+                    <button class="tab-btn px-3 py-2 rounded-lg text-sm font-semibold" data-tab="watchlist">Watchlist</button>
+                    <button class="tab-btn px-3 py-2 rounded-lg text-sm font-semibold" data-tab="gainers">Gainers</button>
+                </div>
+                
+                <select id="sort-select" class="bg-var(--card) border border-var(--border) rounded-xl px-3 py-2 text-sm">
+                    <option value="market_cap">Market Cap</option>
+                    <option value="volume">Volume</option>
+                    <option value="price">Price</option>
+                    <option value="change">24h Change</option>
+                </select>
+            </div>
         </div>
-        <div class="wallet-address"></div>
-        <div class="wallet-details">
-          <span class="wallet-value"></span>
-          <span class="wallet-updated"></span>
-        </div>
-        <div class="wallet-actions">
-          <button class="wallet-action-btn" data-action="copy">📋</button>
-          <button class="wallet-action-btn" data-action="qr">📷</button>
-          <button class="wallet-action-btn" data-action="refresh">🔄</button>
-          <button class="wallet-action-btn" data-action="explorer">🌐</button>
-          <button class="wallet-action-btn" data-action="remove">🗑️</button>
-        </div>
-      </div>
-    </template>
 
-    <template id="alert-item-template">
-      <div class="alert-item">
-        <div class="alert-coin"></div>
-        <div class="alert-condition"></div>
-        <div class="alert-status"></div>
-        <button class="alert-delete">🗑️</button>
-      </div>
-    </template>
-
-    <!-- Modal -->
-    <div id="modal" class="modal hidden">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="modal-title">عنوان</h3>
-          <button class="modal-close">✕</button>
+        <div id="markets-list" class="p-2">
+            <!-- Market cards will be rendered here -->
         </div>
-        <div class="modal-body" id="modal-body"></div>
-      </div>
+    </div>
+
+    <!-- Wallet Page -->
+    <div id="wallet-page" class="page">
+        <div class="header p-4">
+            <h1 class="text-xl font-bold">My Wallets</h1>
+        </div>
+
+        <div id="wallet-empty" class="text-center p-8">
+            <div class="w-20 h-20 bg-var(--bubble) rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-2xl">👛</span>
+            </div>
+            <p class="text-lg font-bold mb-2">No wallets added</p>
+            <p class="text-var(--text-secondary) mb-6">Add your first wallet to get started</p>
+            <button id="add-wallet-btn" class="bg-var(--primary) text-white px-6 py-3 rounded-xl font-bold">Add Wallet</button>
+        </div>
+
+        <div id="wallet-content" class="hidden">
+            <!-- Wallet cards will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Alerts Page -->
+    <div id="alerts-page" class="page">
+        <div class="header p-4">
+            <h1 class="text-xl font-bold">Price Alerts</h1>
+        </div>
+
+        <div id="alerts-empty" class="text-center p-8">
+            <div class="w-20 h-20 bg-var(--bubble) rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-2xl">🔔</span>
+            </div>
+            <p class="text-lg font-bold mb-2">No alerts set</p>
+            <p class="text-var(--text-secondary) mb-6">Create price alerts for your favorite coins</p>
+            <button id="create-alert-btn" class="bg-var(--primary) text-white px-6 py-3 rounded-xl font-bold">Create Alert</button>
+        </div>
+
+        <div id="alerts-list" class="hidden p-4">
+            <!-- Alert items will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Converter Page -->
+    <div id="converter-page" class="page">
+        <div class="header p-4">
+            <h1 class="text-xl font-bold">Currency Converter</h1>
+        </div>
+
+        <div class="p-4">
+            <div class="card">
+                <div class="flex gap-3 items-center mb-4">
+                    <input type="number" id="convert-from" placeholder="0.00" class="flex-1 p-3 rounded-xl border border-var(--border) bg-var(--bg)">
+                    <select id="from-currency" class="p-3 rounded-xl border border-var(--border) bg-var(--bg)"></select>
+                </div>
+                
+                <div class="text-center my-3">
+                    <button id="swap-currencies" class="bg-var(--primary) text-white w-10 h-10 rounded-full flex items-center justify-center mx-auto">⇅</button>
+                </div>
+                
+                <div class="flex gap-3 items-center">
+                    <input type="number" id="convert-to" placeholder="0.00" readonly class="flex-1 p-3 rounded-xl border border-var(--border) bg-var(--bubble)">
+                    <select id="to-currency" class="p-3 rounded-xl border border-var(--border) bg-var(--bg)"></select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="card text-center">
+                    <div class="text-var(--text-secondary) text-sm">BTC Dominance</div>
+                    <div class="font-bold" id="btc-dominance">---</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-var(--text-secondary) text-sm">Fear & Greed</div>
+                    <div class="font-bold" id="fear-greed">---</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profile-page" class="page">
+        <div class="header p-4">
+            <h1 class="text-xl font-bold">Profile</h1>
+        </div>
+
+        <div class="p-4">
+            <div class="card bg-gradient-to-r from-var(--primary) to-blue-600 text-white mb-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">U</div>
+                    <div>
+                        <h2 class="text-xl font-bold" id="profile-name">User</h2>
+                        <p class="text-white/80 text-sm" id="profile-id">ID: loading...</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-white/80 text-sm">Portfolio Value</div>
+                    <div class="text-2xl font-bold" id="portfolio-value">---</div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div class="card flex justify-between items-center cursor-pointer" data-action="wallets">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">👛</span>
+                        <span>Wallet Management</span>
+                    </div>
+                    <span>→</span>
+                </div>
+
+                <div class="card flex justify-between items-center cursor-pointer" data-action="alerts">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🔔</span>
+                        <span>Alert Management</span>
+                    </div>
+                    <span>→</span>
+                </div>
+
+                <div class="card flex justify-between items-center cursor-pointer" data-action="security">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🔒</span>
+                        <span>Security Settings</span>
+                    </div>
+                    <span>→</span>
+                </div>
+
+                <div class="card flex justify-between items-center cursor-pointer" data-action="preferences">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">⚙️</span>
+                        <span>Preferences</span>
+                    </div>
+                    <span>→</span>
+                </div>
+
+                <div class="card flex justify-between items-center cursor-pointer" data-action="backup">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">💾</span>
+                        <span>Backup & Restore</span>
+                    </div>
+                    <span>→</span>
+                </div>
+
+                <div class="card flex justify-between items-center cursor-pointer" data-action="about">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">ℹ️</span>
+                        <span>About Shelby Pro</span>
+                    </div>
+                    <span>→</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <button class="nav-button" data-page="wallet-page">
+            <div class="text-2xl">👛</div>
+            <div class="text-xs mt-1">Wallet</div>
+        </button>
+        
+        <button class="nav-button active" data-page="markets-page">
+            <div class="text-2xl">📈</div>
+            <div class="text-xs mt-1">Markets</div>
+        </button>
+        
+        <button class="nav-button" data-page="alerts-page">
+            <div class="text-2xl">🔔</div>
+            <div class="text-xs mt-1">Alerts</div>
+        </button>
+        
+        <button class="nav-button" data-page="converter-page">
+            <div class="text-2xl">🔄</div>
+            <div class="text-xs mt-1">Converter</div>
+        </button>
+        
+        <button class="nav-button" data-page="profile-page">
+            <div class="text-2xl">👤</div>
+            <div class="text-xs mt-1">Profile</div>
+        </button>
+    </nav>
+
+    <!-- FAB Button -->
+    <button class="fab" id="fab-main">+</button>
+
+    <!-- Modal System -->
+    <div id="modal-backdrop" class="modal-backdrop"></div>
+    <div id="modal" class="modal">
+        <div id="modal-content"></div>
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="toast hidden">
-      <span id="toast-icon">✅</span>
-      <span id="toast-message">پیام</span>
-    </div>
+    <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 hidden"></div>
 
-  </div>
+    <!-- Templates -->
+    <template id="market-card-template">
+        <div class="card market-card">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-3">
+                    <img class="w-10 h-10 rounded-full" src="" alt="">
+                    <div>
+                        <div class="font-bold text-sm coin-symbol"></div>
+                        <div class="text-xs text-var(--text-secondary) coin-name"></div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-sm price-main"></div>
+                    <div class="text-xs text-var(--text-secondary) price-change"></div>
+                </div>
+            </div>
+            <div class="flex justify-between items-center">
+                <div class="sparkline-container">
+                    <canvas class="sparkline"></canvas>
+                </div>
+                <div class="flex gap-2">
+                    <button class="favorite-btn text-var(--text-secondary) hover:text-yellow-400" data-action="favorite">☆</button>
+                    <button class="alert-btn text-var(--text-secondary) hover:text-var(--primary)" data-action="alert">🔔</button>
+                </div>
+            </div>
+        </div>
+    </template>
 
-  <!-- JavaScript -->
-  <script src="script.js"></script>
+    <template id="wallet-card-template">
+        <div class="card wallet-card">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="network-badge eth">ETH</div>
+                    <div>
+                        <div class="font-bold text-sm wallet-symbol">Ethereum</div>
+                        <div class="text-xs text-var(--text-secondary) wallet-address">0x1234...5678</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-sm wallet-balance">0.0000 ETH</div>
+                    <div class="text-xs text-var(--text-secondary) wallet-value">$0.00</div>
+                </div>
+            </div>
+            <div class="flex justify-between">
+                <div class="flex gap-2">
+                    <button class="text-xs bg-var(--primary) text-white px-3 py-1 rounded" data-action="copy">Copy</button>
+                    <button class="text-xs bg-var(--bubble) text-var(--text) px-3 py-1 rounded" data-action="qr">QR</button>
+                    <button class="text-xs bg-var(--bubble) text-var(--text) px-3 py-1 rounded" data-action="explorer">Explorer</button>
+                </div>
+                <button class="text-xs bg-var(--danger) text-white px-3 py-1 rounded" data-action="remove">Remove</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="alert-item-template">
+        <div class="card alert-item">
+            <div class="flex justify-between items-center mb-2">
+                <div class="font-bold text-sm alert-coin">BTC/USD</div>
+                <div class="text-xs network-badge alert-status active">Active</div>
+            </div>
+            <div class="text-sm text-var(--text-secondary) alert-condition mb-2">Price above $50,000</div>
+            <div class="flex justify-between">
+                <div class="text-xs text-var(--text-secondary) alert-time">Created 2 days ago</div>
+                <button class="text-xs bg-var(--danger) text-white px-3 py-1 rounded" data-action="delete">Delete</button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // ===== CONFIGURATION =====
+        const CONFIG = {
+            API: {
+                COINGECKO: 'https://api.coingecko.com/api/v3',
+                ALTERNATIVE: 'https://api.alternative.me/v2',
+                CRYPTOCOMPARE: 'https://min-api.cryptocompare.com/data'
+            },
+            UPDATE_INTERVAL: 30000,
+            CACHE_DURATION: 60000,
+            MAX_FAVORITES: 50,
+            SUPPORTED_NETWORKS: ['eth', 'btc', 'sol', 'ton', 'tron', 'bsc', 'polygon', 'avax', 'arbitrum', 'optimism']
+        };
+
+        // ===== STATE MANAGEMENT =====
+        const STATE = {
+            // User Data
+            user: null,
+            preferences: {
+                theme: 'dark',
+                currency: 'usd',
+                language: 'en',
+                notifications: true,
+                biometrics: false
+            },
+            
+            // Market Data
+            markets: [],
+            favorites: new Set(),
+            watchlist: [],
+            
+            // Wallet Data
+            wallets: [],
+            portfolioValue: 0,
+            
+            // Alert System
+            alerts: [],
+            activeAlerts: new Set(),
+            
+            // App State
+            currentPage: 'markets',
+            isLoading: false,
+            lastUpdate: null,
+            
+            // Web3
+            web3: null,
+            connected: false
+        };
+
+        // ===== UTILITIES =====
+        const utils = {
+            // DOM Helpers
+            $(selector) { return document.querySelector(selector); },
+            $$(selector) { return document.querySelectorAll(selector); },
+            
+            // Formatting
+            formatNumber(num, decimals = 2) {
+                if (!num && num !== 0) return '---';
+                return new Intl.NumberFormat('en-US', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }).format(num);
+            },
+            
+            formatPrice(price) {
+                if (price >= 1) return `$${this.formatNumber(price, 2)}`;
+                if (price >= 0.01) return `$${this.formatNumber(price, 4)}`;
+                return `$${this.formatNumber(price, 6)}`;
+            },
+            
+            formatChange(change) {
+                const sign = change >= 0 ? '+' : '';
+                const color = change >= 0 ? 'positive' : 'negative';
+                return `<span class="${color}">${sign}${this.formatNumber(change, 2)}%</span>`;
+            },
+            
+            // Storage
+            getStorage(key) {
+                try {
+                    return JSON.parse(localStorage.getItem(key));
+                } catch {
+                    return null;
+                }
+            },
+            
+            setStorage(key, value) {
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            
+            // API Calls
+            async fetchWithRetry(url, options = {}, retries = 3) {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(url, {
+                            ...options,
+                            signal: AbortSignal.timeout(10000)
+                        });
+                        if (response.ok) return await response.json();
+                    } catch (error) {
+                        if (i === retries - 1) throw error;
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    }
+                }
+            },
+            
+            // Cryptography
+            generateId() {
+                return crypto.randomUUID();
+            },
+            
+            encryptData(data, key) {
+                // Simple encryption for demo - use proper encryption in production
+                return btoa(JSON.stringify(data));
+            },
+            
+            decryptData(encryptedData, key) {
+                try {
+                    return JSON.parse(atob(encryptedData));
+                } catch {
+                    return null;
+                }
+            }
+        };
+
+        // ===== NOTIFICATION SYSTEM =====
+        const notifications = {
+            async requestPermission() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    return await Notification.requestPermission();
+                }
+                return Notification.permission;
+            },
+            
+            show(title, options = {}) {
+                if (Notification.permission === 'granted') {
+                    new Notification(title, options);
+                }
+                
+                // Show in-app toast
+                this.showToast(title);
+            },
+            
+            showToast(message, type = 'info') {
+                const toast = utils.$('#toast');
+                toast.textContent = message;
+                toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg z-50 ${
+                    type === 'error' ? 'bg-red-500' : 
+                    type === 'success' ? 'bg-green-500' : 'bg-gray-800'
+                } text-white`;
+                toast.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            },
+            
+            vibrate(pattern = [100, 50, 100]) {
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(pattern);
+                }
+            }
+        };
+
+        // ===== MARKET DATA =====
+        const marketData = {
+            async loadMarkets() {
+                try {
+                    STATE.isLoading = true;
+                    this.renderLoadingState();
+                    
+                    const data = await utils.fetchWithRetry(
+                        `${CONFIG.API.COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h,7d`
+                    );
+                    
+                    STATE.markets = data.map(coin => ({
+                        id: coin.id,
+                        symbol: coin.symbol.toUpperCase(),
+                        name: coin.name,
+                        image: coin.image,
+                        price: coin.current_price,
+                        change1h: coin.price_change_percentage_1h_in_currency,
+                        change24h: coin.price_change_percentage_24h_in_currency,
+                        change7d: coin.price_change_percentage_7d_in_currency,
+                        marketCap: coin.market_cap,
+                        volume: coin.total_volume,
+                        sparkline: coin.sparkline_in_7d?.price || [],
+                        lastUpdated: coin.last_updated
+                    }));
+                    
+                    STATE.lastUpdate = Date.now();
+                    this.renderMarkets();
+                    this.updateGlobalMetrics();
+                    
+                } catch (error) {
+                    console.error('Failed to load markets:', error);
+                    notifications.showToast('Failed to load market data', 'error');
+                } finally {
+                    STATE.isLoading = false;
+                }
+            },
+            
+            renderMarkets() {
+                const container = utils.$('#markets-list');
+                const template = utils.$('#market-card-template');
+                
+                container.innerHTML = '';
+                
+                STATE.markets.forEach(coin => {
+                    const card = template.content.cloneNode(true);
+                    const element = card.querySelector('.market-card');
+                    
+                    // Set coin data
+                    element.querySelector('img').src = coin.image;
+                    element.querySelector('.coin-symbol').textContent = coin.symbol;
+                    element.querySelector('.coin-name').textContent = coin.name;
+                    element.querySelector('.price-main').textContent = utils.formatPrice(coin.price);
+                    element.querySelector('.price-change').innerHTML = utils.formatChange(coin.change24h);
+                    
+                    // Set favorite state
+                    const favoriteBtn = element.querySelector('.favorite-btn');
+                    favoriteBtn.textContent = STATE.favorites.has(coin.id) ? '★' : '☆';
+                    favoriteBtn.onclick = () => this.toggleFavorite(coin.id);
+                    
+                    // Set alert action
+                    element.querySelector('.alert-btn').onclick = () => alertSystem.openCreateModal(coin);
+                    
+                    // Render sparkline
+                    this.renderSparkline(element.querySelector('.sparkline'), coin.sparkline, coin.change24h);
+                    
+                    container.appendChild(card);
+                });
+            },
+            
+            renderSparkline(canvas, data, change) {
+                if (!data || data.length < 2) return;
+                
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width = 100;
+                const height = canvas.height = 40;
+                
+                const max = Math.max(...data);
+                const min = Math.min(...data);
+                const range = max - min || 1;
+                
+                ctx.clearRect(0, 0, width, height);
+                ctx.beginPath();
+                ctx.strokeStyle = change >= 0 ? 'var(--success)' : 'var(--danger)';
+                ctx.lineWidth = 2;
+                
+                data.forEach((value, index) => {
+                    const x = (index / (data.length - 1)) * width;
+                    const y = height - ((value - min) / range) * height;
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+            },
+            
+            renderLoadingState() {
+                const container = utils.$('#markets-list');
+                container.innerHTML = Array(10).fill().map(() => `
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full skeleton"></div>
+                                <div>
+                                    <div class="h-4 w-16 skeleton mb-2"></div>
+                                    <div class="h-3 w-24 skeleton"></div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="h-4 w-20 skeleton mb-2"></div>
+                                <div class="h-3 w-16 skeleton"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            toggleFavorite(coinId) {
+                if (STATE.favorites.has(coinId)) {
+                    STATE.favorites.delete(coinId);
+                } else if (STATE.favorites.size < CONFIG.MAX_FAVORITES) {
+                    STATE.favorites.add(coinId);
+                } else {
+                    notifications.showToast('Favorite limit reached');
+                    return;
+                }
+                
+                utils.setStorage('favorites', [...STATE.favorites]);
+                this.renderMarkets();
+                notifications.vibrate();
+            },
+            
+            async updateGlobalMetrics() {
+                try {
+                    const [fearGreed, btcDominance] = await Promise.all([
+                        utils.fetchWithRetry('https://api.alternative.me/fng/'),
+                        utils.fetchWithRetry('https://api.alternative.me/global/')
+                    ]);
+                    
+                    if (fearGreed?.data?.[0]) {
+                        utils.$('#fear-greed').textContent = `${
+                            fearGreed.data[0].value_classification
+                        } (${fearGreed.data[0].value})`;
+                    }
+                    
+                    if (btcDominance?.data?.['bitcoin_dominance_percentage']) {
+                        utils.$('#btc-dominance').textContent = 
+                            `${utils.formatNumber(btcDominance.data['bitcoin_dominance_percentage'], 1)}%`;
+                    }
+                } catch (error) {
+                    console.error('Failed to load global metrics:', error);
+                }
+            }
+        };
+
+        // ===== WALLET MANAGEMENT =====
+        const walletManager = {
+            networks: {
+                eth: { name: 'Ethereum', symbol: 'ETH', explorer: 'https://etherscan.io/address/', decimals: 18 },
+                btc: { name: 'Bitcoin', symbol: 'BTC', explorer: 'https://blockchain.com/btc/address/', decimals: 8 },
+                sol: { name: 'Solana', symbol: 'SOL', explorer: 'https://solscan.io/account/', decimals: 9 },
+                ton: { name: 'TON', symbol: 'TON', explorer: 'https://tonviewer.com/', decimals: 9 },
+                tron: { name: 'TRON', symbol: 'TRX', explorer: 'https://tronscan.org/#/address/', decimals: 6 }
+            },
+            
+            async init() {
+                this.loadWallets();
+                this.setupEventListeners();
+            },
+            
+            loadWallets() {
+                STATE.wallets = utils.getStorage('wallets') || [];
+                this.renderWallets();
+                this.calculatePortfolioValue();
+            },
+            
+            renderWallets() {
+                const emptyState = utils.$('#wallet-empty');
+                const content = utils.$('#wallet-content');
+                
+                if (STATE.wallets.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    content.classList.add('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                content.classList.remove('hidden');
+                
+                content.innerHTML = STATE.wallets.map((wallet, index) => {
+                    const network = this.networks[wallet.network];
+                    return `
+                        <div class="card wallet-card" data-wallet-index="${index}">
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="network-badge ${wallet.network}">${network.symbol}</div>
+                                    <div>
+                                        <div class="font-bold text-sm">${network.name}</div>
+                                        <div class="text-xs text-var(--text-secondary)">${this.shortenAddress(wallet.address)}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-sm wallet-balance">${wallet.balance || '0.0000'} ${network.symbol}</div>
+                                    <div class="text-xs text-var(--text-secondary) wallet-value">$${utils.formatNumber(wallet.value || 0)}</div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between">
+                                <div class="flex gap-2">
+                                    <button class="text-xs bg-var(--primary) text-white px-3 py-1 rounded" 
+                                            onclick="walletManager.copyAddress('${wallet.address}')">Copy</button>
+                                    <button class="text-xs bg-var(--bubble) text-var(--text) px-3 py-1 rounded"
+                                            onclick="walletManager.showQR('${wallet.address}')">QR</button>
+                                    <button class="text-xs bg-var(--bubble) text-var(--text) px-3 py-1 rounded"
+                                            onclick="walletManager.openExplorer('${wallet.address}', '${wallet.network}')">Explorer</button>
+                                </div>
+                                <button class="text-xs bg-var(--danger) text-white px-3 py-1 rounded"
+                                        onclick="walletManager.removeWallet(${index})">Remove</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Load balances for all wallets
+                this.loadWalletBalances();
+            },
+            
+            async loadWalletBalances() {
+                for (const [index, wallet] of STATE.wallets.entries()) {
+                    await this.updateWalletBalance(wallet, index);
+                }
+            },
+            
+            async updateWalletBalance(wallet, index) {
+                try {
+                    // Simulate API call - replace with actual blockchain API calls
+                    const balance = (Math.random() * 10).toFixed(4);
+                    const value = balance * (wallet.network === 'btc' ? 45000 : 3000); // Mock prices
+                    
+                    STATE.wallets[index].balance = balance;
+                    STATE.wallets[index].value = value;
+                    
+                    this.updateWalletDisplay(index, balance, value);
+                    this.calculatePortfolioValue();
+                    
+                } catch (error) {
+                    console.error(`Failed to update balance for wallet ${wallet.address}:`, error);
+                }
+            },
+            
+            updateWalletDisplay(index, balance, value) {
+                const element = utils.$(`[data-wallet-index="${index}"]`);
+                if (element) {
+                    const network = this.networks[STATE.wallets[index].network];
+                    element.querySelector('.wallet-balance').textContent = 
+                        `${utils.formatNumber(parseFloat(balance), 4)} ${network.symbol}`;
+                    element.querySelector('.wallet-value').textContent = 
+                        `$${utils.formatNumber(value)}`;
+                }
+            },
+            
+            calculatePortfolioValue() {
+                STATE.portfolioValue = STATE.wallets.reduce((total, wallet) => total + (wallet.value || 0), 0);
+                utils.$('#portfolio-value').textContent = `$${utils.formatNumber(STATE.portfolioValue)}`;
+            },
+            
+            openAddModal() {
+                const networks = Object.entries(this.networks).map(([key, network]) => 
+                    `<option value="${key}">${network.name} (${network.symbol})</option>`
+                ).join('');
+                
+                const modalContent = `
+                    <h2 class="text-xl font-bold mb-4">Add Wallet</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Network</label>
+                            <select id="wallet-network" class="w-full p-3 rounded-xl border border-var(--border) bg-var(--bg)">
+                                ${networks}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Wallet Address</label>
+                            <input type="text" id="wallet-address" placeholder="Enter wallet address" 
+                                   class="w-full p-3 rounded-xl border border-var(--border) bg-var(--bg)">
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="walletManager.addWallet()" 
+                                    class="flex-1 bg-var(--primary) text-white p-3 rounded-xl font-bold">Add</button>
+                            <button onclick="modal.close()" 
+                                    class="flex-1 bg-var(--bubble) text-var(--text) p-3 rounded-xl">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.open(modalContent);
+            },
+            
+            addWallet() {
+                const network = utils.$('#wallet-network').value;
+                const address = utils.$('#wallet-address').value.trim();
+                
+                if (!this.validateAddress(address, network)) {
+                    notifications.showToast('Invalid wallet address', 'error');
+                    return;
+                }
+                
+                if (STATE.wallets.some(w => w.address === address)) {
+                    notifications.showToast('Wallet already exists', 'error');
+                    return;
+                }
+                
+                const newWallet = {
+                    id: utils.generateId(),
+                    network,
+                    address,
+                    balance: '0',
+                    value: 0,
+                    added: Date.now()
+                };
+                
+                STATE.wallets.push(newWallet);
+                utils.setStorage('wallets', STATE.wallets);
+                
+                modal.close();
+                this.renderWallets();
+                notifications.showToast('Wallet added successfully');
+            },
+            
+            validateAddress(address, network) {
+                const validators = {
+                    eth: /^0x[a-fA-F0-9]{40}$/,
+                    btc: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/,
+                    sol: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+                    ton: /^EQ[0-9a-zA-Z_-]{48}$/,
+                    tron: /^T[A-Za-z1-9]{33}$/
+                };
+                
+                return validators[network]?.test(address) || address.length > 10;
+            },
+            
+            shortenAddress(address) {
+                return `${address.slice(0, 8)}...${address.slice(-6)}`;
+            },
+            
+            copyAddress(address) {
+                navigator.clipboard.writeText(address);
+                notifications.showToast('Address copied to clipboard');
+            },
+            
+            showQR(address) {
+                const canvas = document.createElement('canvas');
+                QRCode.toCanvas(canvas, address, { width: 200, margin: 1 }, (error) => {
+                    if (error) {
+                        notifications.showToast('Failed to generate QR code', 'error');
+                        return;
+                    }
+                    
+                    const modalContent = `
+                        <h2 class="text-xl font-bold mb-4 text-center">Wallet QR Code</h2>
+                        <div class="flex justify-center">
+                            <canvas width="200" height="200"></canvas>
+                        </div>
+                        <button onclick="modal.close()" 
+                                class="w-full bg-var(--primary) text-white p-3 rounded-xl font-bold mt-4">Close</button>
+                    `;
+                    
+                    modal.open(modalContent);
+                    utils.$('#modal-content canvas').getContext('2d').drawImage(canvas, 0, 0);
+                });
+            },
+            
+            openExplorer(address, network) {
+                const explorerUrl = this.networks[network].explorer + address;
+                window.open(explorerUrl, '_blank');
+            },
+            
+            removeWallet(index) {
+                if (confirm('Are you sure you want to remove this wallet?')) {
+                    STATE.wallets.splice(index, 1);
+                    utils.setStorage('wallets', STATE.wallets);
+                    this.renderWallets();
+                    notifications.showToast('Wallet removed');
+                }
+            },
+            
+            setupEventListeners() {
+                utils.$('#add-wallet-btn').onclick = () => this.openAddModal();
+            }
+        };
+
+        // ===== ALERT SYSTEM =====
+        const alertSystem = {
+            async init() {
+                this.loadAlerts();
+                this.setupEventListeners();
+                this.startMonitoring();
+            },
+            
+            loadAlerts() {
+                STATE.alerts = utils.getStorage('alerts') || [];
+                this.renderAlerts();
+            },
+            
+            renderAlerts() {
+                const emptyState = utils.$('#alerts-empty');
+                const content = utils.$('#alerts-list');
+                
+                if (STATE.alerts.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    content.classList.add('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                content.classList.remove('hidden');
+                
+                content.innerHTML = STATE.alerts.map((alert, index) => {
+                    const coin = STATE.markets.find(c => c.id === alert.coinId);
+                    if (!coin) return '';
+                    
+                    return `
+                        <div class="card alert-item" data-alert-index="${index}">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold text-sm">${coin.symbol} - ${coin.name}</div>
+                                <div class="text-xs network-badge ${alert.active ? 'active' : 'inactive'}">
+                                    ${alert.active ? 'Active' : 'Inactive'}
+                                </div>
+                            </div>
+                            <div class="text-sm text-var(--text-secondary) mb-2">
+                                ${alert.condition === 'above' ? 'Price above' : 'Price below'} $${utils.formatNumber(alert.targetPrice, 2)}
+                            </div>
+                            <div class="flex justify-between">
+                                <div class="text-xs text-var(--text-secondary)">
+                                    ${new Date(alert.createdAt).toLocaleDateString()}
+                                </div>
+                                <button class="text-xs bg-var(--danger) text-white px-3 py-1 rounded"
+                                        onclick="alertSystem.removeAlert(${index})">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+            
+            openCreateModal(coin) {
+                const modalContent = `
+                    <h2 class="text-xl font-bold mb-4">Create Price Alert</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 p-3 bg-var(--bubble) rounded-xl">
+                            <img src="${coin.image}" alt="${coin.name}" class="w-8 h-8 rounded-full">
+                            <div>
+                                <div class="font-bold">${coin.symbol}</div>
+                                <div class="text-sm text-var(--text-secondary)">${coin.name}</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Alert Condition</label>
+                            <select id="alert-condition" class="w-full p-3 rounded-xl border border-var(--border) bg-var(--bg)">
+                                <option value="above">Price goes above</option>
+                                <option value="below">Price goes below</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Target Price (USD)</label>
+                            <input type="number" id="alert-price" value="${utils.formatNumber(coin.price, 2)}" step="0.0001"
+                                   class="w-full p-3 rounded-xl border border-var(--border) bg-var(--bg)">
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button onclick="alertSystem.createAlert('${coin.id}')" 
+                                    class="flex-1 bg-var(--primary) text-white p-3 rounded-xl font-bold">Create</button>
+                            <button onclick="modal.close()" 
+                                    class="flex-1 bg-var(--bubble) text-var(--text) p-3 rounded-xl">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.open(modalContent);
+            },
+            
+            createAlert(coinId) {
+                const condition = utils.$('#alert-condition').value;
+                const targetPrice = parseFloat(utils.$('#alert-price').value);
+                const coin = STATE.markets.find(c => c.id === coinId);
+                
+                if (!targetPrice || targetPrice <= 0) {
+                    notifications.showToast('Please enter a valid price', 'error');
+                    return;
+                }
+                
+                const newAlert = {
+                    id: utils.generateId(),
+                    coinId,
+                    coinSymbol: coin.symbol,
+                    coinName: coin.name,
+                    condition,
+                    targetPrice,
+                    currentPrice: coin.price,
+                    active: true,
+                    createdAt: Date.now(),
+                    triggered: false
+                };
+                
+                STATE.alerts.push(newAlert);
+                utils.setStorage('alerts', STATE.alerts);
+                
+                modal.close();
+                this.renderAlerts();
+                notifications.showToast('Alert created successfully');
+            },
+            
+            removeAlert(index) {
+                STATE.alerts.splice(index, 1);
+                utils.setStorage('alerts', STATE.alerts);
+                this.renderAlerts();
+                notifications.showToast('Alert removed');
+            },
+            
+            startMonitoring() {
+                setInterval(() => {
+                    this.checkAlerts();
+                }, 60000); // Check every minute
+            },
+            
+            checkAlerts() {
+                STATE.alerts.forEach((alert, index) => {
+                    if (!alert.active || alert.triggered) return;
+                    
+                    const coin = STATE.markets.find(c => c.id === alert.coinId);
+                    if (!coin) return;
+                    
+                    const shouldTrigger = 
+                        (alert.condition === 'above' && coin.price >= alert.targetPrice) ||
+                        (alert.condition === 'below' && coin.price <= alert.targetPrice);
+                    
+                    if (shouldTrigger) {
+                        this.triggerAlert(alert, index, coin.price);
+                    }
+                });
+            },
+            
+            triggerAlert(alert, index, currentPrice) {
+                STATE.alerts[index].triggered = true;
+                STATE.alerts[index].active = false;
+                STATE.alerts[index].triggeredAt = Date.now();
+                STATE.alerts[index].triggeredPrice = currentPrice;
+                
+                utils.setStorage('alerts', STATE.alerts);
+                this.renderAlerts();
+                
+                // Send notification
+                const message = `${alert.coinSymbol} ${alert.condition} $${utils.formatNumber(alert.targetPrice)}! Current: $${utils.formatNumber(currentPrice)}`;
+                notifications.show('Price Alert Triggered!', {
+                    body: message,
+                    icon: '/icon.png'
+                });
+                
+                notifications.showToast(message);
+                notifications.vibrate([200, 100, 200]);
+            },
+            
+            setupEventListeners() {
+                utils.$('#create-alert-btn').onclick = () => {
+                    if (STATE.markets.length > 0) {
+                        this.openCreateModal(STATE.markets[0]);
+                    }
+                };
+            }
+        };
+
+        // ===== CURRENCY CONVERTER =====
+        const converter = {
+            currencies: ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'BTC', 'ETH', 'SOL', 'TON', 'ADA', 'DOT'],
+            rates: {},
+            
+            async init() {
+                await this.loadRates();
+                this.renderCurrencies();
+                this.setupEventListeners();
+            },
+            
+            async loadRates() {
+                try {
+                    // Mock rates - replace with actual API
+                    this.rates = {
+                        USD: 1,
+                        EUR: 0.85,
+                        GBP: 0.73,
+                        JPY: 110,
+                        CNY: 6.45,
+                        BTC: 0.000025,
+                        ETH: 0.00054,
+                        SOL: 0.035,
+                        TON: 2.8,
+                        ADA: 2.1,
+                        DOT: 0.12
+                    };
+                } catch (error) {
+                    console.error('Failed to load exchange rates:', error);
+                }
+            },
+            
+            renderCurrencies() {
+                const options = this.currencies.map(currency => 
+                    `<option value="${currency}">${currency}</option>`
+                ).join('');
+                
+                utils.$('#from-currency').innerHTML = options;
+                utils.$('#to-currency').innerHTML = options;
+                
+                utils.$('#from-currency').value = 'USD';
+                utils.$('#to-currency').value = 'BTC';
+            },
+            
+            convert() {
+                const amount = parseFloat(utils.$('#convert-from').value) || 0;
+                const from = utils.$('#from-currency').value;
+                const to = utils.$('#to-currency').value;
+                
+                if (amount === 0) {
+                    utils.$('#convert-to').value = '';
+                    return;
+                }
+                
+                const fromRate = this.rates[from] || 1;
+                const toRate = this.rates[to] || 1;
+                
+                const result = (amount / fromRate) * toRate;
+                utils.$('#convert-to').value = utils.formatNumber(result, 6);
+            },
+            
+            swapCurrencies() {
+                const from = utils.$('#from-currency').value;
+                const to = utils.$('#to-currency').value;
+                const amount = utils.$('#convert-from').value;
+                
+                utils.$('#from-currency').value = to;
+                utils.$('#to-currency').value = from;
+                utils.$('#convert-from').value = utils.$('#convert-to').value;
+                
+                this.convert();
+            },
+            
+            setupEventListeners() {
+                utils.$('#convert-from').addEventListener('input', () => this.convert());
+                utils.$('#from-currency').addEventListener('change', () => this.convert());
+                utils.$('#to-currency').addEventListener('change', () => this.convert());
+                utils.$('#swap-currencies').addEventListener('click', () => this.swapCurrencies());
+            }
+        };
+
+        // ===== MODAL SYSTEM =====
+        const modal = {
+            open(content) {
+                utils.$('#modal-content').innerHTML = content;
+                utils.$('#modal-backdrop').style.display = 'block';
+                utils.$('#modal').classList.add('open');
+            },
+            
+            close() {
+                utils.$('#modal').classList.remove('open');
+                setTimeout(() => {
+                    utils.$('#modal-backdrop').style.display = 'none';
+                    utils.$('#modal-content').innerHTML = '';
+                }, 300);
+            }
+        };
+
+        // ===== THEME MANAGEMENT =====
+        const themeManager = {
+            init() {
+                this.loadTheme();
+                this.setupEventListeners();
+            },
+            
+            loadTheme() {
+                const savedTheme = utils.getStorage('theme') || 'dark';
+                STATE.preferences.theme = savedTheme;
+                this.applyTheme(savedTheme);
+            },
+            
+            applyTheme(theme) {
+                document.body.classList.toggle('light-theme', theme === 'light');
+                utils.$('#theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+            },
+            
+            toggleTheme() {
+                const newTheme = STATE.preferences.theme === 'dark' ? 'light' : 'dark';
+                STATE.preferences.theme = newTheme;
+                utils.setStorage('theme', newTheme);
+                this.applyTheme(newTheme);
+            },
+            
+            setupEventListeners() {
+                utils.$('#theme-toggle').onclick = () => this.toggleTheme();
+            }
+        };
+
+        // ===== APP INITIALIZATION =====
+        const app = {
+            async init() {
+                // Initialize all modules
+                themeManager.init();
+                await marketData.loadMarkets();
+                walletManager.init();
+                alertSystem.init();
+                converter.init();
+                
+                // Setup navigation
+                this.setupNavigation();
+                this.setupEventListeners();
+                
+                // Start background tasks
+                this.startBackgroundTasks();
+                
+                // Initialize Telegram Web App
+                this.initTelegram();
+                
+                console.log('Shelby Pro initialized successfully');
+            },
+            
+            setupNavigation() {
+                utils.$$('.nav-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const pageId = button.dataset.page;
+                        this.showPage(pageId);
+                    });
+                });
+            },
+            
+            showPage(pageId) {
+                // Hide all pages
+                utils.$$('.page').forEach(page => page.classList.remove('active'));
+                utils.$$('.nav-button').forEach(btn => btn.classList.remove('active'));
+                
+                // Show target page
+                utils.$(`#${pageId}`).classList.add('active');
+                utils.$(`[data-page="${pageId}"]`).classList.add('active');
+                
+                STATE.currentPage = pageId;
+            },
+            
+            setupEventListeners() {
+                // Search functionality
+                utils.$('#search-input').addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase();
+                    utils.$('#search-clear').classList.toggle('hidden', !query);
+                    // Implement search filtering
+                });
+                
+                utils.$('#search-clear').addEventListener('click', () => {
+                    utils.$('#search-input').value = '';
+                    utils.$('#search-clear').classList.add('hidden');
+                    // Reset search
+                });
+                
+                // FAB button
+                utils.$('#fab-main').addEventListener('click', () => {
+                    switch (STATE.currentPage) {
+                        case 'wallet-page':
+                            walletManager.openAddModal();
+                            break;
+                        case 'alerts-page':
+                            if (STATE.markets.length > 0) {
+                                alertSystem.openCreateModal(STATE.markets[0]);
+                            }
+                            break;
+                        case 'markets-page':
+                            // Quick action for markets
+                            break;
+                        default:
+                            this.showPage('wallet-page');
+                    }
+                });
+                
+                // Modal backdrop
+                utils.$('#modal-backdrop').addEventListener('click', modal.close);
+            },
+            
+            startBackgroundTasks() {
+                // Update markets periodically
+                setInterval(() => {
+                    marketData.loadMarkets();
+                }, CONFIG.UPDATE_INTERVAL);
+                
+                // Update wallet balances
+                setInterval(() => {
+                    walletManager.loadWalletBalances();
+                }, 120000); // Every 2 minutes
+            },
+            
+            initTelegram() {
+                try {
+                    const tg = window.Telegram?.WebApp;
+                    if (tg) {
+                        tg.ready();
+                        tg.expand();
+                        
+                        // Set theme based on Telegram
+                        if (tg.colorScheme === 'light') {
+                            themeManager.applyTheme('light');
+                        }
+                        
+                        // Get user data
+                        const user = tg.initDataUnsafe?.user;
+                        if (user) {
+                            STATE.user = user;
+                            utils.$('#profile-name').textContent = 
+                                user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                            utils.$('#profile-id').textContent = `ID: ${user.id}`;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Telegram Web App not available');
+                }
+            }
+        };
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+        // Make functions globally available for HTML onclick handlers
+        window.modal = modal;
+        window.walletManager = walletManager;
+        window.alertSystem = alertSystem;
+    </script>
 </body>
-</html>
+                      </html>
